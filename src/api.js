@@ -1,3 +1,4 @@
+import { apiUrl } from "./config.js";
 import { getAccessToken, signOut } from "./supabase.js";
 
 async function json(path, opts) {
@@ -8,7 +9,7 @@ async function json(path, opts) {
   };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(path, { ...opts, headers });
+  const res = await fetch(apiUrl(path), { ...opts, headers });
   const data = await res.json().catch(() => ({}));
   if (res.status === 401) {
     await signOut();

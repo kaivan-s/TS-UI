@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { apiUrl } from "./config.js";
 
 let client = null;
 let clientPromise = null;
@@ -12,7 +13,7 @@ export async function getSupabase() {
     let anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || "").trim();
     if (!url || !anonKey) {
       try {
-        const r = await fetch("/api/auth/config", {
+        const r = await fetch(apiUrl("/api/auth/config"), {
           signal: AbortSignal.timeout(2500),
         });
         const cfg = await r.json().catch(() => ({}));

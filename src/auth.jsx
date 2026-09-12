@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { apiUrl } from "./config.js";
 import {
   getAccessToken,
   getSupabase,
@@ -63,7 +64,7 @@ export function AuthProvider({ children }) {
       return;
     }
     let stop = false;
-    fetch("/api/me", {
+    fetch(apiUrl("/api/me"), {
       headers: { Authorization: `Bearer ${session.access_token}` },
     })
       .then(async (r) => {
@@ -170,7 +171,7 @@ export function AuthProvider({ children }) {
         setError("");
         setBusy(true);
         try {
-          const r = await fetch("/api/subscription/checkout", {
+          const r = await fetch(apiUrl("/api/subscription/checkout"), {
             method: "POST",
             headers: {
               Authorization: `Bearer ${session.access_token}`,
@@ -193,7 +194,7 @@ export function AuthProvider({ children }) {
       refreshSubscription: async () => {
         if (!session?.access_token) return;
         try {
-          const r = await fetch("/api/me", {
+          const r = await fetch(apiUrl("/api/me"), {
             headers: { Authorization: `Bearer ${session.access_token}` },
           });
           if (r.ok) {
