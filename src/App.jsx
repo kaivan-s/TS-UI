@@ -8,7 +8,8 @@ import {
 import { C } from "./theme.js";
 import Sidebar from "./components/Sidebar.jsx";
 import Header from "./components/Header.jsx";
-import ScanView from "./components/ScanView.jsx";
+import SectorsView from "./components/SectorsView.jsx";
+import SwingView from "./components/SwingView.jsx";
 import ActionView from "./components/ActionView.jsx";
 import TrackRecordTab from "./components/TrackRecordTab.jsx";
 import Guide from "./components/Guide.jsx";
@@ -26,7 +27,7 @@ export default function App() {
   const [status, setStatus] = useState(null);
   const [days, setDays] = useState(220);
   const [end, setEnd] = useState(todayISO());
-  const [view, setView] = useState("scan");
+  const [view, setView] = useState("sectors");
   const [scan, setScan] = useState([]);
   const [coil, setCoil] = useState([]);
   const [miss, setMiss] = useState([]);
@@ -163,8 +164,9 @@ export default function App() {
 
   // Counts for sidebar badges
   const counts = {
-    scan: status?.actionable ?? 0,
-    action: status?.n_tom || tom.length,
+    sectors: status?.actionable ?? 0,
+    swing: status?.n_coil ?? coil.length,
+    momentum: status?.n_tom || tom.length,
   };
 
   return (
@@ -216,9 +218,16 @@ export default function App() {
             </Alert>
           )}
 
-          {view === "scan" && (
-            <ScanView
+          {view === "sectors" && (
+            <SectorsView
               scan={scan}
+              status={status}
+              onOpenSector={openSector}
+            />
+          )}
+
+          {view === "swing" && (
+            <SwingView
               coil={coil}
               miss={miss}
               buys={buys}
@@ -228,7 +237,7 @@ export default function App() {
             />
           )}
 
-          {view === "action" && (
+          {view === "momentum" && (
             <ActionView
               tom={tom}
               status={status}

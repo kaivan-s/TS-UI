@@ -8,12 +8,8 @@ import {
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import { C } from "../theme.js";
 import { TabLabel } from "./ui.jsx";
-import { LockedTab } from "./Premium.jsx";
-import { useAuth } from "../auth.jsx";
 import SectorLookoutsTab from "./SectorLookoutsTab.jsx";
 import SectorTab from "./SectorTab.jsx";
-import CoilTab from "./CoilTab.jsx";
-import BuysTab from "./BuysTab.jsx";
 
 // Check if current time is in the "waiting for update" window (3:30 PM - 7:30 PM IST on weekdays)
 function useUpdateStatus(asOf) {
@@ -60,19 +56,12 @@ function useUpdateStatus(asOf) {
   return status;
 }
 
-export default function ScanView({
-  // Data
+export default function SectorsView({
   scan,
-  coil,
-  miss,
-  buys,
   status,
-  // Actions
   onOpenSector,
-  onOpenStock,
 }) {
   const [subTab, setSubTab] = useState(0);
-  const { isPremium } = useAuth();
   const actionable = status?.actionable ?? 0;
   const updateStatus = useUpdateStatus(status?.as_of);
 
@@ -114,24 +103,6 @@ export default function ScanView({
       >
         <Tab label={<TabLabel name="Lookouts" />} />
         <Tab label={<TabLabel name="Shortlisted" count={actionable} />} />
-        <Tab
-          label={
-            <TabLabel
-              name="Coils"
-              count={isPremium ? status?.n_coil : null}
-              locked={!isPremium}
-            />
-          }
-        />
-        <Tab
-          label={
-            <TabLabel
-              name="Setups"
-              count={isPremium ? (status?.n_buys ?? buys?.length ?? 0) : null}
-              locked={!isPremium}
-            />
-          }
-        />
       </Tabs>
 
       <Typography sx={{ mb: 2.5, fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
@@ -139,10 +110,6 @@ export default function ScanView({
           "Post-market sector analysis. All sectors with heatmap showing turnover, breadth, and money flow. Click any row to see its 20-day shape history."}
         {subTab === 1 &&
           "Sectors worth watching — crossing or pulling back from a quiet base. A stock setup only counts if its sector is waking up."}
-        {subTab === 2 &&
-          "Individual stocks sitting in a tight, quiet base near their highs. This is a study list, ranked by how coiled they are, not a list of buys."}
-        {subTab === 3 &&
-          "The overlap: coiled stocks that sit inside a sector that is waking up. The closest this system gets to a shortlist."}
       </Typography>
 
       {/* Content */}
@@ -155,26 +122,6 @@ export default function ScanView({
           onOpen={onOpenSector}
           ready={status?.status === "ready"}
         />
-      )}
-      {subTab === 2 && (
-        isPremium ? (
-          <CoilTab
-            hits={coil}
-            misses={miss}
-            coilReady={status?.coil_ready !== false}
-            onOpenSector={onOpenSector}
-            onOpenStock={onOpenStock}
-          />
-        ) : (
-          <LockedTab name="Coils" />
-        )
-      )}
-      {subTab === 3 && (
-        isPremium ? (
-          <BuysTab rows={buys} onOpenSector={onOpenSector} onOpenStock={onOpenStock} />
-        ) : (
-          <LockedTab name="Setups" />
-        )
       )}
     </Box>
   );

@@ -1,5 +1,6 @@
 import { Box, Button, IconButton, Typography } from "@mui/material";
 import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
+import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
@@ -10,16 +11,22 @@ import { useAuth } from "../auth.jsx";
 
 const NAV_ITEMS = [
   {
-    id: "scan",
+    id: "sectors",
     Icon: GridViewRoundedIcon,
-    label: "Scan",
-    desc: "Sectors · Coils · Setups",
+    label: "Sectors",
+    desc: "Lookouts · Shortlisted",
   },
   {
-    id: "action",
+    id: "swing",
+    Icon: ShowChartRoundedIcon,
+    label: "Swing Trading",
+    desc: "Coils · Setups",
+  },
+  {
+    id: "momentum",
     Icon: TrendingUpRoundedIcon,
-    label: "For Tomorrow",
-    desc: "Momentum picks",
+    label: "Momentum",
+    desc: "For tomorrow picks",
   },
   {
     id: "track",
