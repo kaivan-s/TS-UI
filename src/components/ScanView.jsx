@@ -1,19 +1,13 @@
 import { useState } from "react";
 import {
   Box,
-  Button,
-  FormControl,
   IconButton,
-  MenuItem,
-  Select,
   Tab,
   Tabs,
-  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import { C } from "../theme.js";
 import { TabLabel } from "./ui.jsx";
 import { LockedTab } from "./Premium.jsx";
@@ -23,11 +17,6 @@ import SectorTab from "./SectorTab.jsx";
 import CoilTab from "./CoilTab.jsx";
 import BuysTab from "./BuysTab.jsx";
 
-const DAY_OPTS = [90, 120, 180, 220, 320];
-
-// 200-day EMA needs a long warm-up; below this the Coils tab stays empty.
-const COIL_MIN_SESSIONS = 220;
-
 export default function ScanView({
   // Data
   scan,
@@ -36,10 +25,6 @@ export default function ScanView({
   buys,
   status,
   // Controls
-  days,
-  end,
-  onDays,
-  onEnd,
   onRefresh,
   loading,
   // Actions
@@ -52,7 +37,7 @@ export default function ScanView({
 
   return (
     <Box>
-      {/* Tabs + compact controls on same row */}
+      {/* Tabs + refresh button */}
       <Box
         sx={{
           display: "flex",
@@ -96,61 +81,27 @@ export default function ScanView({
           />
         </Tabs>
 
-        {/* Compact controls */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <FormControl size="small">
-            <Select
-              value={days}
-              onChange={(e) => onDays(e.target.value)}
+        <Tooltip
+          title={
+            status?.job_refresh_at
+              ? `System refresh ${status.job_refresh_at.slice(11, 16)} IST — click to re-run`
+              : "The panel refreshes on its own after the close. Click to re-run now."
+          }
+          placement="top"
+          arrow
+        >
+          <span>
+            <IconButton
+              onClick={onRefresh}
               disabled={loading}
-              sx={{ minWidth: 80, fontSize: 13 }}
+              size="small"
+              sx={{ color: C.muted, "&:hover": { color: C.text } }}
             >
-              {DAY_OPTS.map((d) => (
-                <MenuItem key={d} value={d}>
-                  {d}d
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <TextField
-            type="date"
-            size="small"
-            value={end}
-            onChange={(e) => onEnd(e.target.value)}
-            disabled={loading}
-            sx={{ width: 140, "& input": { fontSize: 13 } }}
-          />
-
-          <Tooltip
-            title={
-              status?.job_refresh_at
-                ? `System refresh ${status.job_refresh_at.slice(11, 16)} IST — click to re-run`
-                : "The panel refreshes on its own after the close. Click to re-run now."
-            }
-            placement="top"
-            arrow
-          >
-            <span>
-              <IconButton
-                onClick={onRefresh}
-                disabled={loading}
-                size="small"
-                sx={{ color: C.muted, "&:hover": { color: C.text } }}
-              >
-                <RefreshIcon fontSize="small" />
-              </IconButton>
-            </span>
-          </Tooltip>
-        </Box>
+              <RefreshIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
       </Box>
-
-      {days < COIL_MIN_SESSIONS && (
-        <Typography sx={{ mb: 2, fontSize: 12.5, color: C.warn }}>
-          ⚠ Coils and Setups need at least {COIL_MIN_SESSIONS} sessions for
-          the 200-day trend line.
-        </Typography>
-      )}
 
       <Typography sx={{ mb: 2.5, fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
         {subTab === 0 &&
