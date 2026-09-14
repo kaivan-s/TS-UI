@@ -32,6 +32,11 @@ export default function CoilTab({ hits, misses, coilReady, onOpenSector, onOpenS
     );
   }, [hits, q]);
 
+  const nNew = useMemo(
+    () => hits.filter((r) => r.coil_days === 1).length,
+    [hits],
+  );
+
   if (!coilReady) {
     return (
       <Note>
@@ -63,10 +68,15 @@ export default function CoilTab({ hits, misses, coilReady, onOpenSector, onOpenS
           />
         }
       >
-        {hits.length} stocks sitting quiet and tight near their highs. Every
-        name here already cleared all seven filters — the order is just how
-        coiled each one is, so the top row is not a better buy than the
-        bottom. Hover any column heading for what it measures.
+        {hits.length} stocks sitting quiet and tight near their highs — every
+        name that cleared all seven filters, not a top slice of them. The order
+        carries no meaning: ranking by coil score showed no relationship with
+        forward returns, so the top row is not a better buy than the bottom.
+        "Coiled" counts consecutive sessions a name has qualified
+        {nNew > 0
+          ? `, and ${nNew} ${nNew === 1 ? "name" : "names"} qualified for the first time today`
+          : ""}
+        . Hover any column heading for what it measures.
       </PageIntro>
 
       {hits.length === 0 ? (
@@ -81,6 +91,11 @@ export default function CoilTab({ hits, misses, coilReady, onOpenSector, onOpenS
             <TableHead>
               <TableRow>
                 <HeadCell label="Symbol" />
+                <HeadCell
+                  label="Coiled"
+                  help="Consecutive sessions this name has cleared all seven filters. 1 means it qualified today for the first time. A long run means the base has been sitting a while without resolving."
+                  align="right"
+                />
                 <HeadCell
                   label="Sector"
                   help="Click to open the sector's full history and see whether money is rotating into it."
@@ -131,6 +146,20 @@ export default function CoilTab({ hits, misses, coilReady, onOpenSector, onOpenS
                           }}
                         />
                       </Tooltip>
+                    )}
+                  </TableCell>
+                  <TableCell align="right" className="num">
+                    {r.coil_days === 1 ? (
+                      <Chip
+                        size="small"
+                        label="New"
+                        sx={{
+                          bgcolor: "rgba(142,180,196,0.16)",
+                          color: C.accent,
+                        }}
+                      />
+                    ) : (
+                      (r.coil_days ?? "—")
                     )}
                   </TableCell>
                   <TableCell
