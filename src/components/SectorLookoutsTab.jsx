@@ -222,8 +222,8 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
     setLoading(true);
     
     Promise.all([
-      getSectorHistory(sector, 20),
-      getSectorConstituents(sector, 10),
+      getSectorHistory(sector, 30),  // Fetch 30 days
+      getSectorConstituents(sector, 15),  // Fetch 15 stocks
     ])
       .then(([histRes, constRes]) => {
         setHistory(histRes.rows || []);
@@ -237,22 +237,24 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
 
   const latest = history[history.length - 1] || {};
   const shape = latest.shape_report || {};
+  const hasHistory = history.length > 1;
 
   return (
     <Paper
       elevation={0}
       sx={{
-        p: 2,
+        p: 2.5,
         mb: 2,
         bgcolor: "rgba(255,255,255,0.02)",
         border: "1px solid rgba(238,234,227,0.08)",
         borderRadius: 2,
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <TimelineIcon sx={{ color: C.accent, fontSize: 20 }} />
-          <Typography sx={{ fontWeight: 600, fontSize: 15 }}>{sector}</Typography>
+      {/* Header */}
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <TimelineIcon sx={{ color: C.accent, fontSize: 22 }} />
+          <Typography sx={{ fontWeight: 600, fontSize: 16 }}>{sector}</Typography>
           {latest.klass && <KlassChip klass={latest.klass} />}
           {shape.verdict && <VerdictBadge verdict={shape.verdict} />}
         </Box>
@@ -260,9 +262,9 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
           <Button
             size="small"
             onClick={() => onOpenSector?.(sector)}
-            sx={{ fontSize: 12, color: C.muted }}
+            sx={{ fontSize: 12, color: C.accent }}
           >
-            Full Details
+            Full Details →
           </Button>
           <IconButton size="small" onClick={onClose}>
             <ExpandLessIcon fontSize="small" />
@@ -271,48 +273,26 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
       </Box>
 
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
           <CircularProgress size={24} />
         </Box>
       ) : (
-        <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-          {/* Time-series heatmap */}
-          <Box sx={{ flex: "1 1 400px", minWidth: 0 }}>
-            <Typography sx={{ fontSize: 12, color: C.muted, mb: 1 }}>
-              Last 20 Sessions (color = intensity)
-            </Typography>
-            <TableContainer sx={{ maxHeight: 320 }}>
-              <Table size="small" stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ py: 0.5, fontSize: 11, fontWeight: 600 }}>Date</TableCell>
-                    <TableCell sx={{ py: 0.5, fontSize: 11, fontWeight: 600 }}>State</TableCell>
-                    <TableCell align="right" sx={{ py: 0.5, fontSize: 11, fontWeight: 600 }}>T_rel</TableCell>
-                    <TableCell align="right" sx={{ py: 0.5, fontSize: 11, fontWeight: 600 }}>B</TableCell>
-                    <TableCell align="right" sx={{ py: 0.5, fontSize: 11, fontWeight: 600 }}>CMF</TableCell>
-                    <TableCell align="right" sx={{ py: 0.5, fontSize: 11, fontWeight: 600 }}>RS Δ5</TableCell>
-                    <TableCell align="right" sx={{ py: 0.5, fontSize: 11, fontWeight: 600 }}>Deliv</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {[...history].reverse().map((row) => (
-                    <HistoryRow
-                      key={row.scan_date}
-                      row={row}
-                      onClick={() => {}}
-                    />
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
+        <Box sx={{ display: "flex", gap: 3 }}>
+          {/* Left: Shape checks + Verdict */}
+          <Box sx={{ flex: "0 0 320px" }}>
+            {/* Verdict summary */}
+            {shape.verdict_text && (
+              <Box sx={{ mb: 2.5, p: 2, bgcolor: "rgba(142,180,196,0.06)", borderRadius: 1.5 }}>
+                <Typography sx={{ fontSize: 13, color: C.text, lineHeight: 1.6 }}>
+                  {shape.verdict_text}
+                </Typography>
+              </Box>
+            )}
 
-          {/* Shape report + constituents */}
-          <Box sx={{ flex: "0 0 280px" }}>
             {/* Shape checks */}
             {shape.checks?.length > 0 && (
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ fontSize: 12, color: C.muted, mb: 1 }}>
+              <Box sx={{ mb: 2.5 }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, color: C.muted, mb: 1.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                   Shape Checks
                 </Typography>
                 {shape.checks.map((c, i) => (
@@ -322,34 +302,33 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
                       display: "flex",
                       alignItems: "flex-start",
                       gap: 1,
-                      mb: 0.75,
-                      fontSize: 12,
+                      mb: 1,
                     }}
                   >
                     <Box
                       sx={{
-                        width: 16,
-                        height: 16,
+                        width: 18,
+                        height: 18,
                         borderRadius: "50%",
                         bgcolor:
                           c.ok === true
-                            ? "rgba(125,186,150,0.2)"
+                            ? "rgba(125,186,150,0.25)"
                             : c.ok === false
-                            ? "rgba(239,83,80,0.2)"
+                            ? "rgba(239,83,80,0.25)"
                             : "rgba(255,255,255,0.1)",
                         color:
                           c.ok === true ? C.good : c.ok === false ? C.bad : C.muted,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: 700,
                         flexShrink: 0,
                       }}
                     >
                       {c.ok === true ? "✓" : c.ok === false ? "✗" : "?"}
                     </Box>
-                    <Typography sx={{ fontSize: 11.5, color: C.text, lineHeight: 1.4 }}>
+                    <Typography sx={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>
                       {c.text}
                     </Typography>
                   </Box>
@@ -357,38 +336,82 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
               </Box>
             )}
 
-            {/* Verdict */}
-            {shape.verdict_text && (
-              <Box sx={{ mb: 2, p: 1.5, bgcolor: "rgba(255,255,255,0.03)", borderRadius: 1 }}>
-                <Typography sx={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>
-                  {shape.verdict_text}
-                </Typography>
-              </Box>
-            )}
-
-            {/* Top constituents */}
+            {/* Top Stocks */}
             {isPremium && constituents.length > 0 && (
               <Box>
-                <Typography sx={{ fontSize: 12, color: C.muted, mb: 1 }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 600, color: C.muted, mb: 1.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                   Top Stocks by Turnover
                 </Typography>
-                {constituents.slice(0, 8).map((s) => (
-                  <Box
-                    key={s.symbol}
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: 12,
-                      py: 0.25,
-                    }}
-                  >
-                    <Typography sx={{ fontSize: 12, fontWeight: 500 }}>{s.symbol}</Typography>
-                    <Typography sx={{ fontSize: 12, color: C.muted }}>
-                      {s.ret != null ? `${(s.ret * 100).toFixed(1)}%` : "—"}
-                    </Typography>
-                  </Box>
-                ))}
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.5 }}>
+                  {constituents.map((s) => (
+                    <Box
+                      key={s.symbol}
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        py: 0.5,
+                        px: 1,
+                        bgcolor: "rgba(255,255,255,0.02)",
+                        borderRadius: 0.5,
+                      }}
+                    >
+                      <Typography sx={{ fontSize: 11.5, fontWeight: 500 }}>{s.symbol}</Typography>
+                      <Typography
+                        sx={{
+                          fontSize: 11,
+                          color: s.ret > 0 ? C.good : s.ret < 0 ? C.bad : C.muted,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {s.ret != null ? `${(s.ret * 100).toFixed(1)}%` : "—"}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
               </Box>
+            )}
+          </Box>
+
+          {/* Right: History table */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, color: C.muted, mb: 1.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              {hasHistory ? `Last ${history.length} Sessions` : "History"} (color = intensity)
+            </Typography>
+            {history.length === 0 ? (
+              <Box sx={{ py: 3, textAlign: "center", color: C.muted, fontSize: 13 }}>
+                No historical data yet. History builds up after daily 7:30 PM scans.
+              </Box>
+            ) : (
+              <TableContainer sx={{ maxHeight: 400 }}>
+                <Table size="small" stickyHeader>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>Date</TableCell>
+                      <TableCell sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>State</TableCell>
+                      <TableCell align="right" sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>T_rel</TableCell>
+                      <TableCell align="right" sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>B</TableCell>
+                      <TableCell align="right" sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>CMF</TableCell>
+                      <TableCell align="right" sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>RS Δ5</TableCell>
+                      <TableCell align="right" sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>Deliv</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {[...history].reverse().map((row) => (
+                      <HistoryRow
+                        key={row.scan_date}
+                        row={row}
+                        onClick={() => {}}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
+            {history.length === 1 && (
+              <Typography sx={{ mt: 1.5, fontSize: 11, color: C.muted, fontStyle: "italic" }}>
+                More history will appear as daily scans accumulate.
+              </Typography>
             )}
           </Box>
         </Box>

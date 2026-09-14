@@ -58,7 +58,8 @@ export default function SectorTab({ rows, onOpen, ready }) {
     const c = { all: rows.length, actionable: 0, buy_ready: 0 };
     for (const r of rows) {
       c[r.klass] = (c[r.klass] || 0) + 1;
-      if (r.klass === "CROSSING" || r.klass === "PULLBACK") c.actionable += 1;
+      // Include BASE in "worth a look" — quiet accumulation can be a buying opportunity
+      if (r.klass === "CROSSING" || r.klass === "PULLBACK" || r.klass === "BASE") c.actionable += 1;
       if (r.buy_ready) c.buy_ready += 1;
     }
     return c;
@@ -69,7 +70,8 @@ export default function SectorTab({ rows, onOpen, ready }) {
       if (filter === "buy_ready") {
         if (!r.buy_ready) return false;
       } else if (filter === "actionable") {
-        if (r.klass !== "CROSSING" && r.klass !== "PULLBACK") return false;
+        // Include BASE in "worth a look"
+        if (r.klass !== "CROSSING" && r.klass !== "PULLBACK" && r.klass !== "BASE") return false;
       } else if (filter !== "all" && r.klass !== filter) {
         return false;
       }

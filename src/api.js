@@ -58,5 +58,5 @@ export const getSectorLookouts = (date = null) => {
 export const getSectorHistory = (sector, days = 20) =>
   json(`/api/sector-lookouts/history?sector=${encodeURIComponent(sector)}&days=${days}`);
 
-export const getSectorConstituents = (sector, top = 10) =>
+export const getSectorConstituents = (sector, top = 15) =>
   json(`/api/sector-lookouts/constituents?sector=${encodeURIComponent(sector)}&top=${top}`);
