@@ -14,13 +14,13 @@ const NAV_ITEMS = [
     id: "sectors",
     Icon: GridViewRoundedIcon,
     label: "Sectors",
-    desc: "Lookouts · Shortlisted",
+    desc: "Lookouts · Shortlisted · Setups",
   },
   {
     id: "swing",
     Icon: ShowChartRoundedIcon,
     label: "Swing Trading",
-    desc: "Coils · Setups",
+    desc: "Coiled bases",
   },
   {
     id: "momentum",

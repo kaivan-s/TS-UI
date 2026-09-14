@@ -221,8 +221,10 @@ export default function App() {
           {view === "sectors" && (
             <SectorsView
               scan={scan}
+              buys={buys}
               status={status}
               onOpenSector={openSector}
+              onOpenStock={openStock}
             />
           )}
 
@@ -230,7 +232,6 @@ export default function App() {
             <SwingView
               coil={coil}
               miss={miss}
-              buys={buys}
               status={status}
               onOpenSector={openSector}
               onOpenStock={openStock}
