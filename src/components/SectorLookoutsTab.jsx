@@ -14,24 +14,19 @@ import {
   Button,
   Chip,
   CircularProgress,
-  FormControl,
   IconButton,
-  MenuItem,
   Paper,
-  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import TimelineIcon from "@mui/icons-material/Timeline";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import KlassChip from "./KlassChip.jsx";
 import { HeadCell, Note } from "./ui.jsx";
 import { useAuth } from "../auth.jsx";
@@ -512,41 +507,30 @@ function SectorRow({ row, expanded, onToggle, isPremium }) {
 
 // Main component
 export default function SectorLookoutsTab({ onOpenSector }) {
-  const [data, setData] = useState({ rows: [], scan_date: null, dates: [] });
+  const [data, setData] = useState({ rows: [], scan_date: null });
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState("");
   const [expandedSector, setExpandedSector] = useState(null);
   const { isPremium } = useAuth();
 
-  const fetchData = useCallback((date = null) => {
+  const fetchData = useCallback(() => {
     setLoading(true);
     
-    getSectorLookouts(date)
+    getSectorLookouts()
       .then((res) => {
         // Ensure rows is always an array
         const safeData = {
           rows: res?.rows || [],
           scan_date: res?.scan_date || null,
-          dates: res?.dates || [],
         };
         setData(safeData);
-        if (!selectedDate && safeData.scan_date) {
-          setSelectedDate(safeData.scan_date);
-        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [selectedDate]);
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
-
-  const handleDateChange = (e) => {
-    const d = e.target.value;
-    setSelectedDate(d);
-    fetchData(d);
-  };
+  }, [fetchData]);
 
   // Sort: CROSSING first, then PULLBACK, then by T_rel (show ALL sectors)
   const sorted = useMemo(() => {
@@ -564,38 +548,11 @@ export default function SectorLookoutsTab({ onOpenSector }) {
 
   return (
     <Box>
-      {/* Header with date selector */}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+      {/* Header */}
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
         <Typography sx={{ fontSize: 13, color: C.muted }}>
-          {sectorCount} sectors
+          {sectorCount} sectors {data.scan_date && `· ${data.scan_date}`}
         </Typography>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <FormControl size="small">
-            <Select
-              value={selectedDate}
-              onChange={handleDateChange}
-              disabled={loading}
-              displayEmpty
-              sx={{ minWidth: 130, fontSize: 12 }}
-            >
-              {(data.dates || []).map((d) => (
-                <MenuItem key={d} value={d} sx={{ fontSize: 12 }}>
-                  {d}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Tooltip title="Refresh data">
-            <IconButton
-              size="small"
-              onClick={() => fetchData(selectedDate)}
-              disabled={loading}
-              sx={{ color: C.muted }}
-            >
-              <RefreshIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
       </Box>
 
       <Note>

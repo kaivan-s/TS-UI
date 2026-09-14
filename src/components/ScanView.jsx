@@ -1,13 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
-  IconButton,
   Tab,
   Tabs,
-  Tooltip,
   Typography,
 } from "@mui/material";
-import RefreshIcon from "@mui/icons-material/Refresh";
+import ScheduleIcon from "@mui/icons-material/Schedule";
 import { C } from "../theme.js";
 import { TabLabel } from "./ui.jsx";
 import { LockedTab } from "./Premium.jsx";
@@ -17,6 +15,51 @@ import SectorTab from "./SectorTab.jsx";
 import CoilTab from "./CoilTab.jsx";
 import BuysTab from "./BuysTab.jsx";
 
+// Check if current time is in the "waiting for update" window (3:30 PM - 7:30 PM IST on weekdays)
+function useUpdateStatus(asOf) {
+  const [status, setStatus] = useState({ waiting: false, message: "" });
+
+  useEffect(() => {
+    const checkStatus = () => {
+      const now = new Date();
+      // Convert to IST (UTC+5:30)
+      const istOffset = 5.5 * 60 * 60 * 1000;
+      const ist = new Date(now.getTime() + istOffset + now.getTimezoneOffset() * 60 * 1000);
+      
+      const hour = ist.getHours();
+      const minute = ist.getMinutes();
+      const day = ist.getDay(); // 0 = Sunday, 6 = Saturday
+      const timeInMinutes = hour * 60 + minute;
+      
+      // Weekday check (Monday-Friday)
+      const isWeekday = day >= 1 && day <= 5;
+      
+      // 3:30 PM = 15:30 = 930 minutes, 7:30 PM = 19:30 = 1170 minutes
+      const marketClose = 15 * 60 + 30; // 3:30 PM
+      const updateTime = 19 * 60 + 30;  // 7:30 PM
+      
+      // Check if today's data is already loaded
+      const today = ist.toISOString().split("T")[0];
+      const hasToday = asOf === today;
+      
+      if (isWeekday && timeInMinutes >= marketClose && timeInMinutes < updateTime && !hasToday) {
+        setStatus({
+          waiting: true,
+          message: "Market closed. Today's post-market data will be available after 7:30 PM IST.",
+        });
+      } else {
+        setStatus({ waiting: false, message: "" });
+      }
+    };
+
+    checkStatus();
+    const interval = setInterval(checkStatus, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, [asOf]);
+
+  return status;
+}
+
 export default function ScanView({
   // Data
   scan,
@@ -24,9 +67,6 @@ export default function ScanView({
   miss,
   buys,
   status,
-  // Controls
-  onRefresh,
-  loading,
   // Actions
   onOpenSector,
   onOpenStock,
@@ -34,74 +74,65 @@ export default function ScanView({
   const [subTab, setSubTab] = useState(0);
   const { isPremium } = useAuth();
   const actionable = status?.actionable ?? 0;
+  const updateStatus = useUpdateStatus(status?.as_of);
 
   return (
     <Box>
-      {/* Tabs + refresh button */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 1,
-          mb: 2,
-        }}
-      >
-        <Tabs
-          value={subTab}
-          onChange={(_, v) => setSubTab(v)}
+      {/* Waiting for update banner */}
+      {updateStatus.waiting && (
+        <Box
           sx={{
-            minHeight: 40,
-            "& .MuiTab-root": {
-              minHeight: 40,
-              py: 1,
-            },
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            mb: 2,
+            p: 1.5,
+            bgcolor: "rgba(255,167,38,0.08)",
+            border: "1px solid rgba(255,167,38,0.2)",
+            borderRadius: 1.5,
           }}
         >
-          <Tab label={<TabLabel name="Lookouts" />} />
-          <Tab label={<TabLabel name="Shortlisted" count={actionable} />} />
-          <Tab
-            label={
-              <TabLabel
-                name="Coils"
-                count={isPremium ? status?.n_coil : null}
-                locked={!isPremium}
-              />
-            }
-          />
-          <Tab
-            label={
-              <TabLabel
-                name="Setups"
-                count={isPremium ? (status?.n_buys ?? buys?.length ?? 0) : null}
-                locked={!isPremium}
-              />
-            }
-          />
-        </Tabs>
+          <ScheduleIcon sx={{ fontSize: 18, color: "#ffa726" }} />
+          <Typography sx={{ fontSize: 13, color: "#ffa726" }}>
+            {updateStatus.message}
+          </Typography>
+        </Box>
+      )}
 
-        <Tooltip
-          title={
-            status?.job_refresh_at
-              ? `System refresh ${status.job_refresh_at.slice(11, 16)} IST — click to re-run`
-              : "The panel refreshes on its own after the close. Click to re-run now."
+      {/* Tabs */}
+      <Tabs
+        value={subTab}
+        onChange={(_, v) => setSubTab(v)}
+        sx={{
+          minHeight: 40,
+          mb: 2,
+          "& .MuiTab-root": {
+            minHeight: 40,
+            py: 1,
+          },
+        }}
+      >
+        <Tab label={<TabLabel name="Lookouts" />} />
+        <Tab label={<TabLabel name="Shortlisted" count={actionable} />} />
+        <Tab
+          label={
+            <TabLabel
+              name="Coils"
+              count={isPremium ? status?.n_coil : null}
+              locked={!isPremium}
+            />
           }
-          placement="top"
-          arrow
-        >
-          <span>
-            <IconButton
-              onClick={onRefresh}
-              disabled={loading}
-              size="small"
-              sx={{ color: C.muted, "&:hover": { color: C.text } }}
-            >
-              <RefreshIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-      </Box>
+        />
+        <Tab
+          label={
+            <TabLabel
+              name="Setups"
+              count={isPremium ? (status?.n_buys ?? buys?.length ?? 0) : null}
+              locked={!isPremium}
+            />
+          }
+        />
+      </Tabs>
 
       <Typography sx={{ mb: 2.5, fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
         {subTab === 0 &&

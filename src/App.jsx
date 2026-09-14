@@ -223,12 +223,6 @@ export default function App() {
               miss={miss}
               buys={buys}
               status={status}
-              days={days}
-              end={end}
-              onDays={setDays}
-              onEnd={setEnd}
-              onRefresh={onRefresh}
-              loading={loading}
               onOpenSector={openSector}
               onOpenStock={openStock}
             />
