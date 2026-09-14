@@ -8,7 +8,7 @@
  * - Constituent stocks for actionable sectors
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -641,15 +641,6 @@ export default function SectorLookoutsTab({ onOpenSector }) {
         </Note>
       ) : (
         <>
-          {/* Expanded sector panel */}
-          <Collapse in={!!expandedSector}>
-            <SectorHistoryPanel
-              sector={expandedSector}
-              onClose={() => setExpandedSector(null)}
-              onOpenSector={onOpenSector}
-            />
-          </Collapse>
-
           {/* Cross-sectional heatmap table */}
           <TableContainer>
             <Table stickyHeader size="small">
@@ -667,15 +658,28 @@ export default function SectorLookoutsTab({ onOpenSector }) {
               </TableHead>
               <TableBody>
                 {sorted.map((row) => (
-                  <SectorRow
-                    key={row.sector}
-                    row={row}
-                    expanded={expandedSector === row.sector}
-                    onToggle={() =>
-                      setExpandedSector(expandedSector === row.sector ? null : row.sector)
-                    }
-                    isPremium={isPremium}
-                  />
+                  <React.Fragment key={row.sector}>
+                    <SectorRow
+                      row={row}
+                      expanded={expandedSector === row.sector}
+                      onToggle={() =>
+                        setExpandedSector(expandedSector === row.sector ? null : row.sector)
+                      }
+                      isPremium={isPremium}
+                    />
+                    {/* Inline expanded panel below the row */}
+                    {expandedSector === row.sector && (
+                      <TableRow>
+                        <TableCell colSpan={8} sx={{ p: 0, border: 0 }}>
+                          <SectorHistoryPanel
+                            sector={row.sector}
+                            onClose={() => setExpandedSector(null)}
+                            onOpenSector={onOpenSector}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 ))}
                 {sorted.length === 0 && (
                   <TableRow>
