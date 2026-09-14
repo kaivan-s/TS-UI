@@ -72,7 +72,7 @@ export default function TomTab({
               disabled={scanning}
               sx={{ height: 38, px: 2, whiteSpace: "nowrap" }}
             >
-              {scanning ? "Scanning…" : "Scan now"}
+                {scanning ? "Scanning…" : "Re-scan"}
             </Button>
           ) : (
             <Typography
@@ -84,12 +84,11 @@ export default function TomTab({
           )
         }
       >
-        Stocks sitting near their breakout level, ranked by momentum. Press{" "}
-        <strong>Scan now</strong> to refresh with the latest prices — live
-        during market hours (9:15–15:30) or official closing prices after the
-        session. "THROUGH" means the price has already closed above the
-        breakout level and is the strongest signal. Everything else is still
-        building towards it.
+        Stocks sitting near their breakout level, ranked by momentum. The
+        system scans this list on its own — live around midday, then again
+        after 15:35 IST with closing prices. <strong>Re-scan</strong> is only
+        if you want a fresh pass now. "THROUGH" means the price has already
+        closed above the breakout level and is the strongest signal.
       </PageIntro>
 
       {staleEod && (

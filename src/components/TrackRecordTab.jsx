@@ -25,15 +25,41 @@ import { closeGain, fmtDate, num, pct, predScore, reachedGain, reachedLabel } fr
 import { getTrackRecord, verifyOutcomes } from "../api.js";
 import { KIND_HELP, STAT_HELP } from "../glossary.js";
 
-function isTodayScan(scanDate) {
-  if (!scanDate) return false;
-  const now = new Date();
-  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-  const ist = new Date(utc + 5.5 * 3600000);
-  const y = ist.getFullYear();
-  const m = String(ist.getMonth() + 1).padStart(2, "0");
-  const d = String(ist.getDate()).padStart(2, "0");
-  return String(scanDate).slice(0, 10) === `${y}-${m}-${d}`;
+function CalendarBanner({ calendar, scanDate }) {
+  if (!calendar) return null;
+  const last = calendar.last_session;
+  const next = calendar.next_session || calendar.verify_session;
+  const showingLast = scanDate && last && String(scanDate).slice(0, 10) === last;
+
+  let text = "";
+  if (calendar.today_holiday) {
+    const when = calendar.today_kind === "weekend" ? "the weekend" : "a market holiday";
+    text = `NSE is closed today (${when}). You're looking at the last session${
+      last ? ` (${fmtDate(last)})` : ""
+    }. Come back ${next ? fmtDate(next) : "next trading day"} after the close for a fresh scan and scored results.`;
+  } else if (calendar.yesterday_holiday && showingLast) {
+    text = `Yesterday was not a trading session. Showing the last scan${
+      last ? ` from ${fmtDate(last)}` : ""
+    }. Today's picks score after this session closes.`;
+  } else {
+    return null;
+  }
+
+  return (
+    <Box
+      sx={{
+        mb: 3,
+        px: 2,
+        py: 1.25,
+        borderLeft: `2px solid ${C.warn}`,
+        bgcolor: "rgba(196,164,106,0.08)",
+      }}
+    >
+      <Typography sx={{ fontSize: 14.5, lineHeight: 1.6, color: C.warn }}>
+        {text}
+      </Typography>
+    </Box>
+  );
 }
 
 const KIND_COLORS = {
@@ -207,7 +233,7 @@ export default function TrackRecordTab({ onOpenStock }) {
   const newer = dateIdx > 0 ? dates[dateIdx - 1] : null;
   // API tells us whether the next session has completed (outcomes are real)
   const outcomesReady = data.outcomes_ready ?? false;
-  const todayList = isTodayScan(scanDate);
+  const calendar = data.calendar || null;
   // Show pending if outcomes aren't ready, even if DB has stale data
   const showPending = !outcomesReady;
   const avgClose = (() => {
@@ -278,13 +304,15 @@ export default function TrackRecordTab({ onOpenStock }) {
           </Box>
         }
       >
-        Did last session's picks actually break out? Use the arrows to step
-        through past scan dates. <strong>Verify</strong> fills in the next-day
-        results for any date that is missing them. Each metric shows its{" "}
-        <em>base rate</em> — the same number for every stock that passed the
-        scan's hard filters, before the ranking. Without that comparison the
-        raw numbers look good by construction.
+        Did last session's picks actually break out? Weekends and holidays are
+        skipped — the default date is the previous trading day, and results
+        post only after the next session closes. Use the arrows to step through
+        past scans. <strong>Verify</strong> fills in missing next-session
+        numbers. Each metric shows its <em>base rate</em> — the same number for
+        every stock that passed the scan's hard filters, before the ranking.
       </PageIntro>
+
+      <CalendarBanner calendar={calendar} scanDate={scanDate} />
 
       {error && (
         <Note>
@@ -489,7 +517,11 @@ export default function TrackRecordTab({ onOpenStock }) {
                             )
                           ) : (
                             <Typography variant="caption" color="text.secondary">
-                              {showPending ? "Awaiting next session" : "Pending"}
+                              {showPending
+                                ? (calendar?.verify_session
+                                  ? `Awaiting ${fmtDate(calendar.verify_session)}`
+                                  : "Awaiting next session")
+                                : "Pending"}
                             </Typography>
                           )}
                         </TableCell>
