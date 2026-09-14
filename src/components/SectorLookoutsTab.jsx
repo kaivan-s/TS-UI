@@ -14,7 +14,6 @@ import {
   Button,
   Chip,
   CircularProgress,
-  Collapse,
   FormControl,
   IconButton,
   MenuItem,
@@ -498,7 +497,6 @@ export default function SectorLookoutsTab({ onOpenSector }) {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
   const [expandedSector, setExpandedSector] = useState(null);
-  const [filter, setFilter] = useState("actionable");
   const { isPremium } = useAuth();
 
   const fetchData = useCallback((date = null) => {
@@ -531,72 +529,27 @@ export default function SectorLookoutsTab({ onOpenSector }) {
     fetchData(d);
   };
 
-  const counts = useMemo(() => {
-    const rows = data.rows || [];
-    const c = { all: rows.length, actionable: 0 };
-    for (const r of rows) {
-      c[r.klass] = (c[r.klass] || 0) + 1;
-      if (r.klass === "CROSSING" || r.klass === "PULLBACK") c.actionable += 1;
-    }
-    return c;
-  }, [data.rows]);
-
-  const shown = useMemo(() => {
-    const rows = data.rows || [];
-    return rows.filter((r) => {
-      if (filter === "actionable") {
-        return r.klass === "CROSSING" || r.klass === "PULLBACK";
-      }
-      if (filter !== "all") {
-        return r.klass === filter;
-      }
-      return true;
-    });
-  }, [data.rows, filter]);
-
-  // Sort: CROSSING first, then PULLBACK, then by T_rel
+  // Sort: CROSSING first, then PULLBACK, then by T_rel (show ALL sectors)
   const sorted = useMemo(() => {
-    const order = { CROSSING: 0, PULLBACK: 1, CROSSING_UNVERIFIED: 2, BASE: 3 };
-    return [...(shown || [])].sort((a, b) => {
+    const rows = data.rows || [];
+    const order = { CROSSING: 0, PULLBACK: 1, CROSSING_UNVERIFIED: 2, BASE: 3, NEGLECT: 4, DISQUALIFIED: 5, NONE: 6 };
+    return [...rows].sort((a, b) => {
       const oa = order[a.klass] ?? 99;
       const ob = order[b.klass] ?? 99;
       if (oa !== ob) return oa - ob;
       return (b.t_rel || 0) - (a.t_rel || 0);
     });
-  }, [shown]);
+  }, [data.rows]);
 
-  const filters = ["actionable", "CROSSING", "PULLBACK", "BASE", "all"];
-  const filterLabels = {
-    actionable: "Worth a Look",
-    CROSSING: "Crossing",
-    PULLBACK: "Pullback",
-    BASE: "Base",
-    all: "All",
-  };
+  const sectorCount = (data.rows || []).length;
 
   return (
     <Box>
       {/* Header with date selector */}
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {filters.map((f) => (
-            <Chip
-              key={f}
-              label={`${filterLabels[f]} ${counts[f] || 0}`}
-              onClick={() => setFilter(f)}
-              variant={filter === f ? "filled" : "outlined"}
-              size="small"
-              sx={{
-                borderColor: filter === f ? "transparent" : "rgba(238,234,227,0.10)",
-                bgcolor: filter === f ? C.text : "transparent",
-                color: filter === f ? C.bg : C.muted,
-                "&:hover": {
-                  bgcolor: filter === f ? "#d8d4cd" : "rgba(238,234,227,0.04)",
-                },
-              }}
-            />
-          ))}
-        </Box>
+        <Typography sx={{ fontSize: 13, color: C.muted }}>
+          {sectorCount} sectors
+        </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <FormControl size="small">
             <Select
@@ -684,7 +637,7 @@ export default function SectorLookoutsTab({ onOpenSector }) {
                 {sorted.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} sx={{ color: C.muted, py: 4, textAlign: "center" }}>
-                      No sectors in this filter.
+                      No sector data available.
                     </TableCell>
                   </TableRow>
                 )}

@@ -75,7 +75,7 @@ export default function ScanView({
           }}
         >
           <Tab label={<TabLabel name="Lookouts" />} />
-          <Tab label={<TabLabel name="Sectors" count={actionable} />} />
+          <Tab label={<TabLabel name="Shortlisted" count={actionable} />} />
           <Tab
             label={
               <TabLabel
@@ -154,9 +154,9 @@ export default function ScanView({
 
       <Typography sx={{ mb: 2.5, fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>
         {subTab === 0 &&
-          "Post-market sector analysis with heatmaps. See which sectors are waking up, their shape history, and top stocks. Updated daily at 7:30 PM."}
+          "Post-market sector analysis. All sectors with heatmap showing turnover, breadth, and money flow. Click any row to see its 20-day shape history."}
         {subTab === 1 &&
-          "Which industries money is rotating into. Start here — a stock setup only counts if its sector is waking up. Click any row for the full history."}
+          "Sectors worth watching — crossing or pulling back from a quiet base. A stock setup only counts if its sector is waking up."}
         {subTab === 2 &&
           "Individual stocks sitting in a tight, quiet base near their highs. This is a study list, ranked by how coiled they are, not a list of buys."}
         {subTab === 3 &&
