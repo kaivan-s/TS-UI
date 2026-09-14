@@ -512,9 +512,15 @@ export default function SectorLookoutsTab({ onOpenSector }) {
     fetch(url)
       .then((r) => r.json())
       .then((res) => {
-        setData(res);
-        if (!selectedDate && res.scan_date) {
-          setSelectedDate(res.scan_date);
+        // Ensure rows is always an array
+        const safeData = {
+          rows: res?.rows || [],
+          scan_date: res?.scan_date || null,
+          dates: res?.dates || [],
+        };
+        setData(safeData);
+        if (!selectedDate && safeData.scan_date) {
+          setSelectedDate(safeData.scan_date);
         }
       })
       .catch(console.error)
@@ -532,8 +538,9 @@ export default function SectorLookoutsTab({ onOpenSector }) {
   };
 
   const counts = useMemo(() => {
-    const c = { all: data.rows.length, actionable: 0 };
-    for (const r of data.rows) {
+    const rows = data.rows || [];
+    const c = { all: rows.length, actionable: 0 };
+    for (const r of rows) {
       c[r.klass] = (c[r.klass] || 0) + 1;
       if (r.klass === "CROSSING" || r.klass === "PULLBACK") c.actionable += 1;
     }
@@ -541,7 +548,8 @@ export default function SectorLookoutsTab({ onOpenSector }) {
   }, [data.rows]);
 
   const shown = useMemo(() => {
-    return data.rows.filter((r) => {
+    const rows = data.rows || [];
+    return rows.filter((r) => {
       if (filter === "actionable") {
         return r.klass === "CROSSING" || r.klass === "PULLBACK";
       }
@@ -555,7 +563,7 @@ export default function SectorLookoutsTab({ onOpenSector }) {
   // Sort: CROSSING first, then PULLBACK, then by T_rel
   const sorted = useMemo(() => {
     const order = { CROSSING: 0, PULLBACK: 1, CROSSING_UNVERIFIED: 2, BASE: 3 };
-    return [...shown].sort((a, b) => {
+    return [...(shown || [])].sort((a, b) => {
       const oa = order[a.klass] ?? 99;
       const ob = order[b.klass] ?? 99;
       if (oa !== ob) return oa - ob;
@@ -604,7 +612,7 @@ export default function SectorLookoutsTab({ onOpenSector }) {
               displayEmpty
               sx={{ minWidth: 130, fontSize: 12 }}
             >
-              {data.dates.map((d) => (
+              {(data.dates || []).map((d) => (
                 <MenuItem key={d} value={d} sx={{ fontSize: 12 }}>
                   {d}
                 </MenuItem>
@@ -633,7 +641,7 @@ export default function SectorLookoutsTab({ onOpenSector }) {
         <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
           <CircularProgress size={28} />
         </Box>
-      ) : data.rows.length === 0 ? (
+      ) : (data.rows || []).length === 0 ? (
         <Note>
           No sector lookout data for this date. Data is saved automatically at 7:30 PM IST after market close.
         </Note>
