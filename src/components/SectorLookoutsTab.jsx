@@ -277,125 +277,86 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
           <CircularProgress size={24} />
         </Box>
       ) : (
-        <Box sx={{ display: "flex", gap: 3 }}>
-          {/* Left: Shape checks + Verdict */}
-          <Box sx={{ flex: "0 0 320px" }}>
+        <Box>
+          {/* Top row: Verdict + Shape Checks + History - all horizontal */}
+          <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
             {/* Verdict summary */}
             {shape.verdict_text && (
-              <Box sx={{ mb: 2.5, p: 2, bgcolor: "rgba(142,180,196,0.06)", borderRadius: 1.5 }}>
-                <Typography sx={{ fontSize: 13, color: C.text, lineHeight: 1.6 }}>
+              <Box sx={{ flex: "0 0 auto", maxWidth: 280, p: 1.5, bgcolor: "rgba(142,180,196,0.06)", borderRadius: 1.5 }}>
+                <Typography sx={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>
                   {shape.verdict_text}
                 </Typography>
               </Box>
             )}
 
-            {/* Shape checks */}
+            {/* Shape checks - compact horizontal */}
             {shape.checks?.length > 0 && (
-              <Box sx={{ mb: 2.5 }}>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: C.muted, mb: 1.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              <Box sx={{ flex: "0 0 auto" }}>
+                <Typography sx={{ fontSize: 11, fontWeight: 600, color: C.muted, mb: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>
                   Shape Checks
                 </Typography>
-                {shape.checks.map((c, i) => (
-                  <Box
-                    key={i}
-                    sx={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: 1,
-                      mb: 1,
-                    }}
-                  >
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                  {shape.checks.map((c, i) => (
                     <Box
+                      key={i}
                       sx={{
-                        width: 18,
-                        height: 18,
-                        borderRadius: "50%",
-                        bgcolor:
-                          c.ok === true
-                            ? "rgba(125,186,150,0.25)"
-                            : c.ok === false
-                            ? "rgba(239,83,80,0.25)"
-                            : "rgba(255,255,255,0.1)",
-                        color:
-                          c.ok === true ? C.good : c.ok === false ? C.bad : C.muted,
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {c.ok === true ? "✓" : c.ok === false ? "✗" : "?"}
-                    </Box>
-                    <Typography sx={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>
-                      {c.text}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            )}
-
-            {/* Top Stocks - Horizontal layout */}
-            {isPremium && constituents.length > 0 && (
-              <Box>
-                <Typography sx={{ fontSize: 12, fontWeight: 600, color: C.muted, mb: 1.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Top Stocks by Turnover
-                </Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                  {constituents.map((s) => (
-                    <Box
-                      key={s.symbol}
-                      sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
                         gap: 0.75,
-                        py: 0.5,
-                        px: 1.25,
-                        bgcolor: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(238,234,227,0.06)",
-                        borderRadius: 1,
-                        "&:hover": { bgcolor: "rgba(255,255,255,0.05)" },
                       }}
                     >
-                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: C.text }}>{s.symbol}</Typography>
-                      <Typography
+                      <Box
                         sx={{
-                          fontSize: 11,
-                          color: s.ret > 0 ? C.good : s.ret < 0 ? C.bad : C.muted,
-                          fontWeight: 600,
+                          width: 16,
+                          height: 16,
+                          borderRadius: "50%",
+                          bgcolor:
+                            c.ok === true
+                              ? "rgba(125,186,150,0.25)"
+                              : c.ok === false
+                              ? "rgba(239,83,80,0.25)"
+                              : "rgba(255,255,255,0.1)",
+                          color:
+                            c.ok === true ? C.good : c.ok === false ? C.bad : C.muted,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          flexShrink: 0,
                         }}
                       >
-                        {s.ret != null ? `${s.ret > 0 ? "+" : ""}${(s.ret * 100).toFixed(1)}%` : "—"}
+                        {c.ok === true ? "✓" : c.ok === false ? "✗" : "?"}
+                      </Box>
+                      <Typography sx={{ fontSize: 11, color: C.text, lineHeight: 1.3 }}>
+                        {c.text}
                       </Typography>
                     </Box>
                   ))}
                 </Box>
               </Box>
             )}
-          </Box>
 
-          {/* Right: History table */}
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: 12, fontWeight: 600, color: C.muted, mb: 1.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
-              {hasHistory ? `Last ${history.length} Sessions` : "History"} (color = intensity)
-            </Typography>
-            {history.length === 0 ? (
-              <Box sx={{ py: 3, textAlign: "center", color: C.muted, fontSize: 13 }}>
-                No historical data yet. History builds up after daily 7:30 PM scans.
-              </Box>
-            ) : (
-              <TableContainer sx={{ maxHeight: 400 }}>
-                <Table size="small" stickyHeader>
+            {/* History table - takes remaining space */}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 600, color: C.muted, mb: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                {hasHistory ? `Last ${history.length} Sessions` : "History"}
+              </Typography>
+              {history.length === 0 ? (
+                <Typography sx={{ fontSize: 12, color: C.muted }}>
+                  No history yet. Builds after daily 7:30 PM scans.
+                </Typography>
+              ) : (
+                <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>Date</TableCell>
-                      <TableCell sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>State</TableCell>
-                      <TableCell align="right" sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>T_rel</TableCell>
-                      <TableCell align="right" sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>B</TableCell>
-                      <TableCell align="right" sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>CMF</TableCell>
-                      <TableCell align="right" sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>RS Δ5</TableCell>
-                      <TableCell align="right" sx={{ py: 0.75, fontSize: 11, fontWeight: 600, bgcolor: C.bg }}>Deliv</TableCell>
+                      <TableCell sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>Date</TableCell>
+                      <TableCell sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>State</TableCell>
+                      <TableCell align="right" sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>T_rel</TableCell>
+                      <TableCell align="right" sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>B</TableCell>
+                      <TableCell align="right" sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>CMF</TableCell>
+                      <TableCell align="right" sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>RS Δ5</TableCell>
+                      <TableCell align="right" sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>Deliv</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -408,14 +369,47 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
                     ))}
                   </TableBody>
                 </Table>
-              </TableContainer>
-            )}
-            {history.length === 1 && (
-              <Typography sx={{ mt: 1.5, fontSize: 11, color: C.muted, fontStyle: "italic" }}>
-                More history will appear as daily scans accumulate.
-              </Typography>
-            )}
+              )}
+            </Box>
           </Box>
+
+          {/* Bottom: Top Stocks - full width horizontal */}
+          {isPremium && constituents.length > 0 && (
+            <Box sx={{ pt: 1.5, borderTop: "1px solid rgba(238,234,227,0.06)" }}>
+              <Typography sx={{ fontSize: 11, fontWeight: 600, color: C.muted, mb: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                Top Stocks by Turnover
+              </Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+                {constituents.map((s) => (
+                  <Box
+                    key={s.symbol}
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      py: 0.35,
+                      px: 1,
+                      bgcolor: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(238,234,227,0.06)",
+                      borderRadius: 0.75,
+                      "&:hover": { bgcolor: "rgba(255,255,255,0.05)" },
+                    }}
+                  >
+                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: C.text }}>{s.symbol}</Typography>
+                    <Typography
+                      sx={{
+                        fontSize: 10,
+                        color: s.ret > 0 ? C.good : s.ret < 0 ? C.bad : C.muted,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {s.ret != null ? `${s.ret > 0 ? "+" : ""}${(s.ret * 100).toFixed(1)}%` : "—"}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
         </Box>
       )}
     </Paper>
