@@ -45,11 +45,14 @@ export default function Sidebar({ active, onChange, counts }) {
         minWidth: 220,
         borderRight: `1px solid ${C.line}`,
         bgcolor: C.bg,
-        minHeight: "100vh",
-        position: "sticky",
+        height: "100vh",
+        position: "fixed",
         top: 0,
+        left: 0,
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
+        zIndex: 1000,
       }}
     >
       {/* Logo / Brand */}

@@ -173,7 +173,7 @@ export default function App() {
       <Sidebar active={view} onChange={setView} counts={counts} />
 
       {/* Main content */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, ml: "220px" }}>
         {/* Header */}
         <Header
           status={status}

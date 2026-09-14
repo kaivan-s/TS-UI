@@ -48,3 +48,15 @@ export const getTrackRecord = (scanDate = null, kind = null) => {
 
 export const verifyOutcomes = () =>
   json("/api/verify-outcomes", { method: "POST", body: "{}" });
+
+// Sector Lookouts
+export const getSectorLookouts = (date = null) => {
+  const q = date ? `?date=${date}` : "";
+  return json(`/api/sector-lookouts${q}`);
+};
+
+export const getSectorHistory = (sector, days = 20) =>
+  json(`/api/sector-lookouts/history?sector=${encodeURIComponent(sector)}&days=${days}`);
+
+export const getSectorConstituents = (sector, top = 10) =>
+  json(`/api/sector-lookouts/constituents?sector=${encodeURIComponent(sector)}&top=${top}`);

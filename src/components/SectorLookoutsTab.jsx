@@ -38,7 +38,7 @@ import { HeadCell, Note } from "./ui.jsx";
 import { useAuth } from "../auth.jsx";
 import { C } from "../theme.js";
 import { num, signed, pct } from "../format.js";
-import { apiUrl } from "../config.js";
+import { getSectorLookouts, getSectorHistory, getSectorConstituents } from "../api.js";
 
 // Heatmap color scales
 const HEATMAP_COLORS = {
@@ -223,10 +223,8 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
     setLoading(true);
     
     Promise.all([
-      fetch(apiUrl(`/api/sector-lookouts/history?sector=${encodeURIComponent(sector)}&days=20`))
-        .then((r) => r.json()),
-      fetch(apiUrl(`/api/sector-lookouts/constituents?sector=${encodeURIComponent(sector)}&top=10`))
-        .then((r) => r.json()),
+      getSectorHistory(sector, 20),
+      getSectorConstituents(sector, 10),
     ])
       .then(([histRes, constRes]) => {
         setHistory(histRes.rows || []);
@@ -505,12 +503,8 @@ export default function SectorLookoutsTab({ onOpenSector }) {
 
   const fetchData = useCallback((date = null) => {
     setLoading(true);
-    const url = date
-      ? apiUrl(`/api/sector-lookouts?date=${date}`)
-      : apiUrl("/api/sector-lookouts");
     
-    fetch(url)
-      .then((r) => r.json())
+    getSectorLookouts(date)
       .then((res) => {
         // Ensure rows is always an array
         const safeData = {
