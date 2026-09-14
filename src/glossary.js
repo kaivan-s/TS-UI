@@ -234,6 +234,42 @@ export const STATES = {
   },
 };
 
+/**
+ * Three user-facing states over the seven the scan computes.
+ *
+ * The full set is machinery. A reader only needs to know whether a sector is
+ * feeding the shortlist, worth following, or out — so the chip shows the
+ * group and the tooltip carries the specific state behind it.
+ *
+ * "Acting" is exactly the set a coiled stock's sector must be in to reach
+ * Setups, which is what makes the grouping explain the app rather than just
+ * shorten it.
+ */
+export const STATE_GROUP = {
+  CROSSING: "acting",
+  PULLBACK: "acting",
+  CROSSING_UNVERIFIED: "watching",
+  BASE: "watching",
+  NEGLECT: "out",
+  DISQUALIFIED: "out",
+  NONE: "out",
+};
+
+export const STATE_GROUPS = {
+  acting: {
+    label: "Acting",
+    help: "Turnover expanded out of quiet with breadth holding, or the sector is resting after that expansion. A coiled stock only reaches Setups if its sector is here.",
+  },
+  watching: {
+    label: "Watching",
+    help: "Something is building — quiet accumulation, or an expansion whose width and delivery did not confirm. Worth following; nothing to act on.",
+  },
+  out: {
+    label: "Ruled out",
+    help: "Either nothing the scan recognises, quiet while losing ground, or a hard stop: money leaving, heavy volume into falling stocks, or a markup already public.",
+  },
+};
+
 export const BUY_READY_HELP =
   "The sector is in a pullback AND every shape check passed: the expansion came out of genuine quiet, and every red day since has traded lighter than the crossing day. Sellers have not taken over.";
 
@@ -250,9 +286,10 @@ export const MISSING_REASON = {
 
 /** Filter chips on the Sectors tab. */
 export const FILTER_HELP = {
-  buy_ready: "Pullback sectors where every shape check passed. The shortlist.",
-  actionable: "Sectors that either woke up today or are resting after waking up.",
-  all: "Every sector in the universe, including the ones that were ruled out.",
+  acting: STATE_GROUPS.acting.help,
+  watching: STATE_GROUPS.watching.help,
+  out: STATE_GROUPS.out.help,
+  all: "Every sector in the universe, in whatever state.",
 };
 
 /** For Tom filters */

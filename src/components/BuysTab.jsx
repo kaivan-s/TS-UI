@@ -12,9 +12,9 @@ import {
   Typography,
 } from "@mui/material";
 import { AccentRow, CoilBar, HeadCell, Note, PageIntro, WhyRow } from "./ui.jsx";
+import BaseRate from "./BaseRate.jsx";
 import { C } from "../theme.js";
 import { num, pct } from "../format.js";
-import { STATES } from "../glossary.js";
 
 function SectionHead({ color, title, children }) {
   return (
@@ -59,9 +59,9 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
     <Box>
       <PageIntro title="Setups">
         Coiled stocks whose sector is also moving — the two halves of the scan
-        agreeing. Nothing here is a buy at today's price: the plan is to set a
-        price alert at the breakout level in the "To breakout" column and only
-        act if the stock closes through it on heavy volume.
+        agreeing, and the only list here with a measured edge. Act on a close
+        through the level in "To breakout" on heavy volume, not on today's
+        price.
         {nConfirmed > 0 && (
           <>
             {" "}
@@ -71,6 +71,8 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
           </>
         )}
       </PageIntro>
+
+      <BaseRate metric="setups" />
 
       {rows.length > 1 && (
         <Note>
@@ -85,9 +87,9 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
 
       {rows.length === 0 ? (
         <Note>
-          Nothing qualifies today. Either no sector is in a clean pullback, or
-          the sectors that are have no stock coiled inside them right now.
-          This is the normal state most days.
+          Nothing qualifies today — either no sector is moving, or the ones
+          that are have no stock coiled inside them. Most sessions produce no
+          setups, so an empty list is the filter working.
         </Note>
       ) : (
         <>
@@ -177,31 +179,6 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                     >
                       {g.sector}
                     </Typography>
-                    {g.klass && (
-                      <Tooltip
-                        title={STATES[g.klass]?.help || g.klass}
-                        placement="top"
-                        arrow
-                      >
-                        <Typography
-                          component="span"
-                          sx={{
-                            px: 0.6,
-                            py: 0.1,
-                            fontSize: 10,
-                            fontWeight: 500,
-                            borderRadius: 0.4,
-                            bgcolor:
-                              g.klass === "PULLBACK"
-                                ? "rgba(95,180,95,0.12)"
-                                : "rgba(238,196,120,0.12)",
-                            color: g.klass === "PULLBACK" ? C.good : C.warn,
-                          }}
-                        >
-                          {STATES[g.klass]?.label || g.klass}
-                        </Typography>
-                      </Tooltip>
-                    )}
                     <Typography component="span" sx={{ fontSize: 12, color: C.muted }}>
                       {g.rows.length} {g.rows.length === 1 ? "name" : "names"}
                     </Typography>

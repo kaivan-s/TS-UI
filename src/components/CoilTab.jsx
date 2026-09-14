@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { CoilBar, HeadCell, Note, PageIntro } from "./ui.jsx";
+import BaseRate from "./BaseRate.jsx";
 import { C } from "../theme.js";
 import { num, pct } from "../format.js";
 import { MISSING_REASON } from "../glossary.js";
@@ -69,8 +70,8 @@ export default function CoilTab({ hits, misses, coilReady, onOpenSector, onOpenS
         }
       >
         {hits.length} stocks sitting quiet and tight near their highs — every
-        name that cleared all seven filters, not a top slice of them. The order
-        carries no meaning: ranking by coil score showed no relationship with
+        name that cleared all seven filters, with no regard to sector. Sort
+        order carries no meaning: coil score showed no relationship with
         forward returns, so the top row is not a better buy than the bottom.
         "Coiled" counts consecutive sessions a name has qualified
         {nNew > 0
@@ -79,11 +80,12 @@ export default function CoilTab({ hits, misses, coilReady, onOpenSector, onOpenS
         . Hover any column heading for what it measures.
       </PageIntro>
 
+      <BaseRate metric="coils" />
+
       {hits.length === 0 ? (
         <Note>
-          No stock is in a coil today. This scan is meant to return nothing on
-          most days — it only fires when price, trend, volume and range all
-          line up at once.
+          No stock is in a coil today. This scan only fires when price, trend,
+          volume and range line up at once, which most sessions do not.
         </Note>
       ) : (
         <TableContainer sx={{ mb: 5 }}>

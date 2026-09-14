@@ -1,11 +1,11 @@
 /**
- * Sector Lookouts Tab - Post-market sector analysis with heatmaps.
- * 
- * Features:
- * - Cross-sectional heatmap: all sectors for a given date
- * - Time-series heatmap: drill-down into one sector's history
- * - Shape annotations: crossing, pullback, heavy_red marks
- * - Constituent stocks for actionable sectors
+ * The sector table. Every sector for the latest post-market scan, scored
+ * against the other sectors that day, with a drill-down per sector.
+ *
+ *  - Cross-sectional heatmap of all sectors, filtered by state group
+ *  - Expanding a row gives 20 days of that sector's history, the shape
+ *    checks behind its verdict, and its constituents
+ *  - Falls back to the live classification before the 7:30 PM job has run
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -22,6 +22,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -31,8 +32,35 @@ import KlassChip from "./KlassChip.jsx";
 import { HeadCell, Note } from "./ui.jsx";
 import { useAuth } from "../auth.jsx";
 import { C } from "../theme.js";
-import { num, signed, pct } from "../format.js";
+import { num, signed } from "../format.js";
+import { FILTER_HELP, STATE_GROUP, STATE_GROUPS } from "../glossary.js";
 import { getSectorLookouts, getSectorHistory, getSectorConstituents } from "../api.js";
+
+const FILTERS = ["acting", "watching", "out", "all"];
+
+/**
+ * The saved scan and the live scan carry the same fields under different
+ * cases, so the live rows are reshaped to match rather than teaching every
+ * cell to read both.
+ */
+function fromLiveRow(r) {
+  return {
+    sector: r.sector,
+    klass: r.klass,
+    buy_ready: r.buy_ready,
+    t_rel: r.T_rel,
+    b: r.B,
+    cmf_rel: r.cmf_rel,
+    cmf: r.cmf,
+    rs: r.rs,
+    rs_chg_5: r.rs_chg_5,
+    deliv_quality_rel: r.deliv_quality_rel,
+    n_adv: r.n_adv,
+    n_stocks: r.n_stocks,
+    top_share: r.top_share,
+    note: r.note,
+  };
+}
 
 // Heatmap color scales
 const HEATMAP_COLORS = {
@@ -506,15 +534,16 @@ function SectorRow({ row, expanded, onToggle, isPremium }) {
 }
 
 // Main component
-export default function SectorLookoutsTab({ onOpenSector }) {
+export default function SectorLookoutsTab({ onOpenSector, liveRows }) {
   const [data, setData] = useState({ rows: [], scan_date: null });
   const [loading, setLoading] = useState(true);
   const [expandedSector, setExpandedSector] = useState(null);
+  const [filter, setFilter] = useState("acting");
   const { isPremium } = useAuth();
 
   const fetchData = useCallback(() => {
     setLoading(true);
-    
+
     getSectorLookouts()
       .then((res) => {
         // Ensure rows is always an array
@@ -532,41 +561,75 @@ export default function SectorLookoutsTab({ onOpenSector }) {
     fetchData();
   }, [fetchData]);
 
-  // Sort: CROSSING first, then PULLBACK, then by T_rel (show ALL sectors)
-  const sorted = useMemo(() => {
-    const rows = data.rows || [];
-    const order = { CROSSING: 0, PULLBACK: 1, CROSSING_UNVERIFIED: 2, BASE: 3, NEGLECT: 4, DISQUALIFIED: 5, NONE: 6 };
-    return [...rows].sort((a, b) => {
-      const oa = order[a.klass] ?? 99;
-      const ob = order[b.klass] ?? 99;
-      if (oa !== ob) return oa - ob;
-      return (b.t_rel || 0) - (a.t_rel || 0);
-    });
-  }, [data.rows]);
+  // The saved scan is richer (it carries shape reports and history), but it
+  // only exists once the post-market job has run, so fall back to the live
+  // classification rather than showing an empty page.
+  const rows = useMemo(() => {
+    if ((data.rows || []).length) return data.rows;
+    return (liveRows || []).map(fromLiveRow);
+  }, [data.rows, liveRows]);
 
-  const sectorCount = (data.rows || []).length;
+  const usingLive = (data.rows || []).length === 0 && rows.length > 0;
+
+  const counts = useMemo(() => {
+    const c = { all: rows.length, acting: 0, watching: 0, out: 0 };
+    for (const r of rows) c[STATE_GROUP[r.klass] || "out"] += 1;
+    return c;
+  }, [rows]);
+
+  // Acting first, then by turnover expansion within a group.
+  const sorted = useMemo(() => {
+    const order = { CROSSING: 0, PULLBACK: 1, CROSSING_UNVERIFIED: 2, BASE: 3, NEGLECT: 4, DISQUALIFIED: 5, NONE: 6 };
+    return rows
+      .filter((r) => filter === "all" || (STATE_GROUP[r.klass] || "out") === filter)
+      .sort((a, b) => {
+        const oa = order[a.klass] ?? 99;
+        const ob = order[b.klass] ?? 99;
+        if (oa !== ob) return oa - ob;
+        return (b.t_rel || 0) - (a.t_rel || 0);
+      });
+  }, [rows, filter]);
 
   return (
     <Box>
-      {/* Header */}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
-        <Typography sx={{ fontSize: 13, color: C.muted }}>
-          {sectorCount} sectors {data.scan_date && `· ${data.scan_date}`}
+      <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", alignItems: "center", mb: 2 }}>
+        {FILTERS.map((f) => {
+          const on = filter === f;
+          const label = f === "all" ? "All" : STATE_GROUPS[f].label;
+          return (
+            <Tooltip key={f} title={FILTER_HELP[f]} placement="top" arrow enterDelay={300}>
+              <Chip
+                label={`${label}  ${counts[f] || 0}`}
+                onClick={() => setFilter(f)}
+                variant={on ? "filled" : "outlined"}
+                sx={{
+                  borderColor: on ? "transparent" : "rgba(238,234,227,0.10)",
+                  bgcolor: on ? C.text : "transparent",
+                  color: on ? C.bg : C.muted,
+                  "&:hover": { bgcolor: on ? "#d8d4cd" : "rgba(238,234,227,0.04)" },
+                }}
+              />
+            </Tooltip>
+          );
+        })}
+        <Typography sx={{ fontSize: 12, color: C.muted, ml: "auto" }}>
+          {usingLive ? "live scan" : data.scan_date}
         </Typography>
       </Box>
 
       <Note>
-        Post-market sector analysis. Colors show intensity — red/orange for high turnover expansion,
-        green for positive breadth/money flow. Click any sector to see its 20-day history and shape checks.
+        Every sector, scored against the other sectors that day rather than against itself,
+        so 1.0 always reads as normal. Colour marks intensity. Click a sector for its 20-day
+        history and shape checks. Only <b>Acting</b> sectors feed Setups.
       </Note>
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
           <CircularProgress size={28} />
         </Box>
-      ) : (data.rows || []).length === 0 ? (
+      ) : rows.length === 0 ? (
         <Note>
-          No sector lookout data for this date. Data is saved automatically at 7:30 PM IST after market close.
+          No sector data yet. The post-market job writes it at 7:30 PM IST on trading days.
         </Note>
       ) : (
         <>
@@ -576,7 +639,7 @@ export default function SectorLookoutsTab({ onOpenSector }) {
               <TableHead>
                 <TableRow>
                   <HeadCell label="Sector" />
-                  <HeadCell label="State" help="Current classification and shape verdict" />
+                  <HeadCell label="State" help="Acting, watching, or ruled out. Hover any chip for the specific state and the grounds for it." />
                   <HeadCell k="T_rel" align="right" />
                   <HeadCell k="B" align="right" />
                   <HeadCell label="CMF rel" align="right" help="Chaikin Money Flow vs cross-sectional median" />
@@ -613,7 +676,9 @@ export default function SectorLookoutsTab({ onOpenSector }) {
                 {sorted.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={8} sx={{ color: C.muted, py: 4, textAlign: "center" }}>
-                      No sector data available.
+                      {filter === "acting"
+                        ? "No sector woke up or pulled back today. An empty list is the scan working — markets do not rotate every session."
+                        : "Nothing in this filter."}
                     </TableCell>
                   </TableRow>
                 )}

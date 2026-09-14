@@ -13,14 +13,11 @@ export const C = {
   bad: "#c87a7a",
 };
 
-export const KLASS = {
-  CROSSING: { bg: "rgba(125,186,150,0.10)", fg: C.good, label: "Crossing" },
-  PULLBACK: { bg: "rgba(142,180,196,0.10)", fg: C.accent, label: "Pullback" },
-  CROSSING_UNVERIFIED: { bg: "rgba(196,164,106,0.10)", fg: C.warn, label: "Unverified" },
-  BASE: { bg: "rgba(180,168,210,0.10)", fg: "#b8aed4", label: "Base" },
-  NEGLECT: { bg: "rgba(255,255,255,0.04)", fg: C.muted, label: "Neglect" },
-  DISQUALIFIED: { bg: "rgba(200,122,122,0.10)", fg: C.bad, label: "Disqualified" },
-  NONE: { bg: "rgba(255,255,255,0.03)", fg: "#6e6b66", label: "None" },
+/** Colours for the three user-facing state groups (see glossary STATE_GROUPS). */
+export const KLASS_GROUP = {
+  acting: { bg: "rgba(125,186,150,0.10)", fg: C.good, label: "Acting" },
+  watching: { bg: "rgba(196,164,106,0.10)", fg: C.warn, label: "Watching" },
+  out: { bg: "rgba(255,255,255,0.03)", fg: "#6e6b66", label: "Ruled out" },
 };
 
 export const theme = createTheme({

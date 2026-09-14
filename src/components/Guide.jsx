@@ -1,5 +1,6 @@
 import {
   Box,
+  Chip,
   Divider,
   Paper,
   Table,
@@ -9,8 +10,8 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import KlassChip from "./KlassChip.jsx";
-import { C } from "../theme.js";
+import { C, KLASS_GROUP } from "../theme.js";
+import { BASE_RATES, EVIDENCE_WINDOW } from "../evidence.js";
 
 function H({ children }) {
   return (
@@ -178,34 +179,33 @@ const COIL_FIELDS = [
   },
 ];
 
+// The Sectors table shows three groups; these are the seven states behind
+// them, which is what the chip tooltips name.
 const CLASSES = [
   {
-    klass: "CROSSING",
-    do: "Actionable. Something is starting. Do not chase the expansion day. Open the drawer, find coiled names in this sector, set alerts at each trigger.",
+    group: "acting",
+    do: "The only group that feeds Setups. Do not chase the expansion day itself — find the coiled names in the sector and set an alert at each trigger.",
+    states: [
+      ["Crossing", "Turnover expanded out of quiet with breadth green and the move broad. Something is starting."],
+      ["Pullback", "The intended entry shape: a crossing already fired and today cooled on lighter volume. The rest after the first push."],
+    ],
   },
   {
-    klass: "PULLBACK",
-    do: "Actionable — the intended entry shape. A crossing already fired, and today cooled on less volume. This is the rest after the first push. Same action: coiled names, alert at trigger.",
+    group: "watching",
+    do: "Nothing to buy today. Recheck tomorrow — these are the sectors most likely to become Acting next.",
+    states: [
+      ["Unverified", "Expansion is there, but too few names advanced or delivery was weak. Not confirmed."],
+      ["Base", "Quiet and being bought, no expansion yet. Keep its names on the coil list."],
+    ],
   },
   {
-    klass: "CROSSING_UNVERIFIED",
-    do: "Watch only. Expansion is there but too few names or delivery is weak. Do not treat as confirmed. Recheck tomorrow.",
-  },
-  {
-    klass: "BASE",
-    do: "Watchlist. Quiet and being bought, no expansion yet. Keep names from this sector on the coil list. Nothing to buy today.",
-  },
-  {
-    klass: "NEGLECT",
-    do: "Ignore. Quiet and drifting down. Different from a base. Do not hunt breakouts here.",
-  },
-  {
-    klass: "DISQUALIFIED",
-    do: "Hard stop fired — distribution, volume into falling stocks, poor delivery, decaying RS, or already marked up. Read the note. Walk away.",
-  },
-  {
-    klass: "NONE",
-    do: "No pattern. Skip.",
+    group: "out",
+    do: "Skip. Read the Why column on the ruled-out rows — it is often more informative than the greens.",
+    states: [
+      ["Neglect", "Quiet and drifting down. Different from a base: quiet for the wrong reason."],
+      ["Disqualified", "A hard stop fired — distribution, volume into falling stocks, poor delivery, decaying strength, or a markup already public."],
+      ["None", "No pattern the scan recognises."],
+    ],
   },
 ];
 
@@ -216,33 +216,35 @@ export default function Guide() {
         How to read this
       </Typography>
       <Mute>
-        Sectors show where money is moving. Coil shows which names are tight.
-        Buy setups are the overlap: coiled names in a clean pullback. Still
-        not a market order — the breakout is the close through the trigger on
+        Sectors show where money is moving. Coiled Bases shows which names are
+        tight. Setups are the overlap, and the overlap is where the edge is:
+        over {EVIDENCE_WINDOW}, {Math.round(BASE_RATES.setups.winRate * 100)}%
+        of setups beat the market over the following 20 days against{" "}
+        {Math.round(BASE_RATES.coils.winRate * 100)}% for coils alone. Neither
+        is a market order — the breakout is the close through the trigger on
         volume. Type a symbol in the header to run the same gates on any name.
-        The label is unvalidated until buytest shows an edge.
       </Mute>
 
       <H>The daily sequence</H>
       <Step
         n="1"
-        title="Sectors first — where to look"
-        body="Open Sectors on Actionable. You want Crossing or Pullback. Empty is normal. If eight sectors are Crossing on the same day, the gates are too loose, not a gift."
+        title="Setups — the shortlist"
+        body="This is the landing screen and most days it is the only one you need. It lists coiled names whose sector is also Acting, grouped by sector because names in one sector resolve together. Empty is normal: most sessions produce no setups."
       />
       <Step
         n="2"
-        title="Open the sector"
-        body="Click the row. The drawer now answers those questions for you: whether T_rel expanded from quiet while B stayed green, and whether later red days traded less than the crossing. Crossing days are marked green, lighter reds blue, and a red day that traded more than the crossing is marked Heavy red — sellers won, it is not a pullback."
+        title="Check the sector behind it"
+        body="Open Sectors and click the sector a setup came from. The panel shows whether turnover expanded out of genuine quiet while breadth stayed green, and whether every red day since traded lighter than the crossing. Crossing days are marked green, lighter reds blue, and a red day that traded more than the crossing is marked Heavy red — sellers won, so it is not a pullback. Setups whose sector passed all three checks carry a Shape confirmed mark."
       />
       <Step
         n="3"
-        title="Buy setups — only when every check is green"
-        body="The Setups tab lists coiled names in a PULLBACK sector whose three shape checks all passed (quiet-to-loud crossing, then lighter red days). Power Generation-style pullbacks that did not come from quiet get no list. Open the sector to see why. Each Refresh appends that day to data/cache/flags_log.csv."
+        title="Do not buy the coil"
+        body="A setup is not a market order. Write down trigger (the 20-day high) and to_trigger, and put an alert there. Act only on a close through it on heavy volume."
       />
       <Step
         n="4"
-        title="Do not buy the coil"
-        body="A Buy setup badge is not a market order. Write down trigger (the 20-day high) and to_trigger. Put an alert there."
+        title="Widen only if you want more names"
+        body="Coiled Bases is every stock that cleared all seven coil filters with no sector requirement. It is a bigger list with a thinner edge, so treat it as a study list rather than a shortlist. Its sort order carries no information — coil score showed no relationship with forward returns."
       />
       <Step
         n="5"
@@ -252,30 +254,61 @@ export default function Guide() {
       <Step
         n="6"
         title="Look up any name"
-        body="The header field runs the same coil filters, sector shape, and setup checks on a symbol you type. Put your entry in the drawer to get a mechanical plan: wait / buy / add / hold / sell, plus a stop under the 20-day base (or 1.5 ATR) and a 2R target. Those prices are risk math from this structure, not a proven edge. Click a symbol in Coil or Setups for the same drawer."
+        body="The header field runs the same coil filters, sector shape, and setup checks on a symbol you type. Put your entry in the drawer to get a mechanical plan: wait / buy / add / hold / sell, plus a stop under the 20-day base (or 1.5 ATR) and a 2R target. Those prices are risk math from this structure, not a measured edge. Click a symbol in Coiled Bases or Setups for the same drawer."
       />
       <Step
         n="7"
-        title="For tom — live when you ask"
-        body="Header Refresh does not pull live prices. Open For tom and hit Refresh live. That snapshot is last prices at that moment on last evening’s coils: already through the 20-day high, logged setups still under it, and near-high volume prints. Delivery is still unknown."
+        title="Momentum — live when you ask"
+        body="Everything else updates automatically at 7:30 PM IST on trading days. Momentum is the exception: open it and hit Refresh live for last prices at that moment on last evening's coils — already through the 20-day high, logged setups still under it, and near-high volume prints. Delivery is still unknown."
       />
 
-      <H>What each class means — and what to do</H>
+      <H>What each state means — and what to do</H>
+      <P>
+        The Sectors table labels every sector Acting, Watching, or Ruled out.
+        The scan works with seven finer states underneath, which is what you
+        see when you hover a chip.
+      </P>
       <Paper variant="outlined" sx={{ overflow: "hidden", width: "100%" }}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ width: 150 }}>Class</TableCell>
+              <TableCell sx={{ width: 130 }}>Shown as</TableCell>
+              <TableCell sx={{ width: 320 }}>States behind it</TableCell>
               <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {CLASSES.map((c) => (
-              <TableRow key={c.klass}>
+              <TableRow key={c.group}>
                 <TableCell sx={{ verticalAlign: "top", py: 1.75 }}>
-                  <KlassChip klass={c.klass} />
+                  <Chip
+                    size="small"
+                    label={KLASS_GROUP[c.group].label}
+                    sx={{
+                      bgcolor: KLASS_GROUP[c.group].bg,
+                      color: KLASS_GROUP[c.group].fg,
+                      border: "none",
+                      fontWeight: 500,
+                    }}
+                  />
                 </TableCell>
-                <TableCell sx={{ py: 1.75, lineHeight: 1.65, fontSize: 14.5 }}>{c.do}</TableCell>
+                <TableCell sx={{ verticalAlign: "top", py: 1.75 }}>
+                  {c.states.map(([name, why]) => (
+                    <Typography
+                      key={name}
+                      sx={{ fontSize: 13.5, lineHeight: 1.55, mb: 0.75, color: "text.secondary" }}
+                    >
+                      <Box component="span" sx={{ color: C.text, fontWeight: 500 }}>
+                        {name}
+                      </Box>
+                      {" — "}
+                      {why}
+                    </Typography>
+                  ))}
+                </TableCell>
+                <TableCell sx={{ verticalAlign: "top", py: 1.75, lineHeight: 1.65, fontSize: 14.5 }}>
+                  {c.do}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -312,9 +345,10 @@ export default function Guide() {
 
       <H>When the lists are empty</H>
       <P>
-        No crossings and no coils is the scan working. Markets do not offer
-        this setup every day. A list of forty coils is the stock screen being
-        loose, not useful. Do not loosen filters to fill the page.
+        No sectors Acting and no setups is the scan working. Markets do not
+        offer this shape every day, and the base rates above were measured on
+        a few hundred names over fifteen months — roughly one qualifying name
+        every other session. Do not loosen filters to fill the page.
       </P>
 
       <Divider sx={{ my: 4, borderColor: C.line }} />
