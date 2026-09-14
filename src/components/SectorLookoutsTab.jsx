@@ -336,35 +336,37 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
               </Box>
             )}
 
-            {/* Top Stocks */}
+            {/* Top Stocks - Horizontal layout */}
             {isPremium && constituents.length > 0 && (
               <Box>
                 <Typography sx={{ fontSize: 12, fontWeight: 600, color: C.muted, mb: 1.5, textTransform: "uppercase", letterSpacing: 0.5 }}>
                   Top Stocks by Turnover
                 </Typography>
-                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.5 }}>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                   {constituents.map((s) => (
                     <Box
                       key={s.symbol}
                       sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
+                        display: "inline-flex",
                         alignItems: "center",
+                        gap: 0.75,
                         py: 0.5,
-                        px: 1,
-                        bgcolor: "rgba(255,255,255,0.02)",
-                        borderRadius: 0.5,
+                        px: 1.25,
+                        bgcolor: "rgba(255,255,255,0.03)",
+                        border: "1px solid rgba(238,234,227,0.06)",
+                        borderRadius: 1,
+                        "&:hover": { bgcolor: "rgba(255,255,255,0.05)" },
                       }}
                     >
-                      <Typography sx={{ fontSize: 11.5, fontWeight: 500 }}>{s.symbol}</Typography>
+                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: C.text }}>{s.symbol}</Typography>
                       <Typography
                         sx={{
                           fontSize: 11,
                           color: s.ret > 0 ? C.good : s.ret < 0 ? C.bad : C.muted,
-                          fontWeight: 500,
+                          fontWeight: 600,
                         }}
                       >
-                        {s.ret != null ? `${(s.ret * 100).toFixed(1)}%` : "—"}
+                        {s.ret != null ? `${s.ret > 0 ? "+" : ""}${(s.ret * 100).toFixed(1)}%` : "—"}
                       </Typography>
                     </Box>
                   ))}

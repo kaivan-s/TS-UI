@@ -151,6 +151,7 @@ function ShapeCard({ shape }) {
 export default function SectorDrawer({ open, onClose, data, loading }) {
   const { isPremium, upgrade, busy } = useAuth();
   const title = data?.sector || "Sector";
+  const verdictColor = VERDICT[data?.shape?.verdict] || C.muted;
 
   return (
     <Drawer
@@ -158,51 +159,91 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
       open={open}
       onClose={onClose}
       PaperProps={{
-        sx: { width: { xs: "100%", sm: 780 }, bgcolor: C.bg, p: 0 },
+        sx: { 
+          width: { xs: "100%", sm: 860 }, 
+          bgcolor: C.bg, 
+          p: 0,
+          boxShadow: "-8px 0 32px rgba(0,0,0,0.4)",
+        },
       }}
     >
+      {/* Header with gradient accent */}
       <Box
         sx={{
-          px: 3.5,
-          py: 2.5,
+          position: "relative",
+          px: 4,
+          py: 3,
           borderBottom: `1px solid ${C.line}`,
-          display: "flex",
-          alignItems: "flex-start",
-          gap: 2,
+          background: `linear-gradient(135deg, rgba(142,180,196,0.08) 0%, transparent 100%)`,
         }}
       >
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h1">{title}</Typography>
-          {data?.klass && (
-            <>
-              <Box sx={{ mt: 1.25, display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-                <KlassChip klass={data.klass} />
-                <Typography variant="caption">
-                  {STATES[data.klass]?.short}
-                </Typography>
-              </Box>
-              {data.note && (
-                <Typography variant="caption" sx={{ display: "block", mt: 0.75 }}>
-                  {data.note}
-                </Typography>
-              )}
-            </>
-          )}
+        {/* Accent bar */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 3,
+            background: `linear-gradient(90deg, ${verdictColor} 0%, transparent 100%)`,
+          }}
+        />
+        
+        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography 
+              variant="h1" 
+              sx={{ 
+                fontSize: 22, 
+                fontWeight: 600, 
+                letterSpacing: "-0.02em",
+                mb: 0.5,
+              }}
+            >
+              {title}
+            </Typography>
+            {data?.klass && (
+              <>
+                <Box sx={{ mt: 1.5, display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+                  <KlassChip klass={data.klass} />
+                  <Typography sx={{ fontSize: 13, color: C.muted }}>
+                    {STATES[data.klass]?.short}
+                  </Typography>
+                </Box>
+                {data.note && (
+                  <Typography sx={{ fontSize: 13, color: C.muted, mt: 1 }}>
+                    {data.note}
+                  </Typography>
+                )}
+              </>
+            )}
+          </Box>
+          <IconButton 
+            onClick={onClose} 
+            sx={{ 
+              color: C.muted,
+              bgcolor: "rgba(255,255,255,0.05)",
+              "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
         </Box>
-        <IconButton onClick={onClose} size="small" sx={{ color: C.muted }}>
-          <CloseIcon />
-        </IconButton>
       </Box>
 
-      <Box sx={{ px: 3.5, py: 3 }}>
+      <Box sx={{ px: 4, py: 3.5, overflowY: "auto" }}>
         {loading && (
-          <Typography color="text.secondary">Loading…</Typography>
+          <Box sx={{ py: 8, textAlign: "center" }}>
+            <Typography sx={{ color: C.muted, fontSize: 14 }}>Loading sector details…</Typography>
+          </Box>
         )}
         {data?.found === false && (
-          <Typography color="text.secondary">
-            No match.
-            {data.near?.length ? ` Did you mean: ${data.near.join(", ")}` : ""}
-          </Typography>
+          <Box sx={{ py: 6, textAlign: "center" }}>
+            <Typography sx={{ color: C.muted, fontSize: 14 }}>
+              No match.
+              {data.near?.length ? ` Did you mean: ${data.near.join(", ")}` : ""}
+            </Typography>
+          </Box>
         )}
 
         {data?.found && (
@@ -210,11 +251,11 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
             <ShapeCard shape={data.shape} />
 
             {data.shape?.recommend && (data.buys || []).length > 0 && (
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="h2" sx={{ mb: 0.5, fontSize: 15 }}>
+              <Box sx={{ mb: 4, p: 2.5, bgcolor: "rgba(125,186,150,0.05)", borderRadius: 2, border: "1px solid rgba(125,186,150,0.1)" }}>
+                <Typography sx={{ fontWeight: 600, fontSize: 14, color: C.good, mb: 0.75 }}>
                   Setups in this sector
                 </Typography>
-                <Typography color="text.secondary" sx={{ mb: 1.5, fontSize: 13.5 }}>
+                <Typography sx={{ color: C.muted, mb: 2, fontSize: 13 }}>
                   Coiled stocks inside this pullback. Set an alert at the
                   breakout price — none of these is a buy at today's price.
                 </Typography>
@@ -235,14 +276,15 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
               </Note>
             )}
 
-            <Typography variant="h2" sx={{ mb: 0.5, fontSize: 15 }}>
-              Last 20 sessions
-            </Typography>
-            <Typography color="text.secondary" sx={{ mb: 1.5, fontSize: 13.5 }}>
-              Green stripe = the day volume surged. Blue = a down day that
-              traded lighter than that surge, which is healthy. Red = a down
-              day that traded heavier, meaning sellers showed up.
-            </Typography>
+            {/* History Section */}
+            <Box sx={{ mb: 4 }}>
+              <Typography sx={{ fontWeight: 600, fontSize: 14, color: C.text, mb: 0.75, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                Last 20 sessions
+              </Typography>
+              <Typography sx={{ color: C.muted, mb: 2, fontSize: 13 }}>
+                Green stripe = volume surge day. Blue = lighter down day (healthy). 
+                Red = heavier down day (sellers showed up).
+              </Typography>
             <BlurOverlay isPremium={isPremium} upgrade={upgrade} busy={busy}>
               <Box sx={{ overflow: "auto", mb: 4 }}>
                 <Table>
@@ -303,17 +345,19 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
                 </Table>
               </Box>
             </BlurOverlay>
+            </Box>
 
-            <Typography variant="h2" sx={{ mb: 0.5, fontSize: 15 }}>
-              Constituents
-            </Typography>
-            <Typography color="text.secondary" sx={{ mb: 1.5, fontSize: 13.5 }}>
-              The stocks in this sector on the latest session, biggest by
-              value traded first. Use this to check whether the sector's move
-              is broad or just one large company.
-            </Typography>
-            <BlurOverlay isPremium={isPremium} upgrade={upgrade} busy={busy}>
-              <Table>
+            {/* Constituents Section */}
+            <Box>
+              <Typography sx={{ fontWeight: 600, fontSize: 14, color: C.text, mb: 0.75, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                Constituents
+              </Typography>
+              <Typography sx={{ color: C.muted, mb: 2, fontSize: 13 }}>
+                Stocks in this sector, biggest by value traded first. Check whether 
+                the move is broad or just one large company.
+              </Typography>
+              <BlurOverlay isPremium={isPremium} upgrade={upgrade} busy={busy}>
+                <Table>
                 <TableHead>
                   <TableRow>
                     <HeadCell label="Symbol" />
@@ -338,8 +382,9 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
-            </BlurOverlay>
+                </Table>
+              </BlurOverlay>
+            </Box>
           </>
         )}
       </Box>
