@@ -125,15 +125,13 @@ export default function Landing() {
           >
             {/* Logo */}
             <Box
+              component="img"
+              src="/src/Images/favicon.svg"
+              alt="Morrow Desk"
               sx={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 64,
-                height: 64,
+                width: 72,
+                height: 72,
                 borderRadius: 3,
-                bgcolor: "rgba(142,180,196,0.1)",
-                border: "1px solid rgba(142,180,196,0.25)",
                 mb: 4,
                 animation: "pulse 3s ease-in-out infinite",
                 "@keyframes pulse": {
@@ -141,9 +139,7 @@ export default function Landing() {
                   "50%": { boxShadow: "0 0 0 15px rgba(142,180,196,0)" },
                 },
               }}
-            >
-              <Typography sx={{ fontSize: 28, fontWeight: 600, color: C.accent }}>M</Typography>
-            </Box>
+            />
 
             {/* Headline */}
             <Typography

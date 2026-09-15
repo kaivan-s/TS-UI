@@ -80,27 +80,15 @@ function SidebarContent({ onClose, showClose, counts }) {
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Box
+            component="img"
+            src="/src/Images/favicon.svg"
+            alt="Morrow Desk"
             sx={{
               width: 32,
               height: 32,
               borderRadius: 1.5,
-              background: `linear-gradient(135deg, ${C.accent} 0%, ${C.good} 100%)`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
             }}
-          >
-            <Typography
-              sx={{
-                fontSize: 16,
-                fontWeight: 700,
-                color: C.bg,
-                letterSpacing: "-0.03em",
-              }}
-            >
-              M
-            </Typography>
-          </Box>
+          />
           <Box>
             <Typography
               sx={{

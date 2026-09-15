@@ -198,20 +198,16 @@ export default function Login() {
         {/* Logo / Brand */}
         <Box sx={{ mb: 4, textAlign: "center" }}>
           <Box
+            component="img"
+            src="/src/Images/favicon.svg"
+            alt="Morrow Desk"
             sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 48,
-              height: 48,
+              width: 56,
+              height: 56,
               borderRadius: 3,
-              bgcolor: "rgba(142,180,196,0.1)",
-              border: "1px solid rgba(142,180,196,0.2)",
               mb: 2,
             }}
-          >
-            <Typography sx={{ fontSize: 20, fontWeight: 600, color: C.accent }}>M</Typography>
-          </Box>
+          />
           <Typography
             sx={{
               fontSize: 24,
