@@ -73,8 +73,8 @@ export function PremiumGate({ children, feature = "This feature" }) {
 }
 
 /**
- * Overlay that blurs content and shows upgrade CTA.
- * Shows `previewCount` items clearly, blurs the rest.
+ * Shows preview content with an upgrade banner below.
+ * The children should already be sliced to the preview count.
  */
 export function PremiumOverlay({
   children,
@@ -90,71 +90,48 @@ export function PremiumOverlay({
   if (isPremium || hiddenCount <= 0) return children;
 
   return (
-    <Box sx={{ position: "relative" }}>
+    <Box>
       {children}
       
-      {/* Gradient overlay */}
+      {/* Upgrade banner below the preview */}
       <Box
         sx={{
-          position: "absolute",
-          top: 120, // Leave first few rows visible
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `linear-gradient(to bottom, transparent 0%, ${C.bg}ee 30%, ${C.bg} 100%)`,
+          mt: 3,
+          p: 3,
+          borderRadius: 2,
+          border: `1px solid ${C.line}`,
+          bgcolor: C.paper,
           display: "flex",
-          flexDirection: "column",
+          flexDirection: { xs: "column", sm: "row" },
           alignItems: "center",
-          justifyContent: "center",
-          pt: 8,
+          justifyContent: "space-between",
+          gap: 2,
         }}
       >
-        <Box
+        <Box sx={{ textAlign: { xs: "center", sm: "left" } }}>
+          <Typography sx={{ fontSize: 15, fontWeight: 600, color: C.text, mb: 0.5 }}>
+            +{hiddenCount} more {hiddenCount === 1 ? "stock" : "stocks"}
+          </Typography>
+          <Typography sx={{ fontSize: 13, color: C.muted }}>
+            Upgrade to see the full list
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          onClick={() => upgrade("monthly")}
+          disabled={busy}
+          startIcon={<StarRoundedIcon />}
           sx={{
-            bgcolor: C.paper,
-            border: `1px solid ${C.line}`,
-            borderRadius: 3,
-            p: 4,
-            textAlign: "center",
-            maxWidth: 360,
+            bgcolor: C.accent,
+            color: C.bg,
+            fontWeight: 600,
+            px: 2.5,
+            flexShrink: 0,
+            "&:hover": { bgcolor: "#7aa4b4" },
           }}
         >
-          <Box
-            sx={{
-              width: 48,
-              height: 48,
-              borderRadius: 2,
-              bgcolor: "rgba(142,180,196,0.1)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              mx: "auto",
-              mb: 2,
-            }}
-          >
-            <LockRoundedIcon sx={{ fontSize: 22, color: C.accent }} />
-          </Box>
-          <Typography sx={{ fontSize: 16, fontWeight: 600, color: C.text, mb: 0.75 }}>
-            {hiddenCount > 0 ? `+${hiddenCount} more` : feature}
-          </Typography>
-          <Typography sx={{ fontSize: 13, color: C.muted, mb: 2.5 }}>
-            Upgrade to see the complete list
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => upgrade("monthly")}
-            disabled={busy}
-            size="small"
-            sx={{
-              bgcolor: C.accent,
-              color: C.bg,
-              fontWeight: 600,
-              "&:hover": { bgcolor: "#7aa4b4" },
-            }}
-          >
-            {busy ? "Loading…" : "Upgrade · ₹499/mo"}
-          </Button>
-        </Box>
+          {busy ? "Loading…" : "Upgrade · ₹499/mo"}
+        </Button>
       </Box>
     </Box>
   );
