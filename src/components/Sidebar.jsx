@@ -10,6 +10,7 @@ import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import CloseIcon from "@mui/icons-material/Close";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
+import logoIcon from "../Images/favicon.svg";
 
 const NAV_ITEMS = [
   {
@@ -81,7 +82,7 @@ function SidebarContent({ onClose, showClose, counts }) {
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <Box
             component="img"
-            src="/src/Images/favicon.svg"
+            src={logoIcon}
             alt="Morrow Desk"
             sx={{
               width: 32,

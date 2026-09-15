@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Box, Button, InputBase, Typography } from "@mui/material";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
+import logoIcon from "../Images/favicon.svg";
 
 function GoogleIcon() {
   return (
@@ -199,7 +200,7 @@ export default function Login() {
         <Box sx={{ mb: 4, textAlign: "center" }}>
           <Box
             component="img"
-            src="/src/Images/favicon.svg"
+            src={logoIcon}
             alt="Morrow Desk"
             sx={{
               width: 56,

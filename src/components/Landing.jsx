@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Box, Button, Typography } from "@mui/material";
 import { C } from "../theme.js";
+import logoIcon from "../Images/favicon.svg";
 
 function FloatingOrb({ delay, duration, size, x, y, color }) {
   return (
@@ -126,7 +127,7 @@ export default function Landing() {
             {/* Logo */}
             <Box
               component="img"
-              src="/src/Images/favicon.svg"
+              src={logoIcon}
               alt="Morrow Desk"
               sx={{
                 width: 72,
