@@ -41,9 +41,9 @@ export default function CoilTab({ hits, misses, coilReady, onOpenSector, onOpenS
   if (!coilReady) {
     return (
       <Note>
-        This tab measures each stock against its 200-day trend, which needs
-        about 220 sessions of history to compute. Set the window at the top to
-        220 sessions and press Reload data.
+        This list measures each stock against its 200-day trend, which needs
+        about 220 sessions of history. The data is still loading — it will fill
+        in once the panel is deep enough.
       </Note>
     );
   }

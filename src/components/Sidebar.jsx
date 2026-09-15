@@ -1,7 +1,6 @@
 import { Box, Button, IconButton, Typography } from "@mui/material";
 import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
-import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
@@ -15,19 +14,13 @@ const NAV_ITEMS = [
     id: "setups",
     Icon: PlaylistAddCheckRoundedIcon,
     label: "Setups",
-    desc: "Coil and sector agree",
+    desc: "Quiet bases, sector-filtered or all",
   },
   {
     id: "sectors",
     Icon: GridViewRoundedIcon,
     label: "Sectors",
     desc: "Where setups come from",
-  },
-  {
-    id: "coils",
-    Icon: ShowChartRoundedIcon,
-    label: "Coiled Bases",
-    desc: "Every quiet base, no sector filter",
   },
   {
     id: "position",

@@ -10,7 +10,6 @@ import Sidebar from "./components/Sidebar.jsx";
 import Header from "./components/Header.jsx";
 import SetupsView from "./components/SetupsView.jsx";
 import SectorsView from "./components/SectorsView.jsx";
-import CoilsView from "./components/CoilsView.jsx";
 import PositionView from "./components/PositionView.jsx";
 import TrackRecordTab from "./components/TrackRecordTab.jsx";
 import Guide from "./components/Guide.jsx";
@@ -150,7 +149,6 @@ export default function App() {
   const counts = {
     setups: status?.n_buys ?? buys.length,
     sectors: status?.actionable ?? 0,
-    coils: status?.n_coil ?? coil.length,
     position: status?.n_position ?? 0,
   };
 
@@ -206,6 +204,8 @@ export default function App() {
           {view === "setups" && (
             <SetupsView
               buys={buys}
+              coil={coil}
+              miss={miss}
               status={status}
               onOpenSector={openSector}
               onOpenStock={openStock}
@@ -217,16 +217,6 @@ export default function App() {
               scan={scan}
               status={status}
               onOpenSector={openSector}
-            />
-          )}
-
-          {view === "coils" && (
-            <CoilsView
-              coil={coil}
-              miss={miss}
-              status={status}
-              onOpenSector={openSector}
-              onOpenStock={openStock}
             />
           )}
 

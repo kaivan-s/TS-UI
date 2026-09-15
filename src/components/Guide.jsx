@@ -216,7 +216,7 @@ export default function Guide() {
         How to read this
       </Typography>
       <Mute>
-        Sectors show where money is moving. Coiled Bases shows which names are
+        Sectors show where money is moving. The coil scan shows which names are
         tight. Setups are the overlap, and the overlap is where the edge is:
         over {EVIDENCE_WINDOW}, {Math.round(BASE_RATES.setups.winRate * 100)}%
         of setups beat the market over the following 20 days against{" "}
@@ -244,7 +244,7 @@ export default function Guide() {
       <Step
         n="4"
         title="Widen only if you want more names"
-        body="Coiled Bases is every stock that cleared all seven coil filters with no sector requirement. It is a bigger list with a thinner edge, so treat it as a study list rather than a shortlist. Its sort order carries no information — coil score showed no relationship with forward returns."
+        body="Switch the Setups page to All bases to drop the sector condition and see every stock that cleared all seven coil filters. Same scan, one condition fewer — which is the only thing that separated these two lists, and it is the condition carrying the edge (+3.7% median excess over 20 sessions with the sector filter, +1.7% without). Treat the wider pool as a study list rather than a shortlist, and ignore its sort order: coil score showed no relationship with forward returns."
       />
       <Step
         n="5"
@@ -254,7 +254,7 @@ export default function Guide() {
       <Step
         n="6"
         title="Look up any name"
-        body="The header field runs the same coil filters, sector shape, and setup checks on a symbol you type. Put your entry in the drawer to get a mechanical plan: wait / buy / add / hold / sell, plus a stop under the 20-day base (or 1.5 ATR) and a 2R target. Those prices are risk math from this structure, not a measured edge. Click a symbol in Coiled Bases or Setups for the same drawer."
+        body="The header field runs the same coil filters, sector shape, and setup checks on a symbol you type. Put your entry in the drawer to get a mechanical plan: wait / buy / add / hold / sell, plus a stop under the 20-day base (or 1.5 ATR) and a 2R target. Those prices are risk math from this structure, not a measured edge. Click a symbol on any list for the same drawer."
       />
       <Step
         n="7"
