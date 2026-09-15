@@ -1,9 +1,11 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, Link } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import { C } from "./theme.js";
 import { useAuth } from "./auth.jsx";
 import Landing from "./components/Landing.jsx";
 import Login from "./components/Login.jsx";
+import PrivacyPolicy from "./components/PrivacyPolicy.jsx";
+import TermsConditions from "./components/TermsConditions.jsx";
 import App from "./App.jsx";
 
 function Loading() {
@@ -18,6 +20,56 @@ function Loading() {
       }}
     >
       <Typography sx={{ color: C.muted, fontSize: 14.5 }}>Opening…</Typography>
+    </Box>
+  );
+}
+
+function PublicPage({ children }) {
+  return (
+    <Box sx={{ minHeight: "100vh", bgcolor: C.bg }}>
+      {/* Header with back link */}
+      <Box
+        sx={{
+          borderBottom: `1px solid ${C.line}`,
+          px: 3,
+          py: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <Link
+          to="/"
+          style={{
+            textDecoration: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <Box
+            sx={{
+              width: 28,
+              height: 28,
+              borderRadius: 1.5,
+              bgcolor: "rgba(142,180,196,0.1)",
+              border: "1px solid rgba(142,180,196,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: C.accent }}>M</Typography>
+          </Box>
+          <Typography sx={{ fontSize: 15, fontWeight: 500, color: C.text }}>
+            Morrow Desk
+          </Typography>
+        </Link>
+      </Box>
+      {/* Content */}
+      <Box sx={{ maxWidth: 800, mx: "auto", px: 3, py: 4 }}>
+        {children}
+      </Box>
     </Box>
   );
 }
@@ -85,6 +137,10 @@ export default function AppRoutes() {
           </PublicOnly>
         }
       />
+
+      {/* Public legal pages - accessible without login */}
+      <Route path="/privacy" element={<PublicPage><PrivacyPolicy /></PublicPage>} />
+      <Route path="/terms" element={<PublicPage><TermsConditions /></PublicPage>} />
 
       {/* Protected app routes */}
       <Route

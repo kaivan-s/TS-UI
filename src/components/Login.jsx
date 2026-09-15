@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Box, Button, InputBase, Typography } from "@mui/material";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
@@ -122,12 +122,41 @@ export default function Login() {
         minHeight: "100vh",
         bgcolor: "#050506",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        flexDirection: "column",
         position: "relative",
         overflow: "hidden",
       }}
     >
+      {/* Disclaimer Banner */}
+      <Box
+        sx={{
+          bgcolor: "rgba(196,164,106,0.08)",
+          borderBottom: "1px solid rgba(196,164,106,0.15)",
+          px: 2,
+          py: 0.75,
+          textAlign: "center",
+          position: "relative",
+          zIndex: 10,
+        }}
+      >
+        <Typography sx={{ fontSize: 11, color: "rgba(238,234,227,0.6)" }}>
+          Not SEBI registered. Not financial advice. This is a screening tool — all decisions are yours.{" "}
+          <Link to="/terms" style={{ color: C.accent, textDecoration: "none" }}>Terms</Link>
+          {" · "}
+          <Link to="/privacy" style={{ color: C.accent, textDecoration: "none" }}>Privacy</Link>
+        </Typography>
+      </Box>
+
+      {/* Main content wrapper */}
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          position: "relative",
+        }}
+      >
       {/* Animated background orbs */}
       <FloatingOrb delay={0} duration={20} size={400} x="10%" y="20%" color="rgba(142,180,196,0.15)" />
       <FloatingOrb delay={2} duration={25} size={300} x="70%" y="60%" color="rgba(125,186,150,0.12)" />
@@ -487,6 +516,7 @@ export default function Login() {
       >
         Sector accumulation scan
       </Typography>
+      </Box>
     </Box>
   );
 }

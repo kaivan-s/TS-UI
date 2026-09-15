@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Box, Button, Typography } from "@mui/material";
 import { C } from "../theme.js";
 
@@ -57,8 +57,30 @@ export default function Landing() {
         bgcolor: "#050506",
         position: "relative",
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
+      {/* Disclaimer Banner */}
+      <Box
+        sx={{
+          bgcolor: "rgba(196,164,106,0.08)",
+          borderBottom: "1px solid rgba(196,164,106,0.15)",
+          px: 2,
+          py: 0.75,
+          textAlign: "center",
+          position: "relative",
+          zIndex: 10,
+        }}
+      >
+        <Typography sx={{ fontSize: 11, color: "rgba(238,234,227,0.6)" }}>
+          Not SEBI registered. Not financial advice. This is a screening tool — all decisions are yours.{" "}
+          <Link to="/terms" style={{ color: C.accent, textDecoration: "none" }}>Terms</Link>
+          {" · "}
+          <Link to="/privacy" style={{ color: C.accent, textDecoration: "none" }}>Privacy</Link>
+        </Typography>
+      </Box>
+
       {/* Animated background orbs */}
       <FloatingOrb delay={0} duration={15} size={600} x="-5%" y="-10%" color="rgba(142,180,196,0.15)" />
       <FloatingOrb delay={1} duration={18} size={500} x="60%" y="20%" color="rgba(125,186,150,0.12)" />
