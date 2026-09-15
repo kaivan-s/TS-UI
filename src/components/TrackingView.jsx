@@ -179,7 +179,7 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
     const priced = filtered.map((r) => ({
       ...r,
       move: gain(r.entry_price, r.last_close),
-      peak: gain(r.entry_price, r.peak_close),
+      peak: gain(r.entry_price, r.peak_high),
     }));
     return sort.apply(priced);
   }, [rows, pick, q, sort.key, sort.dir]);
@@ -335,8 +335,8 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
                 sortKey="move"
               />
               <HeadCell
-                label="Best close"
-                help="The highest close the base reached since it appeared, and the gain to it. Closing prices only, so an intraday spike that was given back before the bell does not count. This number can only rise, so read it as whether the base ever worked at all, not as a return anyone captured."
+                label="Best price"
+                help="The highest intraday price the base traded at since the session it appeared, and the gain to it. Measured from the session after it was found, since the list publishes after the close. This is the most generous number on the page — it assumes selling at the exact high — so read it as how much room the base ever offered, not as a return anyone captured."
                 align="right"
                 sort={sort}
                 sortKey="peak"
@@ -414,7 +414,7 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
                           {pct(r.peak, 1)}
                         </Box>
                         <Box sx={{ fontSize: 11.5, color: C.muted }}>
-                          {num(r.peak_close)}
+                          {num(r.peak_high)}
                         </Box>
                       </>
                     )}
@@ -445,11 +445,12 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
         marks an event rather than a result. And "Since found" measures from
         the day the base appeared, which is not an entry price — it is where
         the stock was when the filters first noticed it, and a base is meant
-        to be acted on at the level, not before. "Best close" is the kindest
+        to be acted on at the level, not before. "Best price" is the kindest
         number on the page by construction — it never falls, and nobody sells
-        at the high — so it answers whether a base ever worked rather than
-        what it paid. Resolved bases age out after about twenty sessions so
-        the table stays about the current window rather than the archive.
+        at the exact high — so it answers how much room a base ever offered
+        rather than what it paid. Resolved bases age out after about twenty
+        sessions so the table stays about the current window rather than the
+        archive.
       </Note>
     </Box>
   );
