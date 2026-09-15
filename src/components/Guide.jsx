@@ -258,8 +258,8 @@ export default function Guide() {
       />
       <Step
         n="7"
-        title="Expected Movers — range, not direction"
-        body="Everything else updates automatically at 7:30 PM IST. This one also runs live around midday and again after 15:35. Read it for one thing only: the order forecasts how far a name travels intraday, which measured reliably (the top of the list reaches +3% about 9pp more often, holding on 87-92% of sessions). It does not forecast direction — the next-day return edge measured +0.02%, p=0.73, which is zero. It is a list of names with enough range to be worth watching, not a list of buys."
+        title="Position Trades — a different clock entirely"
+        body="The other tabs look for a base about to resolve over the next few days. This one ignores quietness and buys strength instead: the top decile of twelve-month performers that are still above their 50-day average, held seven to ten sessions. Momentum is measured over the year ending one month ago, because the most recent month tends to give back. Two things make it unlike the rest of the app — sort order is meaningful here (stronger twelve-month momentum measured better than weaker, right down the ranking), and no base rate is printed, because twelve-month momentum needs 250 sessions of warmup and our history leaves too few independent periods to honestly quote a win rate. It rests on the published record instead, where the effect has held across decades and dozens of markets."
       />
 
       <H>What each state means — and what to do</H>

@@ -11,12 +11,12 @@ import Header from "./components/Header.jsx";
 import SetupsView from "./components/SetupsView.jsx";
 import SectorsView from "./components/SectorsView.jsx";
 import CoilsView from "./components/CoilsView.jsx";
-import ActionView from "./components/ActionView.jsx";
+import PositionView from "./components/PositionView.jsx";
 import TrackRecordTab from "./components/TrackRecordTab.jsx";
 import Guide from "./components/Guide.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
 import StockDrawer from "./components/StockDrawer.jsx";
-import { getDashboard, getSector, getStatus, getStock, getSymbols, refresh, scanTom } from "./api.js";
+import { getDashboard, getSector, getStatus, getStock, getSymbols, refresh } from "./api.js";
 
 function todayISO() {
   const d = new Date();
@@ -33,8 +33,6 @@ export default function App() {
   const [coil, setCoil] = useState([]);
   const [miss, setMiss] = useState([]);
   const [buys, setBuys] = useState([]);
-  const [tom, setTom] = useState([]);
-  const [liveBusy, setLiveBusy] = useState(false);
   const [error, setError] = useState("");
   const [sectorName, setSectorName] = useState(null);
   const [sector, setSector] = useState(null);
@@ -53,9 +51,6 @@ export default function App() {
     if (d.coil) setCoil(d.coil);
     if (d.near_miss) setMiss(d.near_miss);
     if (d.buys) setBuys(d.buys);
-    if (d.tom) setTom(d.tom);
-    if (d.live_status === "loading") setLiveBusy(true);
-    if (d.live_status === "ready" || d.live_status === "error") setLiveBusy(false);
     if (d.error) setError(d.error);
     else setError("");
   };
@@ -109,18 +104,6 @@ export default function App() {
     };
   }, [pollKey]);
 
-  const onTomRefresh = async () => {
-    setError("");
-    setLiveBusy(true);
-    try {
-      await scanTom();
-      setPollKey((n) => n + 1);
-    } catch (e) {
-      setError(e.message);
-      setLiveBusy(false);
-    }
-  };
-
   const onRefresh = async () => {
     setError("");
     try {
@@ -168,7 +151,7 @@ export default function App() {
     setups: status?.n_buys ?? buys.length,
     sectors: status?.actionable ?? 0,
     coils: status?.n_coil ?? coil.length,
-    momentum: status?.n_tom || tom.length,
+    position: status?.n_position ?? 0,
   };
 
   return (
@@ -247,14 +230,11 @@ export default function App() {
             />
           )}
 
-          {view === "momentum" && (
-            <ActionView
-              tom={tom}
+          {view === "position" && (
+            <PositionView
               status={status}
-              liveBusy={liveBusy}
               onOpenSector={openSector}
               onOpenStock={openStock}
-              onTomRefresh={onTomRefresh}
             />
           )}
 

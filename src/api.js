@@ -60,3 +60,9 @@ export const getSectorHistory = (sector, days = 20) =>
 
 export const getSectorConstituents = (sector, top = 15) =>
   json(`/api/sector-lookouts/constituents?sector=${encodeURIComponent(sector)}&top=${top}`);
+
+// Position Trades
+export const getPositionTrades = (scanDate = null) => {
+  const q = scanDate ? `?scan_date=${scanDate}` : "";
+  return json(`/api/position-trades${q}`);
+};

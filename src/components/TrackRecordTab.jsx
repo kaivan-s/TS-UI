@@ -399,7 +399,7 @@ export default function TrackRecordTab({ onOpenStock }) {
             <Note>
               {dates.length
                 ? "No picks on this date."
-                : "No predictions logged yet. Run Scan on Expected Movers and they save automatically."}
+                : "No predictions logged yet."}
             </Note>
           ) : (
             <TableContainer component={Paper} variant="outlined">

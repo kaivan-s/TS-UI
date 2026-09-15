@@ -30,10 +30,10 @@ const NAV_ITEMS = [
     desc: "Every quiet base, no sector filter",
   },
   {
-    id: "momentum",
+    id: "position",
     Icon: TrendingUpRoundedIcon,
-    label: "Expected Movers",
-    desc: "Range forecast, not direction",
+    label: "Position Trades",
+    desc: "Year-long leaders, held a week or two",
   },
   {
     id: "track",

@@ -4,8 +4,13 @@
  * These exist so the tables can state a measured number instead of hedging
  * about what they are not. Method, so the numbers can be defended:
  *
- *   - Every scan date from 18 Jun 2025 to 11 Sep 2026 (324 cached sessions,
- *     114 of them usable once the 200-day indicators have warmed up).
+ *   - 324 cached sessions run from 18 Jun 2025 to 11 Sep 2026, but both scans
+ *     need 200 sessions of a symbol's own history (CoilParams.min_sessions,
+ *     and ema200 built with min_periods=200), so nothing qualifies until late
+ *     Mar 2026. Entries then stop once the 20-session forward window no
+ *     longer fits, in mid-Aug 2026. EVIDENCE_WINDOW states that measured
+ *     span, not the data span — the two are easy to confuse and the
+ *     difference is 15 months versus 5.
  *   - De-duplicated to each name's FIRST qualifying session. Pooling every
  *     flag-day counts a name once per session it stays qualified, which
  *     inflates the sample roughly tenfold and skews it toward names that
@@ -17,11 +22,15 @@
  *     a mean-based number makes a worthless screen look good.
  *
  * Caveats worth keeping in mind before quoting these anywhere harder: it is
- * one 15-month window, and forward windows on nearby dates overlap, so these
- * are backtest figures rather than a live record.
+ * one five-month window covering 61 entry days for setups and 98 for coils,
+ * and forward windows on nearby dates overlap, so these are backtest figures
+ * rather than a live record.
  */
 
-export const EVIDENCE_WINDOW = "Jun 2025 – Sep 2026";
+export const EVIDENCE_WINDOW = "Mar – Aug 2026";
+// Movers are measured one session forward rather than twenty, so entries run
+// several weeks later than the 20-session lists before the data runs out.
+export const MOVERS_WINDOW = "Mar – Sep 2026";
 
 export const BASE_RATES = {
   setups: { n: 151, winRate: 0.662, medianExcess: 0.0367 },
@@ -65,7 +74,7 @@ export const STAT_STRIPS = {
       { value: "+0.0%", label: "next-day return edge" },
     ],
     tip:
-      `Measured over ${EVIDENCE_WINDOW} on 114 scan days. The top of this ` +
+      `Measured over ${MOVERS_WINDOW} on 123 scan days. The top of this ` +
       "list reached 3% above its close on the following session 9 to 11 " +
       "percentage points more often than the rest of the screen (t=13, " +
       "holding on 87–92% of sessions) — a reliable forecast of how far a " +
