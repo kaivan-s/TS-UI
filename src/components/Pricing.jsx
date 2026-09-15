@@ -30,12 +30,23 @@ const COMPARISON = [
   { feature: "Sector details & history", free: false, premium: true },
 ];
 
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  } catch {
+    return dateStr;
+  }
+}
+
 export default function Pricing() {
-  const { upgrade, busy, isPremium, plan: currentPlan, email, refreshSubscription, cancelSubscription } = useAuth();
+  const { upgrade, busy, isPremium, plan: currentPlan, email, refreshSubscription, cancelSubscription, subscriptionExpires, subscriptionCancelled } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showSuccess, setShowSuccess] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showCancelled, setShowCancelled] = useState(false);
+  const [cancelledExpiry, setCancelledExpiry] = useState(null);
 
   useEffect(() => {
     if (searchParams.get("success") === "true") {
@@ -49,6 +60,7 @@ export default function Pricing() {
     setShowCancelDialog(false);
     const result = await cancelSubscription?.();
     if (result?.success) {
+      setCancelledExpiry(result.expires_at);
       setShowCancelled(true);
     }
   };
@@ -91,6 +103,7 @@ export default function Pricing() {
         >
           <Typography sx={{ fontWeight: 600 }}>Subscription Cancelled</Typography>
           <Typography sx={{ fontSize: 14, color: "rgba(238,234,227,0.7)" }}>
+            You'll keep premium access until {formatDate(cancelledExpiry || subscriptionExpires)}.
             You can resubscribe anytime.
           </Typography>
         </Alert>
@@ -105,7 +118,8 @@ export default function Pricing() {
         <DialogTitle sx={{ color: C.text, pb: 1 }}>Cancel Subscription?</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ color: "rgba(238,234,227,0.7)" }}>
-            You'll lose access to premium features immediately. You can resubscribe anytime.
+            Your subscription won't renew, but you'll keep premium access until {formatDate(subscriptionExpires)}.
+            You can resubscribe anytime.
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
@@ -137,7 +151,9 @@ export default function Pricing() {
         </Typography>
         <Typography sx={{ fontSize: 16, color: "rgba(238,234,227,0.6)", maxWidth: 400, mx: "auto" }}>
           {isPremium 
-            ? `You're on the ${currentPlan === "yearly" ? "Pro" : "Premium"} plan`
+            ? subscriptionCancelled
+              ? `Access until ${formatDate(subscriptionExpires)}`
+              : `You're on the ${currentPlan === "yearly" ? "Pro" : "Premium"} plan`
             : "Full access to setups, sectors, and tracking tools"
           }
         </Typography>
@@ -164,13 +180,13 @@ export default function Pricing() {
         >
           {isPremium && currentPlan === "monthly" && (
             <Chip
-              label="Current"
+              label={subscriptionCancelled ? "Cancelling" : "Current"}
               size="small"
               sx={{
                 position: "absolute",
                 top: 12,
                 right: 12,
-                bgcolor: C.good,
+                bgcolor: subscriptionCancelled ? C.warn : C.good,
                 color: C.bg,
                 fontWeight: 600,
                 fontSize: 11,
@@ -191,7 +207,7 @@ export default function Pricing() {
           <Button
             fullWidth
             variant="contained"
-            disabled={busy || (isPremium && currentPlan === "monthly")}
+            disabled={busy || (isPremium && currentPlan === "monthly" && !subscriptionCancelled)}
             onClick={() => upgrade("monthly")}
             sx={{
               py: 1.25,
@@ -200,12 +216,12 @@ export default function Pricing() {
               fontWeight: 600,
               "&:hover": { bgcolor: "#7aa4b4" },
               "&.Mui-disabled": {
-                bgcolor: isPremium && currentPlan === "monthly" ? "rgba(125,186,150,0.15)" : "rgba(238,234,227,0.08)",
-                color: isPremium && currentPlan === "monthly" ? C.good : "rgba(238,234,227,0.4)",
+                bgcolor: isPremium && currentPlan === "monthly" && !subscriptionCancelled ? "rgba(125,186,150,0.15)" : "rgba(238,234,227,0.08)",
+                color: isPremium && currentPlan === "monthly" && !subscriptionCancelled ? C.good : "rgba(238,234,227,0.4)",
               },
             }}
           >
-            {busy ? "Loading…" : isPremium && currentPlan === "monthly" ? "Active" : "Get Premium"}
+            {busy ? "Loading…" : isPremium && currentPlan === "monthly" && !subscriptionCancelled ? "Active" : subscriptionCancelled ? "Resubscribe" : "Get Premium"}
           </Button>
         </Box>
 
@@ -220,13 +236,13 @@ export default function Pricing() {
           }}
         >
           <Chip
-            label={isPremium && currentPlan === "yearly" ? "Current" : "Save 33%"}
+            label={isPremium && currentPlan === "yearly" ? (subscriptionCancelled ? "Cancelling" : "Current") : "Save 33%"}
             size="small"
             sx={{
               position: "absolute",
               top: 12,
               right: 12,
-              bgcolor: C.good,
+              bgcolor: isPremium && currentPlan === "yearly" && subscriptionCancelled ? C.warn : C.good,
               color: C.bg,
               fontWeight: 600,
               fontSize: 11,
@@ -246,7 +262,7 @@ export default function Pricing() {
           <Button
             fullWidth
             variant="contained"
-            disabled={busy || (isPremium && currentPlan === "yearly")}
+            disabled={busy || (isPremium && currentPlan === "yearly" && !subscriptionCancelled)}
             onClick={() => upgrade("yearly")}
             sx={{
               py: 1.25,
@@ -255,18 +271,18 @@ export default function Pricing() {
               fontWeight: 600,
               "&:hover": { bgcolor: "#6aa880" },
               "&.Mui-disabled": {
-                bgcolor: isPremium && currentPlan === "yearly" ? "rgba(125,186,150,0.15)" : "rgba(238,234,227,0.08)",
-                color: isPremium && currentPlan === "yearly" ? C.good : "rgba(238,234,227,0.4)",
+                bgcolor: isPremium && currentPlan === "yearly" && !subscriptionCancelled ? "rgba(125,186,150,0.15)" : "rgba(238,234,227,0.08)",
+                color: isPremium && currentPlan === "yearly" && !subscriptionCancelled ? C.good : "rgba(238,234,227,0.4)",
               },
             }}
           >
-            {busy ? "Loading…" : isPremium && currentPlan === "yearly" ? "Active" : "Get Pro"}
+            {busy ? "Loading…" : isPremium && currentPlan === "yearly" && !subscriptionCancelled ? "Active" : subscriptionCancelled ? "Resubscribe" : "Get Pro"}
           </Button>
         </Box>
       </Box>
 
-      {/* Cancel Subscription - Only for premium users */}
-      {isPremium && (
+      {/* Cancel Subscription - Only for premium users who haven't cancelled */}
+      {isPremium && !subscriptionCancelled && (
         <Box sx={{ textAlign: "center", mb: 5 }}>
           <Button
             size="small"
@@ -275,6 +291,15 @@ export default function Pricing() {
           >
             Cancel subscription
           </Button>
+        </Box>
+      )}
+
+      {/* Show cancelled status */}
+      {isPremium && subscriptionCancelled && (
+        <Box sx={{ textAlign: "center", mb: 5 }}>
+          <Typography sx={{ fontSize: 13, color: "rgba(238,234,227,0.5)" }}>
+            Subscription cancelled · Access until {formatDate(subscriptionExpires)}
+          </Typography>
         </Box>
       )}
 

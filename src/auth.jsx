@@ -23,6 +23,8 @@ export function AuthProvider({ children }) {
   const [isPremium, setIsPremium] = useState(false);
   const [plan, setPlan] = useState(null);
   const [subscriptionId, setSubscriptionId] = useState(null);
+  const [subscriptionExpires, setSubscriptionExpires] = useState(null);
+  const [subscriptionCancelled, setSubscriptionCancelled] = useState(false);
 
   useEffect(() => {
     let dead = false;
@@ -63,6 +65,8 @@ export function AuthProvider({ children }) {
       setIsPremium(false);
       setPlan(null);
       setSubscriptionId(null);
+      setSubscriptionExpires(null);
+      setSubscriptionCancelled(false);
       return;
     }
     let stop = false;
@@ -76,18 +80,24 @@ export function AuthProvider({ children }) {
           setIsPremium(false);
           setPlan(null);
           setSubscriptionId(null);
+          setSubscriptionExpires(null);
+          setSubscriptionCancelled(false);
         } else {
           setDenied(false);
           const data = await r.json();
           setIsPremium(data.is_premium || false);
           setPlan(data.plan || null);
           setSubscriptionId(data.subscription_id || null);
+          setSubscriptionExpires(data.subscription_expires || null);
+          setSubscriptionCancelled(data.subscription_cancelled || false);
         }
       })
       .catch(() => {
         setIsPremium(false);
         setPlan(null);
         setSubscriptionId(null);
+        setSubscriptionExpires(null);
+        setSubscriptionCancelled(false);
       });
     return () => {
       stop = true;
@@ -112,6 +122,8 @@ export function AuthProvider({ children }) {
       isPremium,
       plan,
       subscriptionId,
+      subscriptionExpires,
+      subscriptionCancelled,
       signInWithGoogle: async () => {
         setError("");
         setNotice("");
@@ -208,6 +220,8 @@ export function AuthProvider({ children }) {
             setIsPremium(data.is_premium || false);
             setPlan(data.plan || null);
             setSubscriptionId(data.subscription_id || null);
+            setSubscriptionExpires(data.subscription_expires || null);
+            setSubscriptionCancelled(data.subscription_cancelled || false);
           }
         } catch {
           // ignore
@@ -228,10 +242,12 @@ export function AuthProvider({ children }) {
           });
           const data = await r.json();
           if (data.success) {
-            setIsPremium(false);
-            setPlan(null);
-            setSubscriptionId(null);
-            return { success: true };
+            // Don't remove premium - user keeps access until expires_at
+            setSubscriptionCancelled(true);
+            if (data.expires_at) {
+              setSubscriptionExpires(data.expires_at);
+            }
+            return { success: true, expires_at: data.expires_at };
           } else {
             setError(data.error || "Could not cancel subscription");
             return { success: false, error: data.error };
@@ -245,7 +261,7 @@ export function AuthProvider({ children }) {
       },
       getAccessToken,
     };
-  }, [session, configured, loading, denied, error, notice, busy, isPremium, plan, subscriptionId]);
+  }, [session, configured, loading, denied, error, notice, busy, isPremium, plan, subscriptionId, subscriptionExpires, subscriptionCancelled]);
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
