@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -16,6 +16,8 @@ import TrackingView from "./components/TrackingView.jsx";
 import SectorsView from "./components/SectorsView.jsx";
 import Guide from "./components/Guide.jsx";
 import Pricing from "./components/Pricing.jsx";
+import PrivacyPolicy from "./components/PrivacyPolicy.jsx";
+import TermsConditions from "./components/TermsConditions.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
 import StockDrawer from "./components/StockDrawer.jsx";
 import { getDashboard, getSector, getStock, getSymbols } from "./api.js";
@@ -27,6 +29,8 @@ const PATH_TO_VIEW = {
   "/tracking": "tracking",
   "/guide": "guide",
   "/pricing": "pricing",
+  "/privacy": "privacy",
+  "/terms": "terms",
 };
 
 export default function App() {
@@ -123,13 +127,32 @@ export default function App() {
   };
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: C.bg }}>
-      {/* Sidebar */}
-      <Sidebar
-        counts={counts}
-        mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
-      />
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh", bgcolor: C.bg }}>
+      {/* Disclaimer Banner */}
+      <Box
+        sx={{
+          bgcolor: "rgba(196,164,106,0.1)",
+          borderBottom: "1px solid rgba(196,164,106,0.2)",
+          px: 2,
+          py: 0.75,
+          textAlign: "center",
+        }}
+      >
+        <Typography sx={{ fontSize: 11, color: "rgba(238,234,227,0.7)" }}>
+          Not SEBI registered. Not financial advice. This is a screening tool to help identify setups — all decisions are yours.{" "}
+          <Link to="/terms" style={{ color: C.accent, textDecoration: "none" }}>Terms</Link>
+          {" · "}
+          <Link to="/privacy" style={{ color: C.accent, textDecoration: "none" }}>Privacy</Link>
+        </Typography>
+      </Box>
+
+      <Box sx={{ display: "flex", flex: 1 }}>
+        {/* Sidebar */}
+        <Sidebar
+          counts={counts}
+          mobileOpen={mobileOpen}
+          onMobileClose={() => setMobileOpen(false)}
+        />
 
       {/* Main content */}
       <Box
@@ -211,7 +234,12 @@ export default function App() {
           {view === "guide" && <Guide />}
 
           {view === "pricing" && <Pricing />}
+
+          {view === "privacy" && <PrivacyPolicy />}
+
+          {view === "terms" && <TermsConditions />}
         </Box>
+      </Box>
       </Box>
 
       {/* Drawers */}
