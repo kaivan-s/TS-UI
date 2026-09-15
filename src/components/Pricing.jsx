@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Alert, Box, Button, Chip, Typography } from "@mui/material";
+import { Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography } from "@mui/material";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import CelebrationRoundedIcon from "@mui/icons-material/CelebrationRounded";
+import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
 
@@ -282,10 +283,12 @@ function ComparisonTable() {
 }
 
 export default function Pricing() {
-  const { upgrade, busy, isPremium, plan: currentPlan, email, refreshSubscription } = useAuth();
+  const { upgrade, busy, isPremium, plan: currentPlan, email, refreshSubscription, cancelSubscription } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState("yearly");
   const [searchParams, setSearchParams] = useSearchParams();
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showCancelled, setShowCancelled] = useState(false);
 
   // Handle success redirect from payment
   useEffect(() => {
@@ -303,6 +306,18 @@ export default function Pricing() {
       // Not logged in — upgrade will redirect to auth
     }
     upgrade(planId);
+  };
+
+  const handleCancelClick = () => {
+    setShowCancelDialog(true);
+  };
+
+  const handleCancelConfirm = async () => {
+    setShowCancelDialog(false);
+    const result = await cancelSubscription?.();
+    if (result?.success) {
+      setShowCancelled(true);
+    }
   };
 
   return (
@@ -330,6 +345,69 @@ export default function Pricing() {
           </Typography>
         </Alert>
       )}
+
+      {/* Cancelled message */}
+      {showCancelled && (
+        <Alert
+          severity="info"
+          icon={<CancelRoundedIcon />}
+          onClose={() => setShowCancelled(false)}
+          sx={{
+            mb: 4,
+            bgcolor: "rgba(142,180,196,0.12)",
+            border: "1px solid rgba(142,180,196,0.25)",
+            color: C.text,
+            "& .MuiAlert-icon": { color: C.accent },
+            "& .MuiAlert-action": { color: C.muted },
+          }}
+        >
+          <Typography sx={{ fontWeight: 600, mb: 0.5 }}>
+            Subscription Cancelled
+          </Typography>
+          <Typography sx={{ fontSize: 14, color: C.muted }}>
+            Your subscription has been cancelled. You can resubscribe anytime.
+          </Typography>
+        </Alert>
+      )}
+
+      {/* Cancel confirmation dialog */}
+      <Dialog
+        open={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        PaperProps={{
+          sx: {
+            bgcolor: C.paper,
+            border: `1px solid ${C.line}`,
+            borderRadius: 2,
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: C.text }}>Cancel Subscription?</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: C.muted }}>
+            Are you sure you want to cancel your {currentPlan} subscription? 
+            You will lose access to premium features immediately.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setShowCancelDialog(false)}
+            sx={{ color: C.muted }}
+          >
+            Keep Subscription
+          </Button>
+          <Button
+            onClick={handleCancelConfirm}
+            disabled={busy}
+            sx={{
+              color: C.bad,
+              "&:hover": { bgcolor: "rgba(229,115,115,0.1)" },
+            }}
+          >
+            {busy ? "Cancelling…" : "Yes, Cancel"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Header */}
       <Box sx={{ textAlign: "center", mb: 5 }}>
@@ -392,6 +470,45 @@ export default function Pricing() {
           />
         ))}
       </Box>
+
+      {/* Manage subscription section for premium users */}
+      {isPremium && (
+        <Box
+          sx={{
+            mb: 6,
+            p: 3,
+            bgcolor: C.paper,
+            border: `1px solid ${C.line}`,
+            borderRadius: 3,
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
+            <Box>
+              <Typography sx={{ fontSize: 16, fontWeight: 600, color: C.text, mb: 0.5 }}>
+                Manage Subscription
+              </Typography>
+              <Typography sx={{ fontSize: 14, color: C.muted }}>
+                You're on the {currentPlan === "yearly" ? "Pro (Yearly)" : "Premium (Monthly)"} plan
+              </Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              onClick={handleCancelClick}
+              disabled={busy}
+              sx={{
+                color: C.bad,
+                borderColor: "rgba(229,115,115,0.3)",
+                "&:hover": {
+                  borderColor: C.bad,
+                  bgcolor: "rgba(229,115,115,0.08)",
+                },
+              }}
+            >
+              Cancel Subscription
+            </Button>
+          </Box>
+        </Box>
+      )}
 
       {/* Features grid */}
       <Box sx={{ mb: 6 }}>

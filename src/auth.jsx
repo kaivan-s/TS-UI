@@ -22,6 +22,7 @@ export function AuthProvider({ children }) {
   const [busy, setBusy] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [plan, setPlan] = useState(null);
+  const [subscriptionId, setSubscriptionId] = useState(null);
 
   useEffect(() => {
     let dead = false;
@@ -61,6 +62,7 @@ export function AuthProvider({ children }) {
       setDenied(false);
       setIsPremium(false);
       setPlan(null);
+      setSubscriptionId(null);
       return;
     }
     let stop = false;
@@ -73,16 +75,19 @@ export function AuthProvider({ children }) {
           setDenied(true);
           setIsPremium(false);
           setPlan(null);
+          setSubscriptionId(null);
         } else {
           setDenied(false);
           const data = await r.json();
           setIsPremium(data.is_premium || false);
           setPlan(data.plan || null);
+          setSubscriptionId(data.subscription_id || null);
         }
       })
       .catch(() => {
         setIsPremium(false);
         setPlan(null);
+        setSubscriptionId(null);
       });
     return () => {
       stop = true;
@@ -106,6 +111,7 @@ export function AuthProvider({ children }) {
       busy,
       isPremium,
       plan,
+      subscriptionId,
       signInWithGoogle: async () => {
         setError("");
         setNotice("");
@@ -201,14 +207,45 @@ export function AuthProvider({ children }) {
             const data = await r.json();
             setIsPremium(data.is_premium || false);
             setPlan(data.plan || null);
+            setSubscriptionId(data.subscription_id || null);
           }
         } catch {
           // ignore
         }
       },
+      cancelSubscription: async () => {
+        if (!session?.access_token) return { success: false, error: "Not signed in" };
+        setError("");
+        setBusy(true);
+        try {
+          const r = await fetch(apiUrl("/api/subscription/cancel"), {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ subscription_id: subscriptionId }),
+          });
+          const data = await r.json();
+          if (data.success) {
+            setIsPremium(false);
+            setPlan(null);
+            setSubscriptionId(null);
+            return { success: true };
+          } else {
+            setError(data.error || "Could not cancel subscription");
+            return { success: false, error: data.error };
+          }
+        } catch (e) {
+          setError(e.message || "Cancel failed");
+          return { success: false, error: e.message };
+        } finally {
+          setBusy(false);
+        }
+      },
       getAccessToken,
     };
-  }, [session, configured, loading, denied, error, notice, busy, isPremium, plan]);
+  }, [session, configured, loading, denied, error, notice, busy, isPremium, plan, subscriptionId]);
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
