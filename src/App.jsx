@@ -10,7 +10,6 @@ import Sidebar from "./components/Sidebar.jsx";
 import Header from "./components/Header.jsx";
 import SetupsView from "./components/SetupsView.jsx";
 import SectorsView from "./components/SectorsView.jsx";
-import TrackRecordTab from "./components/TrackRecordTab.jsx";
 import Guide from "./components/Guide.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
 import StockDrawer from "./components/StockDrawer.jsx";
@@ -214,8 +213,6 @@ export default function App() {
               onOpenSector={openSector}
             />
           )}
-
-          {view === "track" && <TrackRecordTab onOpenStock={openStock} />}
 
           {view === "guide" && <Guide />}
         </Box>

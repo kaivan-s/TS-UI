@@ -28,7 +28,6 @@ export const refresh = (days, end) =>
     method: "POST",
     body: JSON.stringify({ days, end }),
   });
-export const scanTom = () => json("/api/tom", { method: "POST", body: "{}" });
 export const getSector = (name) =>
   json(`/api/sector?name=${encodeURIComponent(name)}`);
 export const getSymbols = () => json("/api/symbols");
@@ -37,17 +36,6 @@ export const getStock = (q, entry) => {
   if (entry != null && entry !== "") qs.set("entry", String(entry));
   return json(`/api/stock?${qs}`);
 };
-
-export const getTrackRecord = (scanDate = null, kind = null) => {
-  const qs = new URLSearchParams();
-  if (scanDate) qs.set("scan_date", scanDate);
-  if (kind) qs.set("kind", kind);
-  const q = qs.toString();
-  return json(`/api/track-record${q ? `?${q}` : ""}`);
-};
-
-export const verifyOutcomes = () =>
-  json("/api/verify-outcomes", { method: "POST", body: "{}" });
 
 // Sector Lookouts
 export const getSectorLookouts = (date = null) => {
@@ -61,8 +49,3 @@ export const getSectorHistory = (sector, days = 20) =>
 export const getSectorConstituents = (sector, top = 15) =>
   json(`/api/sector-lookouts/constituents?sector=${encodeURIComponent(sector)}&top=${top}`);
 
-// Position Trades
-export const getPositionTrades = (scanDate = null) => {
-  const q = scanDate ? `?scan_date=${scanDate}` : "";
-  return json(`/api/position-trades${q}`);
-};

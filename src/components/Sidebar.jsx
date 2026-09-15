@@ -1,7 +1,6 @@
 import { Box, Button, IconButton, Typography } from "@mui/material";
 import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
-import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -20,12 +19,6 @@ const NAV_ITEMS = [
     Icon: GridViewRoundedIcon,
     label: "Sectors",
     desc: "Where setups come from",
-  },
-  {
-    id: "track",
-    Icon: AssessmentRoundedIcon,
-    label: "Track Record",
-    desc: "Past performance",
   },
   {
     id: "guide",

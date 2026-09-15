@@ -248,20 +248,9 @@ export default function Guide() {
       />
       <Step
         n="5"
-        title="Verify with Track Record"
-        body="Use Verify on Track Record to score yesterday's list against today's high (Reached vs scan) and close (Close %). A name that never ran was never a trade."
-      />
-      <Step
-        n="6"
         title="Look up any name"
         body="The header field runs the same coil filters, sector shape, and setup checks on a symbol you type. Put your entry in the drawer to get a mechanical plan: wait / buy / add / hold / sell, plus a stop under the 20-day base (or 1.5 ATR) and a 2R target. Those prices are risk math from this structure, not a measured edge. Click a symbol on any list for the same drawer."
       />
-      <Step
-        n="7"
-        title="Position Trades — a different clock entirely"
-        body="The other tabs look for a base about to resolve over the next few days. This one ignores quietness and buys strength instead: the top decile of twelve-month performers that are still above their 50-day average, held seven to ten sessions. Momentum is measured over the year ending one month ago, because the most recent month tends to give back. Two things make it unlike the rest of the app — sort order is meaningful here (stronger twelve-month momentum measured better than weaker, right down the ranking), and no base rate is printed, because twelve-month momentum needs 250 sessions of warmup and our history leaves too few independent periods to honestly quote a win rate. It rests on the published record instead, where the effect has held across decades and dozens of markets."
-      />
-
       <H>What each state means — and what to do</H>
       <P>
         The Sectors table labels every sector Acting, Watching, or Ruled out.
