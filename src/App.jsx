@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -19,13 +20,25 @@ import SectorDrawer from "./components/SectorDrawer.jsx";
 import StockDrawer from "./components/StockDrawer.jsx";
 import { getDashboard, getSector, getStock, getSymbols } from "./api.js";
 
+// Map URL paths to view names
+const PATH_TO_VIEW = {
+  "/setups": "setups",
+  "/sectors": "sectors",
+  "/tracking": "tracking",
+  "/guide": "guide",
+  "/pricing": "pricing",
+};
+
 export default function App() {
   const theme = useTheme();
+  const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Derive view from URL path
+  const view = PATH_TO_VIEW[location.pathname] || "setups";
+
   const [status, setStatus] = useState(null);
-  const [view, setView] = useState("setups");
   const [scan, setScan] = useState([]);
   const [rest, setRest] = useState([]);
   const [buys, setBuys] = useState([]);
@@ -41,10 +54,6 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
-  const handleNavChange = (newView) => {
-    setView(newView);
-    if (isMobile) setMobileOpen(false);
-  };
 
   const applyDash = (d) => {
     setStatus(d);
@@ -117,8 +126,6 @@ export default function App() {
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: C.bg }}>
       {/* Sidebar */}
       <Sidebar
-        active={view}
-        onChange={handleNavChange}
         counts={counts}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}

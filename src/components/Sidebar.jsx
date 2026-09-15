@@ -1,3 +1,4 @@
+import { NavLink, useLocation } from "react-router-dom";
 import { Box, Button, Drawer, IconButton, Typography, useMediaQuery, useTheme } from "@mui/material";
 import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
@@ -13,30 +14,35 @@ import { useAuth } from "../auth.jsx";
 const NAV_ITEMS = [
   {
     id: "setups",
+    path: "/setups",
     Icon: PlaylistAddCheckRoundedIcon,
     label: "Setups",
     desc: "Quiet bases, sector-filtered or all",
   },
   {
     id: "sectors",
+    path: "/sectors",
     Icon: GridViewRoundedIcon,
     label: "Sectors",
     desc: "Where setups come from",
   },
   {
     id: "tracking",
+    path: "/tracking",
     Icon: HistoryRoundedIcon,
     label: "Tracking",
     desc: "What happened to past bases",
   },
   {
     id: "guide",
+    path: "/guide",
     Icon: MenuBookRoundedIcon,
     label: "Guide",
     desc: "How it works",
   },
   {
     id: "pricing",
+    path: "/pricing",
     Icon: PaymentsRoundedIcon,
     label: "Pricing",
     desc: "Plans and features",
@@ -45,7 +51,8 @@ const NAV_ITEMS = [
 
 const DRAWER_WIDTH = 220;
 
-function SidebarContent({ active, onChange, onClose, showClose, counts }) {
+function SidebarContent({ onClose, showClose, counts }) {
+  const location = useLocation();
   const { email, signOut, isPremium, plan, upgrade, busy } = useAuth();
 
   return (
@@ -131,107 +138,112 @@ function SidebarContent({ active, onChange, onClose, showClose, counts }) {
       {/* Navigation */}
       <Box sx={{ px: 1.5 }}>
         {NAV_ITEMS.map((item) => {
-          const isActive = active === item.id;
+          const isActive = location.pathname === item.path;
           const count = counts?.[item.id];
           const Icon = item.Icon;
 
           return (
-            <Box
+            <NavLink
               key={item.id}
-              onClick={() => onChange(item.id)}
-              sx={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 1.5,
-                px: 1.5,
-                py: 1.25,
-                mb: 0.5,
-                cursor: "pointer",
-                borderRadius: 2,
-                bgcolor: isActive ? "rgba(142,180,196,0.12)" : "transparent",
-                "&:hover": {
-                  bgcolor: isActive
-                    ? "rgba(142,180,196,0.12)"
-                    : "rgba(238,234,227,0.04)",
-                },
-                transition: "all 0.15s ease",
-              }}
+              to={item.path}
+              onClick={onClose}
+              style={{ textDecoration: "none" }}
             >
               <Box
                 sx={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 1.5,
-                  bgcolor: isActive
-                    ? "rgba(142,180,196,0.15)"
-                    : "rgba(238,234,227,0.04)",
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  alignItems: "flex-start",
+                  gap: 1.5,
+                  px: 1.5,
+                  py: 1.25,
+                  mb: 0.5,
+                  cursor: "pointer",
+                  borderRadius: 2,
+                  bgcolor: isActive ? "rgba(142,180,196,0.12)" : "transparent",
+                  "&:hover": {
+                    bgcolor: isActive
+                      ? "rgba(142,180,196,0.12)"
+                      : "rgba(238,234,227,0.04)",
+                  },
                   transition: "all 0.15s ease",
                 }}
               >
-                <Icon
-                  sx={{
-                    fontSize: 20,
-                    color: isActive ? C.accent : C.muted,
-                    transition: "color 0.15s ease",
-                  }}
-                />
-              </Box>
-
-              <Box sx={{ flex: 1, minWidth: 0, pt: 0.25 }}>
                 <Box
                   sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 1.5,
+                    bgcolor: isActive
+                      ? "rgba(142,180,196,0.15)"
+                      : "rgba(238,234,227,0.04)",
                     display: "flex",
                     alignItems: "center",
-                    gap: 1,
+                    justifyContent: "center",
+                    transition: "all 0.15s ease",
                   }}
                 >
-                  <Typography
+                  <Icon
                     sx={{
-                      fontSize: 13.5,
-                      fontWeight: isActive ? 600 : 500,
-                      color: isActive ? C.text : C.muted,
-                      lineHeight: 1.3,
+                      fontSize: 20,
+                      color: isActive ? C.accent : C.muted,
                       transition: "color 0.15s ease",
                     }}
+                  />
+                </Box>
+
+                <Box sx={{ flex: 1, minWidth: 0, pt: 0.25 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                    }}
                   >
-                    {item.label}
-                  </Typography>
-                  {count > 0 && (
-                    <Box
+                    <Typography
                       sx={{
-                        minWidth: 18,
-                        height: 18,
-                        px: 0.6,
-                        borderRadius: 0.75,
-                        bgcolor: isActive ? C.accent : "rgba(238,234,227,0.12)",
-                        color: isActive ? C.bg : C.muted,
-                        fontSize: 11,
-                        fontWeight: 600,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        fontSize: 13.5,
+                        fontWeight: isActive ? 600 : 500,
+                        color: isActive ? C.text : C.muted,
+                        lineHeight: 1.3,
+                        transition: "color 0.15s ease",
                       }}
                     >
-                      {count}
-                    </Box>
-                  )}
+                      {item.label}
+                    </Typography>
+                    {count > 0 && (
+                      <Box
+                        sx={{
+                          minWidth: 18,
+                          height: 18,
+                          px: 0.6,
+                          borderRadius: 0.75,
+                          bgcolor: isActive ? C.accent : "rgba(238,234,227,0.12)",
+                          color: isActive ? C.bg : C.muted,
+                          fontSize: 11,
+                          fontWeight: 600,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        {count}
+                      </Box>
+                    )}
+                  </Box>
+                  <Typography
+                    sx={{
+                      fontSize: 11.5,
+                      color: C.muted,
+                      opacity: isActive ? 0.9 : 0.65,
+                      lineHeight: 1.4,
+                      mt: 0.25,
+                    }}
+                  >
+                    {item.desc}
+                  </Typography>
                 </Box>
-                <Typography
-                  sx={{
-                    fontSize: 11.5,
-                    color: C.muted,
-                    opacity: isActive ? 0.9 : 0.65,
-                    lineHeight: 1.4,
-                    mt: 0.25,
-                  }}
-                >
-                  {item.desc}
-                </Typography>
               </Box>
-            </Box>
+            </NavLink>
           );
         })}
       </Box>
@@ -347,7 +359,7 @@ function SidebarContent({ active, onChange, onClose, showClose, counts }) {
   );
 }
 
-export default function Sidebar({ active, onChange, counts, mobileOpen, onMobileClose }) {
+export default function Sidebar({ counts, mobileOpen, onMobileClose }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -367,8 +379,6 @@ export default function Sidebar({ active, onChange, counts, mobileOpen, onMobile
         }}
       >
         <SidebarContent
-          active={active}
-          onChange={onChange}
           counts={counts}
           onClose={onMobileClose}
           showClose
@@ -393,9 +403,8 @@ export default function Sidebar({ active, onChange, counts, mobileOpen, onMobile
       }}
     >
       <SidebarContent
-        active={active}
-        onChange={onChange}
         counts={counts}
+        onClose={() => {}}
         showClose={false}
       />
     </Box>

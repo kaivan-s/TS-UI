@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Box, Button, InputBase, Typography } from "@mui/material";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
@@ -75,7 +76,8 @@ function Input({ ...props }) {
   );
 }
 
-export default function Login({ onBack }) {
+export default function Login() {
+  const navigate = useNavigate();
   const {
     signInWithGoogle,
     signInWithEmail,
@@ -448,10 +450,10 @@ export default function Login({ onBack }) {
       </Box>
 
       {/* Back to home link */}
-      {onBack && !denied && (
+      {!denied && (
         <Typography
           component="button"
-          onClick={onBack}
+          onClick={() => navigate("/")}
           sx={{
             position: "absolute",
             top: 24,

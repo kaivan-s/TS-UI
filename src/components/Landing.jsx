@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Box, Button, Typography } from "@mui/material";
 import { C } from "../theme.js";
 
@@ -27,7 +28,8 @@ function FloatingOrb({ delay, duration, size, x, y, color }) {
   );
 }
 
-export default function Landing({ onGetStarted }) {
+export default function Landing() {
+  const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -166,7 +168,7 @@ export default function Landing({ onGetStarted }) {
 
         {/* CTA */}
         <Button
-          onClick={onGetStarted}
+          onClick={() => navigate("/login")}
           sx={{
             px: 4,
             py: 1.5,
