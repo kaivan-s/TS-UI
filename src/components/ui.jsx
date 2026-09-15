@@ -1,40 +1,198 @@
-import { Box, LinearProgress, TableCell, TableRow, Tooltip, Typography } from "@mui/material";
+import { useMemo, useState } from "react";
+import {
+  Box,
+  Button,
+  Checkbox,
+  LinearProgress,
+  ListItemText,
+  Menu,
+  MenuItem,
+  TableCell,
+  TableRow,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import ArrowDropUpIcon from "@mui/icons-material/ArrowDropUp";
+import FilterListIcon from "@mui/icons-material/FilterList";
 import { C } from "../theme.js";
 import { num } from "../format.js";
 import { M } from "../glossary.js";
 
 /**
- * Table header that explains itself on hover.
+ * Column sorting for any table.
+ *
+ * Comparison is inferred from the values rather than declared per column, so
+ * a new column is sortable without registering its type. Blanks always sink
+ * to the bottom regardless of direction — a missing reading is not a small
+ * one, and letting nulls lead an ascending sort buries the real rows.
+ */
+export function useTableSort(initial = {}) {
+  const [key, setKey] = useState(initial.key ?? null);
+  const [dir, setDir] = useState(initial.dir ?? "desc");
+
+  const toggle = (k) => {
+    if (k === key) {
+      setDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setKey(k);
+      // Text reads naturally A-Z; numbers are almost always wanted big-first.
+      setDir(initial.dirFor?.(k) ?? "desc");
+    }
+  };
+
+  const apply = (rows) => {
+    if (!key || !rows?.length) return rows || [];
+    const sign = dir === "asc" ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const x = a?.[key];
+      const y = b?.[key];
+      const xEmpty = x == null || x === "";
+      const yEmpty = y == null || y === "";
+      if (xEmpty || yEmpty) return xEmpty && yEmpty ? 0 : xEmpty ? 1 : -1;
+      if (typeof x === "number" && typeof y === "number") return (x - y) * sign;
+      return String(x).localeCompare(String(y)) * sign;
+    });
+  };
+
+  return { key, dir, toggle, apply, reset: () => setKey(initial.key ?? null) };
+}
+
+/**
+ * Table header that explains itself on hover, and sorts when given `sort`.
  *
  * Pass `k` to pull the label and definition from the glossary, or pass
- * `label`/`help` directly for one-off columns.
+ * `label`/`help` directly for one-off columns. Pass `sort` (a useTableSort
+ * result) plus `sortKey` to make the column clickable.
  */
-export function HeadCell({ k, label, help, align = "left", ...rest }) {
+export function HeadCell({
+  k,
+  label,
+  help,
+  align = "left",
+  sort,
+  sortKey,
+  ...rest
+}) {
   const entry = (k && M[k]) || {};
   const text = label ?? entry.label ?? k;
   const tip = help ?? entry.help;
-  if (!tip) {
-    return (
-      <TableCell align={align} {...rest}>
-        {text}
-      </TableCell>
-    );
-  }
-  return (
-    <TableCell align={align} {...rest}>
+  const field = sortKey ?? k;
+  const sortable = Boolean(sort && field);
+  const active = sortable && sort.key === field;
+
+  let inner = text;
+  if (tip) {
+    inner = (
       <Tooltip title={tip} placement="top" arrow enterDelay={200}>
         <Box
           component="span"
           sx={{
             borderBottom: `1px dotted ${C.muted}`,
-            cursor: "help",
+            cursor: sortable ? "pointer" : "help",
             paddingBottom: "1px",
           }}
         >
           {text}
         </Box>
       </Tooltip>
+    );
+  }
+
+  if (!sortable) {
+    return (
+      <TableCell align={align} {...rest}>
+        {inner}
+      </TableCell>
+    );
+  }
+
+  const Arrow = active && sort.dir === "asc" ? ArrowDropUpIcon : ArrowDropDownIcon;
+  return (
+    <TableCell
+      align={align}
+      {...rest}
+      onClick={() => sort.toggle(field)}
+      sx={{
+        cursor: "pointer",
+        userSelect: "none",
+        whiteSpace: "nowrap",
+        color: active ? C.text : undefined,
+        "&:hover": { color: C.text },
+        ...(rest.sx || {}),
+      }}
+    >
+      <Box
+        component="span"
+        sx={{
+          display: "inline-flex",
+          alignItems: "center",
+          flexDirection: align === "right" ? "row-reverse" : "row",
+          gap: 0.15,
+        }}
+      >
+        {inner}
+        <Arrow
+          fontSize="small"
+          sx={{ opacity: active ? 0.9 : 0.22, transition: "opacity 120ms" }}
+        />
+      </Box>
     </TableCell>
+  );
+}
+
+/**
+ * Multi-select for a categorical column. Empty selection means no filter,
+ * which keeps "show everything" as the default without a special All entry.
+ */
+export function MultiSelect({ label, options, selected, onChange, width = 200 }) {
+  const [anchor, setAnchor] = useState(null);
+  const all = useMemo(() => options.slice().sort(), [options]);
+  const on = (v) =>
+    onChange(selected.includes(v) ? selected.filter((x) => x !== v) : [...selected, v]);
+
+  return (
+    <>
+      <Button
+        size="small"
+        onClick={(e) => setAnchor(e.currentTarget)}
+        startIcon={<FilterListIcon fontSize="small" />}
+        sx={{
+          color: selected.length ? C.text : C.muted,
+          borderColor: "rgba(238,234,227,0.12)",
+          textTransform: "none",
+          fontWeight: 400,
+        }}
+        variant="outlined"
+      >
+        {selected.length ? `${label}: ${selected.length}` : label}
+      </Button>
+      <Menu
+        anchorEl={anchor}
+        open={Boolean(anchor)}
+        onClose={() => setAnchor(null)}
+        slotProps={{ paper: { sx: { maxHeight: 360, width } } }}
+      >
+        {selected.length > 0 && (
+          <MenuItem onClick={() => onChange([])} sx={{ color: C.muted }}>
+            Clear
+          </MenuItem>
+        )}
+        {all.map((o) => (
+          <MenuItem key={o} onClick={() => on(o)} dense>
+            <Checkbox
+              checked={selected.includes(o)}
+              size="small"
+              sx={{ p: 0.5, mr: 1 }}
+            />
+            <ListItemText
+              primary={o}
+              primaryTypographyProps={{ fontSize: 13, noWrap: true }}
+            />
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
   );
 }
 

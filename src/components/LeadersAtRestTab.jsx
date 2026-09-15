@@ -12,24 +12,63 @@
  * advertise. Reusing the coil strip here would be misattribution.
  */
 
-import { Fragment } from "react";
+import { useMemo, useState } from "react";
 import {
   Box,
+  Button,
   Chip,
+  InputAdornment,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
-import { CoilBar, HeadCell, Note, PageIntro } from "./ui.jsx";
+import SearchIcon from "@mui/icons-material/Search";
+import { CoilBar, HeadCell, MultiSelect, Note, PageIntro, useTableSort } from "./ui.jsx";
 import { C } from "../theme.js";
 import { num, pct } from "../format.js";
 
 export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpenStock }) {
+  const [q, setQ] = useState("");
+  const [sectorPick, setSectorPick] = useState([]);
+  // Default order is the backend's: strongest twelve months first.
+  const sort = useTableSort({
+    key: "mom12_1",
+    dir: "desc",
+    // Symbol and sector read naturally A-Z; every measure wants big-first.
+    dirFor: (k) => (k === "symbol" || k === "sector" ? "asc" : "desc"),
+  });
+
+  // The momentum rank is assigned once, from the order the scan delivered, so
+  // re-sorting by RSI or turnover cannot renumber it into something false.
+  const ranked = useMemo(
+    () => (rows || []).map((r, i) => ({ ...r, rank: i + 1 })),
+    [rows],
+  );
+
+  const sectorOptions = useMemo(
+    () => [...new Set(ranked.map((r) => r.sector).filter(Boolean))],
+    [ranked],
+  );
+
+  const shown = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    const filtered = ranked.filter((r) => {
+      if (sectorPick.length && !sectorPick.includes(r.sector)) return false;
+      if (!query) return true;
+      return (
+        (r.symbol || "").toLowerCase().includes(query) ||
+        (r.sector || "").toLowerCase().includes(query)
+      );
+    });
+    return sort.apply(filtered);
+  }, [ranked, q, sectorPick, sort.key, sort.dir]);
+
   if (!coilReady) {
     return (
       <Note>
@@ -40,12 +79,40 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
     );
   }
 
-  const sectors = new Set(rows.map((r) => r.sector)).size;
+  const sectors = new Set(ranked.map((r) => r.sector)).size;
+  const filtering = shown.length !== ranked.length;
 
   return (
     <Box>
-      <PageIntro title="Leaders at rest">
-        The {rows.length} coiled names with the strongest last twelve months,
+      <PageIntro
+        title="Leaders at rest"
+        action={
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+            <MultiSelect
+              label="Sector"
+              options={sectorOptions}
+              selected={sectorPick}
+              onChange={setSectorPick}
+              width={260}
+            />
+            <TextField
+              size="small"
+              placeholder="Symbol or sector"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              sx={{ width: 200 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" sx={{ color: C.muted }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
+        }
+      >
+        The {ranked.length} coiled names with the strongest last twelve months,
         spread across {sectors} {sectors === 1 ? "sector" : "sectors"}. Every
         row cleared the same seven coil filters — quiet, tight, near its highs
         — and they are ordered by twelve-month return, so a stock near the top
@@ -64,44 +131,79 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
         a sensible priority rather than a promise.
       </Note>
 
-      {rows.length === 0 ? (
+      {filtering && (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5 }}>
+          <Typography sx={{ fontSize: 13, color: C.muted }}>
+            Showing {shown.length} of {ranked.length}
+          </Typography>
+          <Button
+            size="small"
+            onClick={() => {
+              setQ("");
+              setSectorPick([]);
+            }}
+            sx={{ textTransform: "none", color: C.accent, fontWeight: 400 }}
+          >
+            Clear filters
+          </Button>
+        </Box>
+      )}
+
+      {ranked.length === 0 ? (
         <Note>
           No stock is in a coil today. This scan only fires when price, trend,
           volume and range line up at once, which most sessions do not.
+        </Note>
+      ) : shown.length === 0 ? (
+        <Note>
+          Nothing matches those filters. Clear them to see all{" "}
+          {ranked.length} names.
         </Note>
       ) : (
         <TableContainer sx={{ mb: 5 }}>
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <HeadCell label="#" align="right" />
-                <HeadCell label="Symbol" />
+                <HeadCell
+                  label="#"
+                  help="Rank by twelve-month momentum, fixed when the scan ran. Re-sorting the table does not change it, so you can always see where a name sits in the original order."
+                  align="right"
+                  sort={sort}
+                  sortKey="rank"
+                />
+                <HeadCell label="Symbol" sort={sort} sortKey="symbol" />
                 <HeadCell
                   label="12m momentum"
-                  help="Return over the twelve months ending one month ago — the column this list is sorted by. The recent month is excluded because short-term gains tend to reverse, which would contaminate the ranking."
+                  help="Return over the twelve months ending one month ago — the column this list is sorted by out of the box. The recent month is excluded because short-term gains tend to reverse, which would contaminate the ranking."
                   align="right"
+                  sort={sort}
+                  sortKey="mom12_1"
                 />
                 <HeadCell
                   label="Coiled"
                   help="Consecutive sessions this name has cleared all seven filters. 1 means it qualified today for the first time. A long run means the base has been sitting a while without resolving."
                   align="right"
+                  sort={sort}
+                  sortKey="coil_days"
                 />
                 <HeadCell
                   label="Sector"
-                  help="Click to open the sector's full history and see whether money is rotating into it."
+                  help="Click a row's sector to open its full history. Use the Sector button above to narrow the list."
+                  sort={sort}
+                  sortKey="sector"
                 />
-                <HeadCell k="adj" align="right" />
-                <HeadCell k="to_trigger" align="right" />
-                <HeadCell k="coil" sx={{ minWidth: 120 }} />
-                <HeadCell k="pos_hi" align="right" />
-                <HeadCell k="rsi" align="right" />
-                <HeadCell k="vol_ratio" align="right" />
-                <HeadCell k="range20" align="right" />
-                <HeadCell k="cmf" align="right" />
+                <HeadCell k="adj" align="right" sort={sort} />
+                <HeadCell k="to_trigger" align="right" sort={sort} />
+                <HeadCell k="coil" sx={{ minWidth: 120 }} sort={sort} />
+                <HeadCell k="pos_hi" align="right" sort={sort} />
+                <HeadCell k="rsi" align="right" sort={sort} />
+                <HeadCell k="vol_ratio" align="right" sort={sort} />
+                <HeadCell k="range20" align="right" sort={sort} />
+                <HeadCell k="cmf" align="right" sort={sort} />
               </TableRow>
             </TableHead>
             <TableBody>
-              {rows.map((r, i) => (
+              {shown.map((r) => (
                 <TableRow
                   key={r.symbol}
                   hover
@@ -112,7 +214,7 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                   }
                 >
                   <TableCell align="right" className="num" sx={{ color: C.muted }}>
-                    {i + 1}
+                    {r.rank}
                   </TableCell>
                   <TableCell
                     className={onOpenStock ? "linkish" : undefined}
