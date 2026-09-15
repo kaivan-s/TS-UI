@@ -10,7 +10,6 @@ import Sidebar from "./components/Sidebar.jsx";
 import Header from "./components/Header.jsx";
 import SetupsView from "./components/SetupsView.jsx";
 import SectorsView from "./components/SectorsView.jsx";
-import PositionView from "./components/PositionView.jsx";
 import TrackRecordTab from "./components/TrackRecordTab.jsx";
 import Guide from "./components/Guide.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
@@ -29,8 +28,7 @@ export default function App() {
   const [end, setEnd] = useState(todayISO());
   const [view, setView] = useState("setups");
   const [scan, setScan] = useState([]);
-  const [coil, setCoil] = useState([]);
-  const [miss, setMiss] = useState([]);
+  const [rest, setRest] = useState([]);
   const [buys, setBuys] = useState([]);
   const [error, setError] = useState("");
   const [sectorName, setSectorName] = useState(null);
@@ -47,8 +45,7 @@ export default function App() {
   const applyDash = (d) => {
     setStatus(d);
     if (d.scan) setScan(d.scan);
-    if (d.coil) setCoil(d.coil);
-    if (d.near_miss) setMiss(d.near_miss);
+    if (d.rest) setRest(d.rest);
     if (d.buys) setBuys(d.buys);
     if (d.error) setError(d.error);
     else setError("");
@@ -149,7 +146,6 @@ export default function App() {
   const counts = {
     setups: status?.n_buys ?? buys.length,
     sectors: status?.actionable ?? 0,
-    position: status?.n_position ?? 0,
   };
 
   return (
@@ -204,8 +200,7 @@ export default function App() {
           {view === "setups" && (
             <SetupsView
               buys={buys}
-              coil={coil}
-              miss={miss}
+              rest={rest}
               status={status}
               onOpenSector={openSector}
               onOpenStock={openStock}
@@ -217,14 +212,6 @@ export default function App() {
               scan={scan}
               status={status}
               onOpenSector={openSector}
-            />
-          )}
-
-          {view === "position" && (
-            <PositionView
-              status={status}
-              onOpenSector={openSector}
-              onOpenStock={openStock}
             />
           )}
 

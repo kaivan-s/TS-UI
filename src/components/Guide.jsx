@@ -243,8 +243,8 @@ export default function Guide() {
       />
       <Step
         n="4"
-        title="Widen only if you want more names"
-        body="Switch the Setups page to All bases to drop the sector condition and see every stock that cleared all seven coil filters. Same scan, one condition fewer — which is the only thing that separated these two lists, and it is the condition carrying the edge (+3.7% median excess over 20 sessions with the sector filter, +1.7% without). Treat the wider pool as a study list rather than a shortlist, and ignore its sort order: coil score showed no relationship with forward returns."
+        title="Leaders at rest — the other cut"
+        body="Switch the Setups page to Leaders at rest to drop the sector condition and instead rank the same coil pool by return over the twelve months ending a month ago, cut to the top 20. The top of that list is a proven leader that has gone quiet, which is a different bet from Sector agrees and picks up mostly different names. This is the only list in the app where sort order carries information: the coil score has no relationship with forward returns, but twelve-month momentum orders outcomes consistently. Showing 20 ranked this way measured about twice the edge of showing all 63 unranked — on five months of history, so treat it as a priority order, not a promise."
       />
       <Step
         n="5"

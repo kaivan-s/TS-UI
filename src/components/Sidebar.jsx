@@ -1,7 +1,6 @@
 import { Box, Button, IconButton, Typography } from "@mui/material";
 import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
-import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
@@ -21,12 +20,6 @@ const NAV_ITEMS = [
     Icon: GridViewRoundedIcon,
     label: "Sectors",
     desc: "Where setups come from",
-  },
-  {
-    id: "position",
-    Icon: TrendingUpRoundedIcon,
-    label: "Position Trades",
-    desc: "Year-long leaders, held a week or two",
   },
   {
     id: "track",

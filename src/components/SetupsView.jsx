@@ -1,16 +1,14 @@
 /**
- * Setups — one page, two views of the same scan.
+ * Setups — one page, two cuts of the same coil pool.
  *
- * "Sector agrees" is the default: coiled stocks whose sector is also moving,
- * which is the narrower list and the one with the stronger measured edge
- * (+3.7% median excess over 20 sessions against +1.7% for the unfiltered
- * pool). "All bases" drops the sector condition and shows every coil.
+ * "Sector agrees" is the default: coiled stocks whose sector is also moving.
+ * "Leaders at rest" drops the sector condition and instead ranks the pool by
+ * 12-month momentum, keeping 20.
  *
- * These were two tabs until the sector filter turned out to be the only thing
- * separating them — same scan, same gates, one extra condition. Each view
- * keeps its own table because they answer different questions: setups group
- * by sector, since names inside one sector resolve together, while the full
- * pool is read flat and searched by name.
+ * Both are deliberately short. The unranked 63-name pool and the separate
+ * 80-name momentum list were removed because neither was a list anyone would
+ * finish reading, and ranking the pool by momentum measured better than
+ * either of them — see eval_listsize.py.
  */
 
 import { useState } from "react";
@@ -19,26 +17,25 @@ import { LockedTab } from "./Premium.jsx";
 import { useAuth } from "../auth.jsx";
 import UpdateBanner from "./UpdateBanner.jsx";
 import BuysTab from "./BuysTab.jsx";
-import CoilTab from "./CoilTab.jsx";
+import LeadersAtRestTab from "./LeadersAtRestTab.jsx";
 import { C } from "../theme.js";
 
 const FILTERS = [
   {
     id: "agree",
     label: "Sector agrees",
-    help: "Coiled stocks whose sector is also waking up or resting after waking up. The narrower list, and the only one here with a measured edge — +3.7% median excess over 20 sessions against the all-stock median.",
+    help: "Coiled stocks whose sector is also waking up or resting after waking up. Grouped by sector, because names inside one sector tend to resolve together. Measured +3.7% median excess over 20 sessions against the all-stock median.",
   },
   {
-    id: "all",
-    label: "All bases",
-    help: "Every stock that cleared the coil filters, with no regard to its sector. A wider pool at about half the edge (+1.7% median excess over 20 sessions). Useful for watching a base whose sector has not turned yet.",
+    id: "rest",
+    label: "Leaders at rest",
+    help: "The same coil pool ignoring sector state, ranked by return over the twelve months ending a month ago, cut to 20. A proven leader that has gone quiet. Ranking this way measured about twice the edge of showing the full pool, on five months of history.",
   },
 ];
 
 export default function SetupsView({
   buys,
-  coil,
-  miss,
+  rest,
   status,
   onOpenSector,
   onOpenStock,
@@ -55,7 +52,7 @@ export default function SetupsView({
     );
   }
 
-  const counts = { agree: buys.length, all: coil.length };
+  const counts = { agree: buys.length, rest: rest.length };
 
   return (
     <Box>
@@ -90,8 +87,8 @@ export default function SetupsView({
         })}
         <Typography sx={{ fontSize: 12, color: C.muted, ml: "auto" }}>
           {filter === "agree"
-            ? "sector filter on"
-            : "sector filter off — wider pool, weaker edge"}
+            ? "sector must agree"
+            : "any sector, ranked by the last twelve months"}
         </Typography>
       </Box>
 
@@ -102,9 +99,8 @@ export default function SetupsView({
           onOpenStock={onOpenStock}
         />
       ) : (
-        <CoilTab
-          hits={coil}
-          misses={miss}
+        <LeadersAtRestTab
+          rows={rest}
           coilReady={status?.coil_ready !== false}
           onOpenSector={onOpenSector}
           onOpenStock={onOpenStock}
