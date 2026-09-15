@@ -77,8 +77,8 @@ export default function App() {
             const d = await getDashboard();
             if (!stop) applyDash(d);
           } else {
-            // Keep the spinner going but don't refetch 200 KB every second.
-            setLiveBusy(true);
+            // Mid-scan: keep polling status, but don't refetch 200 KB every
+            // second when the heavy payloads cannot have changed yet.
             timer = setTimeout(tick, 1000);
           }
           return;
