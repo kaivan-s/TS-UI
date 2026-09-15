@@ -39,6 +39,9 @@ import { HeadCell, Note, PageIntro, useTableSort } from "./ui.jsx";
 
 const ROW_CAP = 200;
 
+/** Close-to-close change, or null when either end is missing. */
+const gain = (from, to) => (from && to ? to / from - 1 : null);
+
 /** The digest line: transitions that happened on the latest session. */
 const NEWS = [
   { key: "triggered", label: "broke out", color: C.good },
@@ -171,7 +174,14 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
         (r.sector || "").toLowerCase().includes(query)
       );
     });
-    return sort.apply(filtered);
+    // Both moves are derived, and the sort reads fields straight off the row,
+    // so they have to exist before `apply` rather than at render time.
+    const priced = filtered.map((r) => ({
+      ...r,
+      move: gain(r.entry_price, r.last_close),
+      peak: gain(r.entry_price, r.peak_close),
+    }));
+    return sort.apply(priced);
   }, [rows, pick, q, sort.key, sort.dir]);
 
   // Twenty sessions of retention runs to ~600 episodes, which is more table
@@ -277,7 +287,7 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
       <TableContainer
         sx={{ bgcolor: C.paper, border: `1px solid ${C.line}`, borderRadius: 1, overflowX: "auto" }}
       >
-        <Table size="small" sx={{ minWidth: 800 }}>
+        <Table size="small" sx={{ minWidth: 900 }}>
           <TableHead>
             <TableRow>
               <HeadCell
@@ -324,15 +334,18 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
                 sort={sort}
                 sortKey="move"
               />
+              <HeadCell
+                label="Best close"
+                help="The highest close the base reached since it appeared, and the gain to it. Closing prices only, so an intraday spike that was given back before the bell does not count. This number can only rise, so read it as whether the base ever worked at all, not as a return anyone captured."
+                align="right"
+                sort={sort}
+                sortKey="peak"
+              />
               <HeadCell label="Sector" sort={sort} sortKey="sector" />
             </TableRow>
           </TableHead>
           <TableBody>
             {capped.map((r) => {
-              const move =
-                r.entry_price && r.last_close
-                  ? r.last_close / r.entry_price - 1
-                  : null;
               const heavy = r.trigger_vol === true;
               return (
                 <TableRow key={`${r.symbol}-${r.started_on}`} hover>
@@ -387,10 +400,24 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
                     className="num"
                     sx={{
                       color:
-                        move == null ? C.muted : move >= 0 ? C.good : C.bad,
+                        r.move == null ? C.muted : r.move >= 0 ? C.good : C.bad,
                     }}
                   >
-                    {move == null ? "—" : pct(move, 1)}
+                    {r.move == null ? "—" : pct(r.move, 1)}
+                  </TableCell>
+                  <TableCell align="right" className="num">
+                    {r.peak == null ? (
+                      "—"
+                    ) : (
+                      <>
+                        <Box sx={{ color: r.peak > 0 ? C.good : C.muted }}>
+                          {pct(r.peak, 1)}
+                        </Box>
+                        <Box sx={{ fontSize: 11.5, color: C.muted }}>
+                          {num(r.peak_close)}
+                        </Box>
+                      </>
+                    )}
                   </TableCell>
                   <TableCell
                     className="row-click linkish"
@@ -412,15 +439,17 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
       </TableContainer>
 
       <Note>
-        Two things worth knowing before reading this as a scoreboard. Breaking
+        Three things worth knowing before reading this as a scoreboard. Breaking
         out is not the same as working: of the bases that cleared their level,
         fewer than half were still above it ten sessions later, so "Broke out"
         marks an event rather than a result. And "Since found" measures from
         the day the base appeared, which is not an entry price — it is where
         the stock was when the filters first noticed it, and a base is meant
-        to be acted on at the level, not before. Resolved bases age out after
-        about twenty sessions so the table stays about the current window
-        rather than the archive.
+        to be acted on at the level, not before. "Best close" is the kindest
+        number on the page by construction — it never falls, and nobody sells
+        at the high — so it answers whether a base ever worked rather than
+        what it paid. Resolved bases age out after about twenty sessions so
+        the table stays about the current window rather than the archive.
       </Note>
     </Box>
   );
