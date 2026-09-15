@@ -13,12 +13,16 @@
 
 import { useState } from "react";
 import { Box, Chip, Tooltip, Typography } from "@mui/material";
-import { LockedTab } from "./Premium.jsx";
+import { PremiumOverlay } from "./Premium.jsx";
 import { useAuth } from "../auth.jsx";
 import UpdateBanner from "./UpdateBanner.jsx";
 import BuysTab from "./BuysTab.jsx";
 import LeadersAtRestTab from "./LeadersAtRestTab.jsx";
 import { C } from "../theme.js";
+
+// How many rows to show free users as a preview
+const FREE_PREVIEW_SETUPS = 1;
+const FREE_PREVIEW_LEADERS = 2;
 
 const FILTERS = [
   {
@@ -43,16 +47,11 @@ export default function SetupsView({
   const { isPremium } = useAuth();
   const [filter, setFilter] = useState("agree");
 
-  if (!isPremium) {
-    return (
-      <Box>
-        <UpdateBanner asOf={status?.as_of} />
-        <LockedTab name="Setups" />
-      </Box>
-    );
-  }
-
   const counts = { agree: buys.length, rest: rest.length };
+
+  // For free users: slice the data to preview count
+  const previewBuys = isPremium ? buys : buys.slice(0, FREE_PREVIEW_SETUPS);
+  const previewRest = isPremium ? rest : rest.slice(0, FREE_PREVIEW_LEADERS);
 
   // A night where no sector agreed saves no setup rows, so the newest ones
   // in the table are from an earlier session. They still render, but saying
@@ -120,19 +119,31 @@ export default function SetupsView({
               </Typography>
             </Box>
           )}
-          <BuysTab
-            rows={buys}
+          <PremiumOverlay
+            previewCount={FREE_PREVIEW_SETUPS}
+            totalCount={buys.length}
+            feature="Full setups list"
+          >
+            <BuysTab
+              rows={previewBuys}
+              onOpenSector={onOpenSector}
+              onOpenStock={onOpenStock}
+            />
+          </PremiumOverlay>
+        </>
+      ) : (
+        <PremiumOverlay
+          previewCount={FREE_PREVIEW_LEADERS}
+          totalCount={rest.length}
+          feature="Leaders at rest"
+        >
+          <LeadersAtRestTab
+            rows={previewRest}
+            coilReady={status?.coil_ready !== false}
             onOpenSector={onOpenSector}
             onOpenStock={onOpenStock}
           />
-        </>
-      ) : (
-        <LeadersAtRestTab
-          rows={rest}
-          coilReady={status?.coil_ready !== false}
-          onOpenSector={onOpenSector}
-          onOpenStock={onOpenStock}
-        />
+        </PremiumOverlay>
       )}
     </Box>
   );

@@ -232,12 +232,61 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
       </Box>
 
       <Box sx={{ px: { xs: 2.5, sm: 4 }, py: { xs: 2.5, sm: 3.5 }, overflowY: "auto" }}>
-        {loading && (
+        {/* Premium gate for entire drawer content */}
+        {!isPremium && (
+          <Box
+            sx={{
+              py: 8,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+            }}
+          >
+            <Box
+              sx={{
+                width: 64,
+                height: 64,
+                borderRadius: 3,
+                bgcolor: "rgba(142,180,196,0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mb: 2.5,
+              }}
+            >
+              <StarRoundedIcon sx={{ fontSize: 28, color: C.accent }} />
+            </Box>
+            <Typography sx={{ fontSize: 18, fontWeight: 600, color: C.text, mb: 1 }}>
+              Sector Details
+            </Typography>
+            <Typography sx={{ fontSize: 14, color: C.muted, mb: 3, maxWidth: 320 }}>
+              Shape checks, history, and constituent stocks are available with a premium subscription.
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={() => upgrade("monthly")}
+              disabled={busy}
+              startIcon={<StarRoundedIcon />}
+              sx={{
+                bgcolor: C.accent,
+                color: C.bg,
+                fontWeight: 600,
+                px: 3,
+                "&:hover": { bgcolor: "#7aa4b4" },
+              }}
+            >
+              {busy ? "Loading…" : "Upgrade · ₹499/mo"}
+            </Button>
+          </Box>
+        )}
+
+        {isPremium && loading && (
           <Box sx={{ py: 8, textAlign: "center" }}>
             <Typography sx={{ color: C.muted, fontSize: 14 }}>Loading sector details…</Typography>
           </Box>
         )}
-        {data?.found === false && (
+        {isPremium && data?.found === false && (
           <Box sx={{ py: 6, textAlign: "center" }}>
             <Typography sx={{ color: C.muted, fontSize: 14 }}>
               No match.
@@ -246,7 +295,7 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
           </Box>
         )}
 
-        {data?.found && (
+        {isPremium && data?.found && (
           <>
             <ShapeCard shape={data.shape} />
 

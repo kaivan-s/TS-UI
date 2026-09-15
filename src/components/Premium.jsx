@@ -84,9 +84,10 @@ export function PremiumOverlay({
 }) {
   const { isPremium, upgrade, busy } = useAuth();
 
-  if (isPremium) return children;
-
   const hiddenCount = Math.max(0, totalCount - previewCount);
+
+  // Premium users or nothing hidden = no overlay
+  if (isPremium || hiddenCount <= 0) return children;
 
   return (
     <Box sx={{ position: "relative" }}>

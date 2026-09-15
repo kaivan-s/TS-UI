@@ -442,39 +442,48 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
 // Main cross-sectional heatmap row
 function SectorRow({ row, expanded, onToggle, isPremium }) {
   const shape = row.shape_report || {};
+
+  // Non-premium users can't expand rows
+  const handleClick = isPremium ? onToggle : undefined;
   
   return (
     <TableRow
       hover
-      onClick={onToggle}
+      onClick={handleClick}
       sx={{
-        cursor: "pointer",
-        "&:hover": { bgcolor: "rgba(255,255,255,0.02)" },
+        cursor: isPremium ? "pointer" : "default",
+        "&:hover": { bgcolor: isPremium ? "rgba(255,255,255,0.02)" : undefined },
         ...(expanded && { bgcolor: "rgba(142,180,196,0.05)" }),
       }}
     >
       <TableCell sx={{ py: 1, fontWeight: 500 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
           {row.sector}
-          {expanded ? (
+          {isPremium && (expanded ? (
             <ExpandLessIcon sx={{ fontSize: 16, color: C.muted }} />
           ) : (
             <ExpandMoreIcon sx={{ fontSize: 16, color: C.muted }} />
-          )}
+          ))}
         </Box>
       </TableCell>
       <TableCell sx={{ py: 1 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-          <KlassChip klass={row.klass} />
-          {row.buy_ready && (
-            <Chip
-              size="small"
-              label="Buy"
-              sx={{ bgcolor: "rgba(125,186,150,0.12)", color: C.good, fontSize: 10 }}
-            />
-          )}
-          {shape.verdict && <VerdictBadge verdict={shape.verdict} />}
-        </Box>
+        {isPremium ? (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <KlassChip klass={row.klass} />
+            {row.buy_ready && (
+              <Chip
+                size="small"
+                label="Buy"
+                sx={{ bgcolor: "rgba(125,186,150,0.12)", color: C.good, fontSize: 10 }}
+              />
+            )}
+            {shape.verdict && <VerdictBadge verdict={shape.verdict} />}
+          </Box>
+        ) : (
+          <Box sx={{ filter: "blur(6px)", opacity: 0.4 }}>
+            <KlassChip klass={row.klass} />
+          </Box>
+        )}
       </TableCell>
       <TableCell
         align="right"

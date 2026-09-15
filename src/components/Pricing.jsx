@@ -56,14 +56,13 @@ const FEATURES = [
 
 const COMPARISONS = [
   { feature: "Daily sector scan", free: true, premium: true },
-  { feature: "Sector state labels", free: true, premium: true },
   { feature: "Guide & methodology", free: true, premium: true },
+  { feature: "Episode tracking", free: true, premium: true },
+  { feature: "Stock lookup", free: true, premium: true },
+  { feature: "Setups preview", free: true, premium: true },
   { feature: "Full setups list", free: false, premium: true },
-  { feature: "Leaders at rest view", free: false, premium: true },
-  { feature: "All coiled bases", free: false, premium: true },
-  { feature: "Sector detail panels", free: false, premium: true },
-  { feature: "Episode tracking", free: false, premium: true },
-  { feature: "Stock lookup & planning", free: false, premium: true },
+  { feature: "Full leaders at rest (20)", free: false, premium: true },
+  { feature: "Sector states & details", free: false, premium: true },
 ];
 
 function PlanCard({ plan, selected, onSelect, onUpgrade, busy, isPremium, currentPlan }) {
