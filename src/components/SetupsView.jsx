@@ -139,7 +139,7 @@ export default function SetupsView({
         >
           <LeadersAtRestTab
             rows={previewRest}
-            coilReady={status?.coil_ready !== false}
+            coilReady={rest.length > 0 || status?.coil_ready !== false}
             onOpenSector={onOpenSector}
             onOpenStock={onOpenStock}
           />
