@@ -27,7 +27,7 @@ export const M = {
   },
   cmf: {
     label: "Money flow",
-    help: "Chaikin Money Flow — where prices close inside their daily range, weighted by volume. Positive means closing near the highs on volume, which reads as accumulation.",
+    help: "Chaikin Money Flow — where prices close inside their daily range, weighted by volume. Positive is good (closing near highs = accumulation). Negative means distribution.",
   },
   cmf_rel: {
     label: "Money flow vs peers",
@@ -61,15 +61,15 @@ export const M = {
   // --- coil / stock ----------------------------------------------------
   coil: {
     label: "Tightness",
-    help: "0–100 score combining quieter volume, a tighter range, better money flow, stronger delivery and a longer base. It ranks names that already passed every filter — a higher number is not a stronger buy signal.",
+    help: "0–100 score combining volume, range, money flow, delivery and base age. Higher is tighter, but all rows here already passed — this score does not predict which ones will work.",
   },
   pos_hi: {
     label: "Near high",
-    help: "Where the price sits against its 85-day (roughly 4-month) high. 100% means it is sitting right at the high.",
+    help: "Where the price sits against its 85-day high. Higher is better — 95%+ means it's coiled right at the highs, not recovering from a fall.",
   },
   to_trigger: {
     label: "To breakout",
-    help: "How far the price still has to rise to close above the 20-day high. That close is the event to wait for — this row is not a buy at today's price.",
+    help: "How far the price still has to rise to close above the 20-day high. Lower is closer to triggering. That close is the event to wait for — this row is not a buy at today's price.",
   },
   trigger: {
     label: "Breakout price",
@@ -77,15 +77,15 @@ export const M = {
   },
   rsi: {
     label: "RSI",
-    help: "14-day Relative Strength Index. The coil scan wants 45–68: above 45 the trend is intact, below 68 the move has not already happened.",
+    help: "14-day Relative Strength Index. The sweet spot is 45–68: above 45 the trend is intact, below 68 the move hasn't already happened. Too high means you're late.",
   },
   vol_ratio: {
     label: "Dry-up",
-    help: "Average volume over the last 5 days divided by the last 20. Under 1.0 means trading has gone quiet, which is what a base looks like before it resolves.",
+    help: "Recent volume vs. the 20-day average. Lower is better — under 0.6 means trading has dried up, which is what a base looks like before it resolves. When this spikes above 1.5 on a close through the trigger, that's the conviction.",
   },
   range20: {
     label: "20d range",
-    help: "The high-to-low spread over the last 20 sessions. The scan wants 14% or tighter — a narrowing range is the one base marker that cannot be faked by churn.",
+    help: "The high-to-low spread over the last 20 sessions. Lower is tighter — under 10% is a very tight coil. A narrowing range is the one base marker that cannot be faked by churn.",
   },
   contraction: {
     label: "Contraction",

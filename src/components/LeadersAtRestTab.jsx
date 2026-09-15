@@ -112,8 +112,8 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
           </Box>
         }
       >
-        Coiled stocks ranked by twelve-month return. Act on a close through the
-        trigger on heavy volume, not on today's price.
+        Coiled stocks ranked by twelve-month return. Wait for a close above the
+        breakout level — these are not buys at today's price.
       </PageIntro>
 
       {filtering && (
