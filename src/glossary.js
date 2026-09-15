@@ -126,8 +126,8 @@ export const M = {
 
   // --- For Tom / momentum scoring -------------------------------------
   score: {
-    label: "Score",
-    help: "0–1 energy score combining volume, RSI, ATR, extension from EMA, money flow and sector heat. Higher means the breakout is better confirmed — but the ranking is just for prioritisation, not a probability.",
+    label: "Expected range",
+    help: "0–1 energy score from volume, RSI, ATR, extension from the 20-EMA and money flow. Measured over 15 months, it forecasts how FAR a name travels intraday — the top of the list reached +3% about 9pp more often, holding on 87–92% of sessions. It does not forecast direction: its next-day return edge was +0.02% (p=0.73). Read it as expected movement, not as a better buy.",
   },
   ltp: {
     label: "Price",
@@ -292,10 +292,10 @@ export const FILTER_HELP = {
   all: "Every sector in the universe, in whatever state.",
 };
 
-/** For Tom filters */
+/** Expected Movers filters */
 export const TOM_FILTER_HELP = {
-  all: "Every name that passed the For Tom gates, whether or not it has broken out yet.",
-  through: "Stocks whose live price has already closed through the breakout level. The strongest signal the scan produces.",
+  all: "Every name that cleared the gates, whether or not it has broken out yet.",
+  through: "Stocks whose live price is already above the 20-day high. A factual state, not a ranking — the break has happened and the follow-through has not been measured.",
 };
 
 /** Track Record kind categories */

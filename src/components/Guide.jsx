@@ -258,8 +258,8 @@ export default function Guide() {
       />
       <Step
         n="7"
-        title="Momentum — live when you ask"
-        body="Everything else updates automatically at 7:30 PM IST on trading days. Momentum is the exception: open it and hit Refresh live for last prices at that moment on last evening's coils — already through the 20-day high, logged setups still under it, and near-high volume prints. Delivery is still unknown."
+        title="Expected Movers — range, not direction"
+        body="Everything else updates automatically at 7:30 PM IST. This one also runs live around midday and again after 15:35. Read it for one thing only: the order forecasts how far a name travels intraday, which measured reliably (the top of the list reaches +3% about 9pp more often, holding on 87-92% of sessions). It does not forecast direction — the next-day return edge measured +0.02%, p=0.73, which is zero. It is a list of names with enough range to be worth watching, not a list of buys."
       />
 
       <H>What each state means — and what to do</H>

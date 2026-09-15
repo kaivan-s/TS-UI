@@ -32,8 +32,8 @@ const NAV_ITEMS = [
   {
     id: "momentum",
     Icon: TrendingUpRoundedIcon,
-    label: "Momentum",
-    desc: "For tomorrow picks",
+    label: "Expected Movers",
+    desc: "Range forecast, not direction",
   },
   {
     id: "track",

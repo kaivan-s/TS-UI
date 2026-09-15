@@ -1,26 +1,20 @@
 import { Box, Tooltip, Typography } from "@mui/material";
 import { C } from "../theme.js";
-import { BASE_RATES, EVIDENCE_WINDOW, baseRateSource } from "../evidence.js";
+import { EVIDENCE_WINDOW, STAT_STRIPS } from "../evidence.js";
 
 /**
- * What this list has historically been worth, stated up front.
+ * What a list has historically been worth, stated up front.
  *
  * This replaces the paragraph of disclaimers each list used to carry. A
  * reader who sees "66% beat the market, median +3.7%" already knows a third
  * of these go nowhere, which the hedging was trying and failing to say.
  */
 export default function BaseRate({ metric }) {
-  const r = BASE_RATES[metric];
-  if (!r) return null;
-
-  const stats = [
-    { value: `${Math.round(r.winRate * 100)}%`, label: "beat the market over 20 days" },
-    { value: `+${(r.medianExcess * 100).toFixed(1)}%`, label: "median excess return" },
-    { value: r.n, label: "names measured" },
-  ];
+  const strip = STAT_STRIPS[metric];
+  if (!strip) return null;
 
   return (
-    <Tooltip title={baseRateSource(metric)} placement="top" arrow enterDelay={200}>
+    <Tooltip title={strip.tip} placement="top" arrow enterDelay={200}>
       <Box
         sx={{
           display: "flex",
@@ -36,7 +30,7 @@ export default function BaseRate({ metric }) {
           border: "1px solid rgba(142,180,196,0.12)",
         }}
       >
-        {stats.map((s) => (
+        {strip.stats.map((s) => (
           <Box key={s.label} sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
             <Typography
               component="span"

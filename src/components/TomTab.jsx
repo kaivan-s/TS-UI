@@ -13,6 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { AccentRow, CoilBar, HeadCell, Note, PageIntro, WhyRow } from "./ui.jsx";
+import BaseRate from "./BaseRate.jsx";
 import { PremiumOverlay } from "./Premium.jsx";
 import { useAuth } from "../auth.jsx";
 import { C } from "../theme.js";
@@ -49,6 +50,9 @@ export default function TomTab({
   // "eod_stale" means the feed failed on a day-old panel.
   const staleEod = liveSource === "eod_stale";
   const earlyLive = liveSource === "live" && !isRefreshTime();
+  // Ordered by expected range, which is what the score was measured to
+  // predict. It is not a quality ranking: the top of the list had no better
+  // next-day return than the bottom.
   const sorted = useMemo(() => [...rows].sort(byScoreDesc), [rows]);
   const throughCount = useMemo(
     () => sorted.filter(isThrough).length,
@@ -63,7 +67,7 @@ export default function TomTab({
   return (
     <Box>
       <PageIntro
-        title="For tomorrow"
+        title="Expected Movers"
         action={
           canRefresh ? (
             <Button
@@ -84,12 +88,16 @@ export default function TomTab({
           )
         }
       >
-        Stocks sitting near their breakout level, ranked by momentum. The
-        system scans this list on its own — live around midday, then again
-        after 15:35 IST with closing prices. <strong>Re-scan</strong> is only
-        if you want a fresh pass now. "THROUGH" means the price has already
-        closed above the breakout level and is the strongest signal.
+        Uptrend stocks sitting near their 20-day high, ordered by how much
+        movement is expected. That order is the one thing measurement
+        supports: it forecasts distance travelled, not direction, and not
+        whether the trade is good. Use it to find names with enough range to
+        be worth watching, then decide direction yourself. The system scans on
+        its own — live around midday, then again after 15:35 IST with closing
+        prices; <strong>Re-scan</strong> is only for a fresh pass now.
       </PageIntro>
+
+      <BaseRate metric="movers" />
 
       {staleEod && (
         <Box
@@ -199,7 +207,7 @@ export default function TomTab({
           >
             {[
               { id: "all", label: "All", count: sorted.length, on: !throughOnly },
-              { id: "through", label: "Broke out", count: throughCount, on: throughOnly },
+              { id: "through", label: "Already through", count: throughCount, on: throughOnly },
             ].map((f) => (
               <Tooltip key={f.id} title={TOM_FILTER_HELP[f.id] || ""} placement="top" arrow enterDelay={300}>
                 <Chip
@@ -233,7 +241,7 @@ export default function TomTab({
             <PremiumOverlay
               previewCount={FREE_PREVIEW_COUNT}
               totalCount={shown.length}
-              feature="Full momentum list"
+              feature="Full movers list"
             >
               <ScanTable
                 rows={shown.slice(0, FREE_PREVIEW_COUNT)}
