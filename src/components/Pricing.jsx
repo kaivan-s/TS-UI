@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { Box, Button, Chip, Typography } from "@mui/material";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Alert, Box, Button, Chip, Typography } from "@mui/material";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
+import CelebrationRoundedIcon from "@mui/icons-material/CelebrationRounded";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
 
@@ -280,8 +282,21 @@ function ComparisonTable() {
 }
 
 export default function Pricing() {
-  const { upgrade, busy, isPremium, plan: currentPlan, email } = useAuth();
+  const { upgrade, busy, isPremium, plan: currentPlan, email, refreshSubscription } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState("yearly");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Handle success redirect from payment
+  useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      setShowSuccess(true);
+      // Refresh subscription status
+      refreshSubscription?.();
+      // Remove query param from URL
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams, refreshSubscription]);
 
   const handleUpgrade = (planId) => {
     if (!email) {
@@ -292,6 +307,30 @@ export default function Pricing() {
 
   return (
     <Box sx={{ pb: 8, maxWidth: 900, mx: "auto" }}>
+      {/* Success message */}
+      {showSuccess && (
+        <Alert
+          severity="success"
+          icon={<CelebrationRoundedIcon />}
+          onClose={() => setShowSuccess(false)}
+          sx={{
+            mb: 4,
+            bgcolor: "rgba(125,186,150,0.12)",
+            border: "1px solid rgba(125,186,150,0.25)",
+            color: C.text,
+            "& .MuiAlert-icon": { color: C.good },
+            "& .MuiAlert-action": { color: C.muted },
+          }}
+        >
+          <Typography sx={{ fontWeight: 600, mb: 0.5 }}>
+            Welcome to Premium!
+          </Typography>
+          <Typography sx={{ fontSize: 14, color: C.muted }}>
+            Your subscription is now active. You have full access to all setups and features.
+          </Typography>
+        </Alert>
+      )}
+
       {/* Header */}
       <Box sx={{ textAlign: "center", mb: 5 }}>
         <Box
