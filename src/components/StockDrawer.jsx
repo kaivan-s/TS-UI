@@ -79,7 +79,7 @@ function Metric({ label, k, value, hint, color, size = "normal" }) {
           sx={{
             fontSize: 11,
             fontWeight: 500,
-            color: C.muted,
+            color: "rgba(238,234,227,0.5)",
             textTransform: "uppercase",
             letterSpacing: "0.03em",
             mb: 0.5,
@@ -162,7 +162,7 @@ export default function StockDrawer({
       open={open}
       onClose={onClose}
       PaperProps={{
-        sx: { width: { xs: "100%", sm: 520 }, bgcolor: C.bg, p: 0 },
+        sx: { width: { xs: "100%", sm: 720 }, bgcolor: C.bg, p: 0 },
       }}
     >
       {/* Header */}
@@ -184,7 +184,7 @@ export default function StockDrawer({
                 {data?.symbol || data?.query || "Stock"}
               </Typography>
               {m.adj && (
-                <Typography sx={{ fontSize: 20, fontWeight: 500, color: C.muted }}>
+                <Typography sx={{ fontSize: 20, fontWeight: 500, color: "rgba(238,234,227,0.6)" }}>
                   ₹{num(m.adj, 2)}
                 </Typography>
               )}
@@ -209,7 +209,7 @@ export default function StockDrawer({
                 />
               )}
               {data?.as_of && (
-                <Typography sx={{ fontSize: 12, color: C.muted }}>
+                <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.5)" }}>
                   {fmtDate(data.as_of)}
                 </Typography>
               )}
@@ -258,7 +258,7 @@ export default function StockDrawer({
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
             {/* Summary description */}
             {data.why && (
-              <Typography sx={{ fontSize: 14, lineHeight: 1.7, color: C.muted }}>
+              <Typography sx={{ fontSize: 14, lineHeight: 1.7, color: "rgba(238,234,227,0.7)" }}>
                 {data.why}
               </Typography>
             )}
@@ -278,7 +278,7 @@ export default function StockDrawer({
                       textTransform: "uppercase",
                     }}
                   />
-                  <Typography sx={{ fontSize: 12, color: C.muted }}>
+                  <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.5)" }}>
                     mechanical levels · not a validated edge
                   </Typography>
                 </Box>
@@ -323,17 +323,17 @@ export default function StockDrawer({
                     Recalc
                   </Button>
                   {plan.suggested_entry != null && entryDraft !== String(plan.suggested_entry) && (
-                    <Typography sx={{ fontSize: 12, color: C.muted }}>
+                    <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.5)" }}>
                       system: {num(plan.suggested_entry, 2)}
                     </Typography>
                   )}
                 </Box>
 
                 {/* Risk info */}
-                <Typography sx={{ fontSize: 13, lineHeight: 1.6, color: C.muted }}>
+                <Typography sx={{ fontSize: 13, lineHeight: 1.6, color: "rgba(238,234,227,0.65)" }}>
                   {plan.why}
                   {plan.risk != null && plan.rr != null && (
-                    <Box component="span" sx={{ color: C.text, fontWeight: 500 }}>
+                    <Box component="span" sx={{ color: C.good, fontWeight: 600 }}>
                       {" "}Risk ₹{num(plan.risk, 2)} · {num(plan.rr, 1)}R
                     </Box>
                   )}
@@ -375,7 +375,7 @@ export default function StockDrawer({
                   {filters.map((f) => (
                     <Box key={f.id} sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
                       <Check ok={f.ok} />
-                      <Typography sx={{ fontSize: 13, lineHeight: 1.5, color: f.ok ? C.text : C.muted }}>
+                      <Typography sx={{ fontSize: 13, lineHeight: 1.5, color: f.ok ? C.text : "rgba(238,234,227,0.5)" }}>
                         {f.text}
                       </Typography>
                     </Box>
@@ -383,7 +383,7 @@ export default function StockDrawer({
                   {m.liquid === false && (
                     <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
                       <Check ok={false} />
-                      <Typography sx={{ fontSize: 13, lineHeight: 1.5, color: C.muted }}>
+                      <Typography sx={{ fontSize: 13, lineHeight: 1.5, color: "rgba(238,234,227,0.5)" }}>
                         Median turnover below liquidity floor — excluded from scan
                       </Typography>
                     </Box>
@@ -435,7 +435,7 @@ export default function StockDrawer({
                     />
                   )}
                 </Box>
-                <Typography sx={{ fontSize: 13, lineHeight: 1.65, color: C.muted }}>
+                <Typography sx={{ fontSize: 13, lineHeight: 1.65, color: "rgba(238,234,227,0.7)" }}>
                   {data.shape.verdict_text}
                   {data.sector_note ? ` ${data.sector_note}` : ""}
                 </Typography>
@@ -444,7 +444,7 @@ export default function StockDrawer({
 
             {/* Flagged dates */}
             {data.flags?.length > 0 && (
-              <Typography sx={{ fontSize: 13, color: C.muted, px: 0.5 }}>
+              <Typography sx={{ fontSize: 13, color: "rgba(238,234,227,0.6)", px: 0.5 }}>
                 Flagged as a setup on {data.flags.map((f) => fmtDate(f.as_of)).join(", ")}.
               </Typography>
             )}
