@@ -75,7 +75,7 @@ function Input({ ...props }) {
   );
 }
 
-export default function Login() {
+export default function Login({ onBack }) {
   const {
     signInWithGoogle,
     signInWithEmail,
@@ -446,6 +446,32 @@ export default function Login() {
           </Box>
         )}
       </Box>
+
+      {/* Back to home link */}
+      {onBack && !denied && (
+        <Typography
+          component="button"
+          onClick={onBack}
+          sx={{
+            position: "absolute",
+            top: 24,
+            left: 24,
+            fontSize: 13,
+            color: C.muted,
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "inherit",
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            transition: "color 0.2s ease",
+            "&:hover": { color: C.text },
+          }}
+        >
+          ← Back
+        </Typography>
+      )}
 
       {/* Bottom attribution */}
       <Typography
