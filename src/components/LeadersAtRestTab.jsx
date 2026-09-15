@@ -184,7 +184,7 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                   help="Sessions since this base first cleared all seven filters. Gaps of up to three sessions do not restart the count, so a base that wobbles for a day keeps its real age. 'New' means it genuinely started today."
                   align="right"
                   sort={sort}
-                  sortKey="base_days"
+                  sortKey="episode_days"
                 />
                 <HeadCell
                   label="Sector"
@@ -249,18 +249,18 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                     {r.mom12_1 == null ? "—" : pct(r.mom12_1, 0)}
                   </TableCell>
                   <TableCell align="right" className="num">
-                    {/* base_new comes from episode tracking, which bridges
+                    {/* episode_new comes from episode tracking, which bridges
                         three-session gaps. Keying "New" off coil_days === 1
-                        labelled a quarter of these rows fresh when they were
+                        labelled 88% of these rows fresh when they were
                         long-standing bases that had wobbled once. */}
-                    {r.base_new ? (
+                    {r.episode_new ? (
                       <Chip
                         size="small"
                         label="New"
                         sx={{ bgcolor: "rgba(142,180,196,0.16)", color: C.accent }}
                       />
                     ) : (
-                      (r.base_days ?? r.coil_days ?? "—")
+                      (r.episode_days ?? r.coil_days ?? "—")
                     )}
                   </TableCell>
                   <TableCell

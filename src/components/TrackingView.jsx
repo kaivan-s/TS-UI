@@ -124,6 +124,7 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
   const [asOf, setAsOf] = useState(null);
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState(null);
+  const [note, setNote] = useState(null);
   const [pick, setPick] = useState([]);
   const [q, setQ] = useState("");
 
@@ -141,6 +142,7 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
       setRows(res?.rows || []);
       setDigest(res?.digest || null);
       setAsOf(res?.as_of || null);
+      setNote(res?.message || null);
     } catch (e) {
       setErr(e?.message || "Could not load tracking data");
       setRows([]);
@@ -193,8 +195,9 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
   if (!rows.length) {
     return (
       <Note>
-        No episodes tracked yet. This fills in after the first post-market run
-        of the day, which also reconstructs the recent history.
+        {note ||
+          "No episodes tracked yet. This fills in after the first post-market " +
+          "run, which also reconstructs the recent history."}
       </Note>
     );
   }

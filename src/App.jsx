@@ -14,18 +14,10 @@ import SectorsView from "./components/SectorsView.jsx";
 import Guide from "./components/Guide.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
 import StockDrawer from "./components/StockDrawer.jsx";
-import { getDashboard, getSector, getStatus, getStock, getSymbols, refresh } from "./api.js";
-
-function todayISO() {
-  const d = new Date();
-  const z = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
-}
+import { getDashboard, getSector, getStock, getSymbols } from "./api.js";
 
 export default function App() {
   const [status, setStatus] = useState(null);
-  const [days, setDays] = useState(220);
-  const [end, setEnd] = useState(todayISO());
   const [view, setView] = useState("setups");
   const [scan, setScan] = useState([]);
   const [rest, setRest] = useState([]);
@@ -38,9 +30,8 @@ export default function App() {
   const [stockQuery, setStockQuery] = useState(null);
   const [stock, setStock] = useState(null);
   const [stockLoading, setStockLoading] = useState(false);
-  const [pollKey, setPollKey] = useState(0);
 
-  const loading = status?.status === "loading" || status?.status === "idle" || !status;
+  const [loading, setLoading] = useState(true);
 
   const applyDash = (d) => {
     setStatus(d);
@@ -51,65 +42,26 @@ export default function App() {
     else setError("");
   };
 
-  // Symbols load once the panel is ready, and again after a header Refresh.
+  // The lists live in Supabase, written once a day by the post-market job.
+  // Nothing is polled and nothing waits on the in-process panel: a cold
+  // server serves the same rows as a warm one, so this is a single read.
   useEffect(() => {
-    if (status?.status !== "ready") return;
+    let stop = false;
+    setLoading(true);
+    getDashboard()
+      .then((d) => { if (!stop) applyDash(d); })
+      .catch((e) => { if (!stop) setError(e.message); })
+      .finally(() => { if (!stop) setLoading(false); });
+    return () => { stop = true; };
+  }, []);
+
+  // Symbol list for the header lookup. Best-effort: it is the one thing that
+  // still needs the panel, so it stays empty rather than blocking the app.
+  useEffect(() => {
     getSymbols()
       .then((r) => { if (r.symbols) setSymbols(r.symbols); })
       .catch(() => {});
-  }, [pollKey, status?.status]);
-
-  useEffect(() => {
-    let stop = false;
-    let timer;
-
-    const tick = async () => {
-      if (stop) return;
-      try {
-        const s = await getStatus();
-        if (stop) return;
-        setStatus(s);
-        if (s.status === "ready") {
-          // Only fetch the full dashboard when not mid-live-scan, or when
-          // the live scan just finished. Polling status alone is enough
-          // while the scan is running — the heavy payloads don't change.
-          if (s.live_status !== "loading") {
-            const d = await getDashboard();
-            if (!stop) applyDash(d);
-          } else {
-            // Mid-scan: keep polling status, but don't refetch 200 KB every
-            // second when the heavy payloads cannot have changed yet.
-            timer = setTimeout(tick, 1000);
-          }
-          return;
-        }
-        if (s.status === "error") {
-          setError(s.error || "Load failed.");
-          return;
-        }
-      } catch (e) {
-        if (!stop) setError(e.message);
-      }
-      timer = setTimeout(tick, 1000);
-    };
-
-    tick();
-    return () => {
-      stop = true;
-      clearTimeout(timer);
-    };
-  }, [pollKey]);
-
-  const onRefresh = async () => {
-    setError("");
-    try {
-      const s = await refresh(days, end);
-      setStatus({ ...s, status: "loading" });
-      setPollKey((n) => n + 1);
-    } catch (e) {
-      setError(e.message);
-    }
-  };
+  }, []);
 
   const openSector = async (name) => {
     setStockQuery(null);
