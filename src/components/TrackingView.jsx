@@ -84,8 +84,8 @@ function Digest({ digest }) {
         display: "flex",
         alignItems: "center",
         flexWrap: "wrap",
-        gap: 2,
-        px: 2,
+        gap: { xs: 1.5, sm: 2 },
+        px: { xs: 1.5, sm: 2 },
         py: 1.5,
         mb: 2,
         bgcolor: C.paper,
@@ -212,7 +212,7 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
             placeholder="Symbol or sector"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            sx={{ width: 200 }}
+            sx={{ width: { xs: "100%", sm: 200 } }}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -266,8 +266,8 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
             sx={{ fontSize: 12, color: C.muted, borderColor: C.line }}
           />
         )}
-        <Box sx={{ flex: 1 }} />
-        <Typography sx={{ fontSize: 12.5, color: C.muted, alignSelf: "center" }}>
+        <Box sx={{ flex: 1, display: { xs: "none", sm: "block" } }} />
+        <Typography sx={{ fontSize: 12.5, color: C.muted, alignSelf: "center", width: { xs: "100%", sm: "auto" }, mt: { xs: 0.5, sm: 0 } }}>
           {capped.length < shown.length
             ? `Newest ${capped.length} of ${shown.length} — search or filter to narrow`
             : `${shown.length} shown`}
@@ -275,9 +275,9 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
       </Box>
 
       <TableContainer
-        sx={{ bgcolor: C.paper, border: `1px solid ${C.line}`, borderRadius: 1 }}
+        sx={{ bgcolor: C.paper, border: `1px solid ${C.line}`, borderRadius: 1, overflowX: "auto" }}
       >
-        <Table size="small">
+        <Table size="small" sx={{ minWidth: 800 }}>
           <TableHead>
             <TableRow>
               <HeadCell

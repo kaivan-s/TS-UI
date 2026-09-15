@@ -87,7 +87,7 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
       <PageIntro
         title="Leaders at rest"
         action={
-          <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+          <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap", width: { xs: "100%", sm: "auto" } }}>
             <MultiSelect
               label="Sector"
               options={sectorOptions}
@@ -100,7 +100,7 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
               placeholder="Symbol or sector"
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              sx={{ width: 200 }}
+              sx={{ width: { xs: "100%", sm: 200 }, flex: { xs: 1, sm: "none" } }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -145,8 +145,8 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
           {ranked.length} names.
         </Note>
       ) : (
-        <TableContainer sx={{ mb: 5 }}>
-          <Table stickyHeader>
+        <TableContainer sx={{ mb: 5, overflowX: "auto" }}>
+          <Table stickyHeader sx={{ minWidth: 1000 }}>
             <TableHead>
               <TableRow>
                 <HeadCell

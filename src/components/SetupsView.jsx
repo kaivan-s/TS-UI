@@ -90,7 +90,7 @@ export default function SetupsView({
             </Tooltip>
           );
         })}
-        <Typography sx={{ fontSize: 12, color: C.muted, ml: "auto" }}>
+        <Typography sx={{ fontSize: 12, color: C.muted, ml: "auto", display: { xs: "none", sm: "block" } }}>
           {filter === "agree"
             ? "sector must agree"
             : "any sector, ranked by the last twelve months"}

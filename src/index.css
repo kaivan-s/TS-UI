@@ -43,3 +43,34 @@ body {
 .linkish:hover {
   color: #eeeae3;
 }
+
+/* Mobile-friendly table scrolling */
+@media (max-width: 600px) {
+  .MuiTableContainer-root {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .MuiTableCell-root {
+    white-space: nowrap;
+  }
+  
+  /* Slightly smaller table text on mobile */
+  .MuiTableCell-head {
+    font-size: 11px !important;
+  }
+  
+  .MuiTableCell-body {
+    font-size: 12px !important;
+  }
+  
+  .num {
+    font-size: 12px;
+  }
+}
+
+/* Touch-friendly tap targets */
+@media (max-width: 900px) {
+  .row-click {
+    min-height: 44px;
+  }
+}

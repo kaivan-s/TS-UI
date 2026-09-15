@@ -1,4 +1,4 @@
-import { Box, Button, IconButton, Typography } from "@mui/material";
+import { Box, Button, Drawer, IconButton, Typography, useMediaQuery, useTheme } from "@mui/material";
 import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
@@ -6,6 +6,7 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
+import CloseIcon from "@mui/icons-material/Close";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
 
@@ -42,24 +43,21 @@ const NAV_ITEMS = [
   },
 ];
 
-export default function Sidebar({ active, onChange, counts }) {
+const DRAWER_WIDTH = 220;
+
+function SidebarContent({ active, onChange, onClose, showClose, counts }) {
   const { email, signOut, isPremium, plan, upgrade, busy } = useAuth();
 
   return (
     <Box
       sx={{
-        width: 220,
-        minWidth: 220,
-        borderRight: `1px solid ${C.line}`,
+        width: DRAWER_WIDTH,
+        minWidth: DRAWER_WIDTH,
         bgcolor: C.bg,
-        height: "100vh",
-        position: "fixed",
-        top: 0,
-        left: 0,
+        height: "100%",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        zIndex: 1000,
       }}
     >
       {/* Logo / Brand */}
@@ -68,6 +66,9 @@ export default function Sidebar({ active, onChange, counts }) {
           px: 2.5,
           pt: 2.5,
           pb: 3,
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -116,6 +117,15 @@ export default function Sidebar({ active, onChange, counts }) {
             </Typography>
           </Box>
         </Box>
+        {showClose && (
+          <IconButton
+            onClick={onClose}
+            size="small"
+            sx={{ color: C.muted, mt: -0.5, mr: -0.5 }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        )}
       </Box>
 
       {/* Navigation */}
@@ -333,6 +343,61 @@ export default function Sidebar({ active, onChange, counts }) {
           </Box>
         </Box>
       )}
+    </Box>
+  );
+}
+
+export default function Sidebar({ active, onChange, counts, mobileOpen, onMobileClose }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  // Mobile: use a temporary drawer
+  if (isMobile) {
+    return (
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onMobileClose}
+        ModalProps={{ keepMounted: true }}
+        PaperProps={{
+          sx: {
+            bgcolor: C.bg,
+            borderRight: `1px solid ${C.line}`,
+          },
+        }}
+      >
+        <SidebarContent
+          active={active}
+          onChange={onChange}
+          counts={counts}
+          onClose={onMobileClose}
+          showClose
+        />
+      </Drawer>
+    );
+  }
+
+  // Desktop: fixed sidebar
+  return (
+    <Box
+      sx={{
+        width: DRAWER_WIDTH,
+        minWidth: DRAWER_WIDTH,
+        borderRight: `1px solid ${C.line}`,
+        bgcolor: C.bg,
+        height: "100vh",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        zIndex: 1000,
+      }}
+    >
+      <SidebarContent
+        active={active}
+        onChange={onChange}
+        counts={counts}
+        showClose={false}
+      />
     </Box>
   );
 }

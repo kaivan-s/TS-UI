@@ -612,7 +612,7 @@ export default function SectorLookoutsTab({ onOpenSector, liveRows }) {
             </Tooltip>
           );
         })}
-        <Typography sx={{ fontSize: 12, color: C.muted, ml: "auto" }}>
+        <Typography sx={{ fontSize: 12, color: C.muted, ml: "auto", display: { xs: "none", sm: "block" } }}>
           {usingLive ? "live scan" : data.scan_date}
         </Typography>
       </Box>
@@ -634,8 +634,8 @@ export default function SectorLookoutsTab({ onOpenSector, liveRows }) {
       ) : (
         <>
           {/* Cross-sectional heatmap table */}
-          <TableContainer>
-            <Table stickyHeader size="small">
+          <TableContainer sx={{ overflowX: "auto" }}>
+            <Table stickyHeader size="small" sx={{ minWidth: 700 }}>
               <TableHead>
                 <TableRow>
                   <HeadCell label="Sector" />

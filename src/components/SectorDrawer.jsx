@@ -171,8 +171,8 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
       <Box
         sx={{
           position: "relative",
-          px: 4,
-          py: 3,
+          px: { xs: 2.5, sm: 4 },
+          py: { xs: 2.5, sm: 3 },
           borderBottom: `1px solid ${C.line}`,
           background: `linear-gradient(135deg, rgba(142,180,196,0.08) 0%, transparent 100%)`,
         }}
@@ -231,7 +231,7 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
         </Box>
       </Box>
 
-      <Box sx={{ px: 4, py: 3.5, overflowY: "auto" }}>
+      <Box sx={{ px: { xs: 2.5, sm: 4 }, py: { xs: 2.5, sm: 3.5 }, overflowY: "auto" }}>
         {loading && (
           <Box sx={{ py: 8, textAlign: "center" }}>
             <Typography sx={{ color: C.muted, fontSize: 14 }}>Loading sector details…</Typography>
@@ -286,8 +286,8 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
                 Red = heavier down day (sellers showed up).
               </Typography>
             <BlurOverlay isPremium={isPremium} upgrade={upgrade} busy={busy}>
-              <Box sx={{ overflow: "auto", mb: 4 }}>
-                <Table>
+              <Box sx={{ overflowX: "auto", mb: 4, mx: { xs: -2.5, sm: 0 }, px: { xs: 2.5, sm: 0 } }}>
+                <Table sx={{ minWidth: 700 }}>
                   <TableHead>
                     <TableRow>
                       <HeadCell label="Date" />
@@ -357,7 +357,8 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
                 the move is broad or just one large company.
               </Typography>
               <BlurOverlay isPremium={isPremium} upgrade={upgrade} busy={busy}>
-                <Table>
+                <Box sx={{ overflowX: "auto", mx: { xs: -2.5, sm: 0 }, px: { xs: 2.5, sm: 0 } }}>
+                <Table sx={{ minWidth: 550 }}>
                 <TableHead>
                   <TableRow>
                     <HeadCell label="Symbol" />
@@ -383,6 +384,7 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
                   ))}
                 </TableBody>
                 </Table>
+                </Box>
               </BlurOverlay>
             </Box>
           </>

@@ -146,8 +146,8 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
   );
 
   return (
-    <TableContainer>
-      <Table>
+    <TableContainer sx={{ overflowX: "auto" }}>
+      <Table sx={{ minWidth: 750 }}>
         <TableHead>
           <TableRow>
             <HeadCell label="Symbol" />

@@ -4,6 +4,8 @@ import {
   Box,
   LinearProgress,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { C } from "./theme.js";
 import Sidebar from "./components/Sidebar.jsx";
@@ -18,6 +20,10 @@ import StockDrawer from "./components/StockDrawer.jsx";
 import { getDashboard, getSector, getStock, getSymbols } from "./api.js";
 
 export default function App() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   const [status, setStatus] = useState(null);
   const [view, setView] = useState("setups");
   const [scan, setScan] = useState([]);
@@ -33,6 +39,12 @@ export default function App() {
   const [stockLoading, setStockLoading] = useState(false);
 
   const [loading, setLoading] = useState(true);
+
+  const handleDrawerToggle = () => setMobileOpen(!mobileOpen);
+  const handleNavChange = (newView) => {
+    setView(newView);
+    if (isMobile) setMobileOpen(false);
+  };
 
   const applyDash = (d) => {
     setStatus(d);
@@ -104,16 +116,33 @@ export default function App() {
   return (
     <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: C.bg }}>
       {/* Sidebar */}
-      <Sidebar active={view} onChange={setView} counts={counts} />
+      <Sidebar
+        active={view}
+        onChange={handleNavChange}
+        counts={counts}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
 
       {/* Main content */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, ml: "220px" }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minWidth: 0,
+          ml: { xs: 0, md: "220px" },
+          transition: "margin-left 0.2s ease",
+        }}
+      >
         {/* Header */}
         <Header
           status={status}
           loading={loading}
           symbols={symbols}
           onLookup={openStock}
+          onMenuClick={handleDrawerToggle}
+          showMenuButton={isMobile}
         />
 
         {/* Loading bar */}
@@ -128,7 +157,7 @@ export default function App() {
         )}
 
         {/* Content area */}
-        <Box sx={{ flex: 1, px: 3, py: 3 }}>
+        <Box sx={{ flex: 1, px: { xs: 2, sm: 3 }, py: { xs: 2, sm: 3 } }}>
           {loading && (
             <Typography color="text.secondary" sx={{ mb: 2.5, fontSize: 14.5 }}>
               {status?.message || "Starting…"}

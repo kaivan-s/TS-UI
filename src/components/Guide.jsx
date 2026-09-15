@@ -58,8 +58,8 @@ function Step({ n, title, body }) {
 
 function FieldTable({ rows }) {
   return (
-    <Paper variant="outlined" sx={{ overflow: "hidden", mb: 1, width: "100%" }}>
-      <Table>
+    <Paper variant="outlined" sx={{ overflow: "hidden", mb: 1, width: "100%", overflowX: "auto" }}>
+      <Table sx={{ minWidth: 600 }}>
         <TableHead>
           <TableRow>
             <TableCell sx={{ width: 130 }}>Field</TableCell>
@@ -267,12 +267,12 @@ export default function Guide() {
         The scan works with seven finer states underneath, which is what you
         see when you hover a chip.
       </P>
-      <Paper variant="outlined" sx={{ overflow: "hidden", width: "100%" }}>
-        <Table>
+      <Paper variant="outlined" sx={{ overflow: "hidden", width: "100%", overflowX: "auto" }}>
+        <Table sx={{ minWidth: 600 }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ width: 130 }}>Shown as</TableCell>
-              <TableCell sx={{ width: 320 }}>States behind it</TableCell>
+              <TableCell sx={{ width: { xs: 100, sm: 130 } }}>Shown as</TableCell>
+              <TableCell sx={{ width: { xs: 220, sm: 320 } }}>States behind it</TableCell>
               <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>

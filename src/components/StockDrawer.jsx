@@ -128,7 +128,7 @@ export default function StockDrawer({
     >
       <Box
         sx={{
-          px: 3.5,
+          px: { xs: 2.5, sm: 3.5 },
           py: 2.5,
           borderBottom: `1px solid ${C.line}`,
           display: "flex",
@@ -164,7 +164,7 @@ export default function StockDrawer({
         </IconButton>
       </Box>
 
-      <Box sx={{ px: 3.5, py: 3 }}>
+      <Box sx={{ px: { xs: 2.5, sm: 3.5 }, py: 3 }}>
         {loading && (
           <Typography color="text.secondary">Reading the name…</Typography>
         )}
@@ -257,7 +257,7 @@ export default function StockDrawer({
                 <Box
                   sx={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                    gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, minmax(0, 1fr))" },
                     gap: 2,
                     mb: 1.5,
                   }}
@@ -279,8 +279,8 @@ export default function StockDrawer({
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                gap: 2.25,
+                gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)", md: "repeat(4, minmax(0, 1fr))" },
+                gap: { xs: 1.5, sm: 2.25 },
                 mb: 3.5,
               }}
             >
@@ -347,7 +347,8 @@ export default function StockDrawer({
             )}
 
             <Section title="Last 20 sessions">
-              <Table>
+              <Box sx={{ overflowX: "auto", mx: { xs: -2.5, sm: 0 }, px: { xs: 2.5, sm: 0 } }}>
+              <Table sx={{ minWidth: 500 }}>
                 <TableHead>
                   <TableRow>
                     <HeadCell label="Date" />
@@ -371,6 +372,7 @@ export default function StockDrawer({
                   ))}
                 </TableBody>
               </Table>
+              </Box>
             </Section>
           </>
         )}

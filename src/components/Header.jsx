@@ -1,9 +1,11 @@
 import {
   Autocomplete,
   Box,
+  IconButton,
   TextField,
   Typography,
 } from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import { C } from "../theme.js";
 import { fmtDate } from "../format.js";
 
@@ -12,21 +14,34 @@ export default function Header({
   loading,
   symbols = [],
   onLookup,
+  onMenuClick,
+  showMenuButton,
 }) {
   return (
     <Box
       sx={{
         bgcolor: C.paper,
         borderBottom: `1px solid ${C.line}`,
-        px: 3,
+        px: { xs: 2, sm: 3 },
         py: 1.5,
         display: "flex",
         alignItems: "center",
-        gap: 2,
+        gap: { xs: 1.5, sm: 2 },
         minHeight: 56,
       }}
     >
-      <Typography sx={{ fontSize: 13, color: C.muted }}>
+      {/* Hamburger menu for mobile */}
+      {showMenuButton && (
+        <IconButton
+          onClick={onMenuClick}
+          sx={{ color: C.text, p: 1, ml: -1 }}
+          aria-label="open navigation"
+        >
+          <MenuIcon />
+        </IconButton>
+      )}
+
+      <Typography sx={{ fontSize: { xs: 12, sm: 13 }, color: C.muted, display: { xs: "none", sm: "block" } }}>
         {status?.as_of ? (
           <>
             As of{" "}
@@ -59,7 +74,7 @@ export default function Header({
         )}
       </Typography>
 
-      <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 1.5 }}>
+      <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 1.5, flex: { xs: 1, sm: "none" } }}>
         <Autocomplete
           size="small"
           options={symbols}
@@ -86,7 +101,7 @@ export default function Header({
           includeInputInList
           openOnFocus
           freeSolo
-          sx={{ width: 260 }}
+          sx={{ width: { xs: "100%", sm: 260 }, minWidth: { xs: 140, sm: 260 } }}
           noOptionsText={symbols.length ? "No match" : "Symbols still loading…"}
           renderOption={(props, o) => (
             <li {...props} key={o.symbol || o}>

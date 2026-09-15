@@ -230,20 +230,20 @@ function ComparisonTable() {
       <Box
         sx={{
           display: "grid",
-          gridTemplateColumns: "1fr 80px 80px",
-          gap: 2,
-          p: 2,
+          gridTemplateColumns: { xs: "1fr 60px 60px", sm: "1fr 80px 80px" },
+          gap: { xs: 1, sm: 2 },
+          p: { xs: 1.5, sm: 2 },
           bgcolor: C.surface,
           borderBottom: `1px solid ${C.line}`,
         }}
       >
-        <Typography sx={{ fontSize: 13, fontWeight: 600, color: C.muted }}>
+        <Typography sx={{ fontSize: { xs: 12, sm: 13 }, fontWeight: 600, color: C.muted }}>
           Feature
         </Typography>
-        <Typography sx={{ fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "center" }}>
+        <Typography sx={{ fontSize: { xs: 12, sm: 13 }, fontWeight: 600, color: C.muted, textAlign: "center" }}>
           Free
         </Typography>
-        <Typography sx={{ fontSize: 13, fontWeight: 600, color: C.accent, textAlign: "center" }}>
+        <Typography sx={{ fontSize: { xs: 12, sm: 13 }, fontWeight: 600, color: C.accent, textAlign: "center" }}>
           Premium
         </Typography>
       </Box>
@@ -254,9 +254,9 @@ function ComparisonTable() {
           key={row.feature}
           sx={{
             display: "grid",
-            gridTemplateColumns: "1fr 80px 80px",
-            gap: 2,
-            p: 2,
+            gridTemplateColumns: { xs: "1fr 60px 60px", sm: "1fr 80px 80px" },
+            gap: { xs: 1, sm: 2 },
+            p: { xs: 1.5, sm: 2 },
             bgcolor: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
             borderBottom: i < COMPARISONS.length - 1 ? `1px solid ${C.line}` : "none",
           }}
@@ -316,7 +316,7 @@ export default function Pricing() {
 
         <Typography
           sx={{
-            fontSize: 32,
+            fontSize: { xs: 24, sm: 32 },
             fontWeight: 600,
             color: C.text,
             letterSpacing: "-0.03em",

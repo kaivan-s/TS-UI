@@ -220,13 +220,14 @@ export function PageIntro({ title, action, children }) {
       <Box
         sx={{
           display: "flex",
-          alignItems: "flex-start",
-          gap: 2,
+          alignItems: { xs: "stretch", sm: "flex-start" },
+          flexDirection: { xs: "column", sm: "row" },
+          gap: { xs: 1.5, sm: 2 },
           flexWrap: "wrap",
           mb: children ? 0.75 : 0,
         }}
       >
-        <Typography variant="h1" sx={{ flex: 1, fontSize: 20, minWidth: 160 }}>
+        <Typography variant="h1" sx={{ flex: 1, fontSize: { xs: 18, sm: 20 }, minWidth: 160 }}>
           {title}
         </Typography>
         {action}
