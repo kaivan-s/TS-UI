@@ -54,6 +54,11 @@ export default function SetupsView({
 
   const counts = { agree: buys.length, rest: rest.length };
 
+  // A night where no sector agreed saves no setup rows, so the newest ones
+  // in the table are from an earlier session. They still render, but saying
+  // nothing would present a four-day-old list as tonight's.
+  const setupsStale = (status?.stale || []).includes("setups");
+
   return (
     <Box>
       <UpdateBanner asOf={status?.as_of} />
@@ -93,11 +98,34 @@ export default function SetupsView({
       </Box>
 
       {filter === "agree" ? (
-        <BuysTab
-          rows={buys}
-          onOpenSector={onOpenSector}
-          onOpenStock={onOpenStock}
-        />
+        <>
+          {setupsStale && (
+            <Box
+              sx={{
+                mb: 2,
+                px: 1.5,
+                py: 1.25,
+                borderRadius: 1,
+                border: `1px solid ${C.line}`,
+                bgcolor: "rgba(196,164,106,0.06)",
+              }}
+            >
+              <Typography sx={{ fontSize: 13, color: C.warn }}>
+                No sector agreed in the {status?.session} session.
+              </Typography>
+              <Typography sx={{ fontSize: 12, color: C.muted, mt: 0.25 }}>
+                Below is the last list that had any, from{" "}
+                {status?.dates?.setups} — history, not tonight's candidates.
+                Leaders at rest is current.
+              </Typography>
+            </Box>
+          )}
+          <BuysTab
+            rows={buys}
+            onOpenSector={onOpenSector}
+            onOpenStock={onOpenStock}
+          />
+        </>
       ) : (
         <LeadersAtRestTab
           rows={rest}

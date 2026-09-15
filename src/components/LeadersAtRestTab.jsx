@@ -112,24 +112,9 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
           </Box>
         }
       >
-        The {ranked.length} coiled names with the strongest last twelve months,
-        spread across {sectors} {sectors === 1 ? "sector" : "sectors"}. Every
-        row cleared the same seven coil filters — quiet, tight, near its highs
-        — and they are ordered by twelve-month return, so a stock near the top
-        has both gone quiet <em>and</em> been a genuine leader. Momentum is
-        measured over the year ending a month ago, since very recent gains tend
-        to give back. Act the same way as any coil: on a close through the
-        level in "To breakout" on heavy volume, not on today's price.
+        Coiled stocks ranked by twelve-month return. Act on a close through the
+        trigger on heavy volume, not on today's price.
       </PageIntro>
-
-      <Note>
-        This is the one list here where sort order means something. The coil
-        score does not predict returns and never ordered this list; twelve-month
-        momentum does, consistently from the top of the ranking to the bottom.
-        Ranking the pool this way and keeping 20 measured about twice the edge
-        of showing all 63 — but on five months of history, so treat the order as
-        a sensible priority rather than a promise.
-      </Note>
 
       {filtering && (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5 }}>
