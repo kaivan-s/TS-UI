@@ -20,6 +20,22 @@ export const KLASS_GROUP = {
   out: { bg: "rgba(255,255,255,0.03)", fg: "#6e6b66", label: "Ruled out" },
 };
 
+/**
+ * Colours for base episode states (see glossary EPISODE_STATE).
+ *
+ * `dropped` is deliberately neutral rather than red: leaving the filters is
+ * not a loss, and most of those names simply went quiet. Only broke_down and
+ * failed — where price actually went against the base — get the bad colour.
+ */
+export const EPISODE_COLOR = {
+  basing: { bg: "rgba(142,180,196,0.12)", fg: C.accent },
+  triggered: { bg: "rgba(125,186,150,0.12)", fg: C.good },
+  failed: { bg: "rgba(200,122,122,0.12)", fg: C.bad },
+  broke_down: { bg: "rgba(200,122,122,0.12)", fg: C.bad },
+  dropped: { bg: "rgba(255,255,255,0.04)", fg: C.muted },
+  stale: { bg: "rgba(196,164,106,0.10)", fg: C.warn },
+};
+
 export const theme = createTheme({
   palette: {
     mode: "dark",

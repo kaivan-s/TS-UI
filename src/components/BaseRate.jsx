@@ -48,7 +48,7 @@ export default function BaseRate({ metric }) {
           component="span"
           sx={{ fontSize: 11.5, color: C.muted, ml: "auto", opacity: 0.8 }}
         >
-          backtest, {EVIDENCE_WINDOW}
+          backtest, {strip.window || EVIDENCE_WINDOW}
         </Typography>
       </Box>
     </Tooltip>

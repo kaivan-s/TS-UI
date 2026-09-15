@@ -181,10 +181,10 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                 />
                 <HeadCell
                   label="Coiled"
-                  help="Consecutive sessions this name has cleared all seven filters. 1 means it qualified today for the first time. A long run means the base has been sitting a while without resolving."
+                  help="Sessions since this base first cleared all seven filters. Gaps of up to three sessions do not restart the count, so a base that wobbles for a day keeps its real age. 'New' means it genuinely started today."
                   align="right"
                   sort={sort}
-                  sortKey="coil_days"
+                  sortKey="base_days"
                 />
                 <HeadCell
                   label="Sector"
@@ -249,14 +249,18 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                     {r.mom12_1 == null ? "—" : pct(r.mom12_1, 0)}
                   </TableCell>
                   <TableCell align="right" className="num">
-                    {r.coil_days === 1 ? (
+                    {/* base_new comes from episode tracking, which bridges
+                        three-session gaps. Keying "New" off coil_days === 1
+                        labelled a quarter of these rows fresh when they were
+                        long-standing bases that had wobbled once. */}
+                    {r.base_new ? (
                       <Chip
                         size="small"
                         label="New"
                         sx={{ bgcolor: "rgba(142,180,196,0.16)", color: C.accent }}
                       />
                     ) : (
-                      (r.coil_days ?? "—")
+                      (r.base_days ?? r.coil_days ?? "—")
                     )}
                   </TableCell>
                   <TableCell

@@ -316,3 +316,40 @@ export const STAT_HELP = {
   avg_close: "Average next-session close versus scan price. Shows where the move settled.",
   broke_out: "Number of picks that actually closed through their breakout level the next session.",
 };
+
+/**
+ * Base episode states. The label is what the reader sees; the help explains
+ * what the app observed, never what to do about it — these are descriptions
+ * of price and filter events, not recommendations.
+ */
+export const EPISODE_STATE = {
+  basing: {
+    label: "Basing",
+    help: "Still clearing all seven coil filters. Nothing has happened yet.",
+  },
+  triggered: {
+    label: "Broke out",
+    help: "Closed above the level the base was measured at. Heavy volume means the day's turnover ran at least 1.5x its recent average.",
+  },
+  failed: {
+    label: "Broke out, then failed",
+    help: "Closed back inside the base for two straight sessions after breaking out. One dip does not count — breakouts retest the level routinely.",
+  },
+  broke_down: {
+    label: "Broke down",
+    help: "Closed 7% or more below where it was when it first appeared, without ever breaking out.",
+  },
+  dropped: {
+    label: "Left the list",
+    help: "Stopped clearing the filters for more than three sessions. Not a loss — usually volume returned or it drifted from its highs. Still watched for a late breakout.",
+  },
+  stale: {
+    label: "Never resolved",
+    help: "Twenty sessions passed with no breakout and no breakdown. The base went nowhere.",
+  },
+};
+
+/** Ordering for the state filter chips: live first, then outcomes. */
+export const EPISODE_ORDER = [
+  "basing", "triggered", "failed", "broke_down", "dropped", "stale",
+];

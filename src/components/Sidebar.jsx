@@ -2,6 +2,7 @@ import { Box, Button, IconButton, Typography } from "@mui/material";
 import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { C } from "../theme.js";
@@ -19,6 +20,12 @@ const NAV_ITEMS = [
     Icon: GridViewRoundedIcon,
     label: "Sectors",
     desc: "Where setups come from",
+  },
+  {
+    id: "tracking",
+    Icon: HistoryRoundedIcon,
+    label: "Tracking",
+    desc: "What happened to past bases",
   },
   {
     id: "guide",

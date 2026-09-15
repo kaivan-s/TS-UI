@@ -9,6 +9,7 @@ import { C } from "./theme.js";
 import Sidebar from "./components/Sidebar.jsx";
 import Header from "./components/Header.jsx";
 import SetupsView from "./components/SetupsView.jsx";
+import TrackingView from "./components/TrackingView.jsx";
 import SectorsView from "./components/SectorsView.jsx";
 import Guide from "./components/Guide.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
@@ -212,6 +213,10 @@ export default function App() {
               status={status}
               onOpenSector={openSector}
             />
+          )}
+
+          {view === "tracking" && (
+            <TrackingView onOpenSector={openSector} onOpenStock={openStock} />
           )}
 
           {view === "guide" && <Guide />}

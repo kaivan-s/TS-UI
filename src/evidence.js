@@ -37,6 +37,37 @@ export const BASE_RATES = {
   coils: { n: 377, winRate: 0.592, medianExcess: 0.017 },
 };
 
+/**
+ * How basing episodes resolved, from the shipped definition in episodes.py.
+ *
+ * Measured differently from BASE_RATES above and not comparable to it. These
+ * count EPISODES, not names, over the full 324-session window rather than the
+ * de-duplicated forward-return sample — an episode is one base from the
+ * session it appears to the session it resolves, so the same symbol
+ * contributes several times across the window and the horizon is the
+ * 20-session resolution window rather than a fixed forward return.
+ *
+ * Deliberately re-derived from episodes.py rather than reused from
+ * eval_lifecycle.py, whose 49% trigger rate describes a slightly different
+ * construction (no mid-stream restarts, rolling rather than windowed
+ * liquidity). Quoting the analysis script's numbers next to this table would
+ * be describing code that is not the code being run.
+ */
+export const EPISODE_RATES = {
+  n: 942,
+  brokeOut: 0.569,
+  heldAfterBreakout: 0.45,
+  brokeDown: 0.218,
+  stale: 0.213,
+  sessionsToBreakout: 6,
+  sessionsToBreakdown: 10,
+  // Incidental, not the controlled test of the heavy-volume guidance: this
+  // is "still above the level 10 sessions later", not a return measurement.
+  heldOnHeavyVolume: 0.52,
+  heldOnLightVolume: 0.41,
+  shareOfBreakoutsHeavy: 0.36,
+};
+
 const METHOD = (n) =>
   `Backtest over ${EVIDENCE_WINDOW}: ${n} names, each counted once on the day it first qualified, measured against the same session's all-stock median. One window, so treat it as a base rate rather than a promise.`;
 
@@ -66,6 +97,27 @@ export const STAT_STRIPS = {
       { value: 377, label: "names measured" },
     ],
     tip: METHOD(377),
+  },
+  episodes: {
+    // Its own window: episodes do not need a forward return window to fit, so
+    // this spans all 324 cached sessions rather than the 5-month slice the
+    // other two strips are confined to. Labelling it EVIDENCE_WINDOW would
+    // understate the sample by a year.
+    window: "Jun 2025 – Sep 2026",
+    stats: [
+      { value: "57%", label: "of bases eventually broke out" },
+      { value: "45%", label: "of those held the level" },
+      { value: "22%", label: "broke down instead" },
+    ],
+    tip:
+      "1,167 basing episodes over 324 sessions, 942 of them resolved. An " +
+      "episode runs from the session a base first clears all seven filters " +
+      "until it breaks out, falls 7% below where it appeared, or spends 20 " +
+      "sessions doing neither. Median 6 sessions to break out and 10 to " +
+      "break down. Counts episodes rather than names, so a symbol that bases " +
+      "repeatedly appears more than once — these are not comparable to the " +
+      "Setups and Leaders strips, which measure forward returns on " +
+      "de-duplicated names.",
   },
   movers: {
     stats: [

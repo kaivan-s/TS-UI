@@ -248,6 +248,16 @@ export default function Guide() {
       />
       <Step
         n="5"
+        title="Tracking — what happened to the last lot"
+        body="Every other screen is tonight's snapshot, so a name that disappears leaves no trace. Tracking gives each base an identity from the session it first cleared the filters until it resolves, and says which of the four things happened: it broke out, it fell 7% below where it appeared, it stopped clearing the filters, or twenty sessions passed with neither. A base survives gaps of up to three sessions, because about half of all drop-offs are back within ten and ending an episode on the first miss reported the same base as dead and then brand new a week later. Read the top line first — it counts only what changed in the last session, so a quiet evening says so."
+      />
+      <Step
+        n="6"
+        title="Breaking out is not the same as working"
+        body="Across 942 resolved episodes, 57% eventually closed through their level, 22% broke down first, and 21% did neither. But of the ones that broke out, fewer than half were still above the level ten sessions later. That is the single most useful number in this app: a breakout is an event, not an outcome, and the base rate for it holding is close to a coin toss. Breakouts on heavy volume held 52% of the time against 41% on light volume — consistent with the advice in step 3, though that comparison is 'still above the level', not a return measurement, and is not a controlled test."
+      />
+      <Step
+        n="7"
         title="Look up any name"
         body="The header field runs the same coil filters, sector shape, and setup checks on a symbol you type. Put your entry in the drawer to get a mechanical plan: wait / buy / add / hold / sell, plus a stop under the 20-day base (or 1.5 ATR) and a 2R target. Those prices are risk math from this structure, not a measured edge. Click a symbol on any list for the same drawer."
       />
