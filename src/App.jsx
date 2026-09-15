@@ -12,6 +12,7 @@ import SetupsView from "./components/SetupsView.jsx";
 import TrackingView from "./components/TrackingView.jsx";
 import SectorsView from "./components/SectorsView.jsx";
 import Guide from "./components/Guide.jsx";
+import Pricing from "./components/Pricing.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
 import StockDrawer from "./components/StockDrawer.jsx";
 import { getDashboard, getSector, getStock, getSymbols } from "./api.js";
@@ -172,6 +173,8 @@ export default function App() {
           )}
 
           {view === "guide" && <Guide />}
+
+          {view === "pricing" && <Pricing />}
         </Box>
       </Box>
 

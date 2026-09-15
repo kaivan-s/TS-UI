@@ -5,6 +5,7 @@ import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
 
@@ -32,6 +33,12 @@ const NAV_ITEMS = [
     Icon: MenuBookRoundedIcon,
     label: "Guide",
     desc: "How it works",
+  },
+  {
+    id: "pricing",
+    Icon: PaymentsRoundedIcon,
+    label: "Pricing",
+    desc: "Plans and features",
   },
 ];
 
