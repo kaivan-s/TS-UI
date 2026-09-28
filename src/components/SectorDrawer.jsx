@@ -289,7 +289,7 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
         {isPremium && data?.found === false && (
           <Box sx={{ py: 6, textAlign: "center" }}>
             <Typography sx={{ color: "rgba(238,234,227,0.6)", fontSize: 14 }}>
-              No match.
+              {data.reason || "No match."}
               {data.near?.length ? ` Did you mean: ${data.near.join(", ")}` : ""}
             </Typography>
           </Box>

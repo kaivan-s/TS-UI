@@ -2,8 +2,9 @@
  * Setups — one page, two cuts of the same coil pool.
  *
  * "Sector agrees" is the default: coiled stocks whose sector is also moving.
- * "Leaders at rest" drops the sector condition and instead ranks the pool by
- * 12-month momentum, keeping 20.
+ * "Leaders at rest" drops the sector-acting condition (keeping only the
+ * DISQUALIFIED exclusion) and instead ranks the market leaders in the pool by
+ * risk-adjusted 12-month momentum, keeping 20.
  *
  * Both are deliberately short. The unranked 63-name pool and the separate
  * 80-name momentum list were removed because neither was a list anyone would
@@ -33,7 +34,7 @@ const FILTERS = [
   {
     id: "rest",
     label: "Leaders at rest",
-    help: "The same coil pool ignoring sector state, ranked by return over the twelve months ending a month ago, cut to 20. A proven leader that has gone quiet. Ranking this way measured about twice the edge of showing the full pool, on five months of history.",
+    help: "The same coil pool, kept to stocks in the top 30% of the market on return over the twelve months ending a month ago and outside disqualified sectors, then ranked with steadier trends first and cut to 20. A proven leader that has gone quiet.",
   },
 ];
 

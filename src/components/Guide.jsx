@@ -244,7 +244,7 @@ export default function Guide() {
       <Step
         n="4"
         title="Leaders at rest — the other cut"
-        body="Switch the Setups page to Leaders at rest to drop the sector condition and instead rank the same coil pool by return over the twelve months ending a month ago, cut to the top 20. The top of that list is a proven leader that has gone quiet, which is a different bet from Sector agrees and picks up mostly different names. This is the only list in the app where sort order carries information: the coil score has no relationship with forward returns, but twelve-month momentum orders outcomes consistently. Showing 20 ranked this way measured about twice the edge of showing all 63 unranked — on five months of history, so treat it as a priority order, not a promise."
+        body="Switch the Setups page to Leaders at rest to drop the requirement that the sector is acting. Instead, the same coil pool is cut to stocks in the top 30% of the whole market on return over the twelve months ending a month ago, with anything in a disqualified sector removed. Survivors are ranked by that return divided by its volatility, so a steady trend outranks an erratic one, and the top 20 are shown. The top of that list is a proven leader that has gone quiet, which is a different bet from Sector agrees and picks up mostly different names. Twelve-month momentum is the one reading in the app that orders outcomes consistently; the risk-adjusted ordering is newer and still being measured, so treat it as a priority order, not a promise."
       />
       <Step
         n="5"

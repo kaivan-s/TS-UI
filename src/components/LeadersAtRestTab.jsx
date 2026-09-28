@@ -1,10 +1,11 @@
 /**
- * Leaders at rest — the coil pool ordered by 12-month momentum, cut to 20.
+ * Leaders at rest — coiled market leaders, ordered by risk-adjusted
+ * 12-month momentum, cut to 20.
  *
- * A name qualifies on the coil gates (quiet, tight, near its highs) and is
- * then ranked by how strong its last year was, so the top of this list is a
- * proven leader taking a rest. The gates time the entry; momentum picks which
- * bases are worth the wait.
+ * A name qualifies on the coil gates (quiet, tight, near its highs), must sit
+ * in the top 30% of the market on twelve-month return, and must not be in a
+ * disqualified sector. Order is the backend's `rest_rank`: momentum divided by
+ * volatility, so steady trends rank above erratic ones.
  *
  * Carries no BaseRate strip on purpose. The +1.7% figure in evidence.js was
  * measured on the UNRANKED 63-name pool and does not describe this list, and
@@ -36,12 +37,13 @@ import { num, pct } from "../format.js";
 export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpenStock }) {
   const [q, setQ] = useState("");
   const [sectorPick, setSectorPick] = useState([]);
-  // Default order is the backend's: strongest twelve months first.
+  // Default order is the backend's rank, which is risk-adjusted and so is not
+  // the same as sorting by the raw 12m column.
   const sort = useTableSort({
-    key: "mom12_1",
-    dir: "desc",
-    // Symbol and sector read naturally A-Z; every measure wants big-first.
-    dirFor: (k) => (k === "symbol" || k === "sector" ? "asc" : "desc"),
+    key: "rank",
+    dir: "asc",
+    // Rank, symbol and sector read naturally low-to-high; measures big-first.
+    dirFor: (k) => (k === "rank" || k === "symbol" || k === "sector" ? "asc" : "desc"),
   });
 
   // The momentum rank is assigned once, from the order the scan delivered, so
@@ -112,8 +114,9 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
           </Box>
         }
       >
-        Coiled stocks ranked by twelve-month return. Wait for a close above the
-        breakout level — these are not buys at today's price.
+        Coiled stocks in the top 30% of the market on twelve-month return,
+        steadiest trends first. Wait for a close above the breakout level —
+        these are not buys at today's price.
       </PageIntro>
 
       {filtering && (
@@ -136,8 +139,9 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
 
       {ranked.length === 0 ? (
         <Note>
-          No stock is in a coil today. This scan only fires when price, trend,
-          volume and range line up at once, which most sessions do not.
+          No market leader is in a coil today. A name needs the coil filters
+          and a top-30% twelve-month return at once, outside any disqualified
+          sector, which many sessions do not offer.
         </Note>
       ) : shown.length === 0 ? (
         <Note>
@@ -151,7 +155,7 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
               <TableRow>
                 <HeadCell
                   label="#"
-                  help="Rank by twelve-month momentum, fixed when the scan ran. Re-sorting the table does not change it, so you can always see where a name sits in the original order."
+                  help="Rank by twelve-month momentum divided by volatility, fixed when the scan ran. A steady 40% year ranks above an erratic 60% one. Re-sorting the table does not change it."
                   align="right"
                   sort={sort}
                   sortKey="rank"
@@ -159,7 +163,7 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                 <HeadCell label="Symbol" sort={sort} sortKey="symbol" />
                 <HeadCell
                   label="12m momentum"
-                  help="Return over the twelve months ending one month ago — the column this list is sorted by out of the box. The recent month is excluded because short-term gains tend to reverse, which would contaminate the ranking."
+                  help="Return over the twelve months ending one month ago. Every name here is in the top 30% of the market on this number. The recent month is excluded because short-term gains tend to reverse, which would contaminate the ranking."
                   align="right"
                   sort={sort}
                   sortKey="mom12_1"
