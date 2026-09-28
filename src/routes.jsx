@@ -168,6 +168,14 @@ export default function AppRoutes() {
         }
       />
       <Route
+        path="/carry"
+        element={
+          <RequireAuth>
+            <App />
+          </RequireAuth>
+        }
+      />
+      <Route
         path="/guide"
         element={
           <RequireAuth>

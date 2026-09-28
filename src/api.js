@@ -52,3 +52,6 @@ export const getSectorConstituents = (sector, top = 15) =>
 
 // Base episodes — what happened to each base since it appeared.
 export const getEpisodes = () => json("/api/episodes");
+
+// Upper-circuit carry: latest list, track record, per-session history.
+export const getCarry = () => json("/api/carry");
