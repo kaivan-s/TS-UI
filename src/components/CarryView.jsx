@@ -3,7 +3,7 @@
  * did the next session.
  *
  * The list is written by the 15:22 IST snapshot (with the order book behind
- * each name) or, if that was missed, rebuilt from the bhavcopy by the
+ * each name) or, if that was missed, rebuilt from end-of-day data by the
  * post-market run. Outcomes are filled in the evening after the next session.
  *
  * This is a paper-tracking screen. The pattern is measured on end-of-day data
@@ -45,7 +45,7 @@ const BUCKET_LABEL = {
   "all live": "Live snapshots",
   "live: sellers present": "Live — sellers present",
   "live: no sellers (queue)": "Live — queue only",
-  "eod backfill (fill unknown)": "Rebuilt from bhavcopy",
+  "eod backfill (fill unknown)": "Rebuilt from EOD data",
   "band 5%": "5% band",
   "band 10%": "10% band",
   "band 20%": "20% band",
@@ -57,7 +57,7 @@ const BUCKET_HELP = {
   "live: no sellers (queue)":
     "At the circuit with nothing on offer. A buy order would have joined the queue and most likely not filled.",
   "eod backfill (fill unknown)":
-    "Sessions rebuilt from the bhavcopy. The pattern is real here, but the order book is unknown.",
+    "Sessions rebuilt from end-of-day data. The pattern is real here, but the order book is unknown.",
 };
 
 const color = (v) => (v == null ? C.muted : v >= 0 ? C.good : C.bad);
@@ -85,7 +85,7 @@ const timeIST = (iso) => {
 function FillChip({ row }) {
   if (row.source !== "live" || row.fillable == null) {
     return (
-      <Tooltip title="Rebuilt from the bhavcopy — the order book at the close is not known." arrow>
+      <Tooltip title="Rebuilt from end-of-day data — the order book at the close is not known." arrow>
         <Chip size="small" label="Unknown" sx={{ bgcolor: "rgba(255,255,255,0.04)", color: C.muted, fontSize: 11.5, height: 22, borderRadius: 1 }} />
       </Tooltip>
     );
@@ -168,7 +168,7 @@ function Strip({ data, latest }) {
       <Typography sx={{ fontSize: 12.5, color: C.muted }}>
         {data.source === "live"
           ? `Live snapshot${snap ? ` · ${snap} IST` : ""}`
-          : "Rebuilt from bhavcopy · no order book"}
+          : "Rebuilt from EOD data · no order book"}
       </Typography>
     </Box>
   );
@@ -346,7 +346,7 @@ function History({ daily, history, onOpenStock }) {
                   <TableCell align="right" className="num" sx={{ color: color(d.mean_btst) }}>{signedPct(d.mean_btst)}</TableCell>
                   <TableCell align="right" className="num" sx={{ color: color(d.best) }}>{signedPct(d.best)}</TableCell>
                   <TableCell align="right" className="num" sx={{ color: color(d.worst) }}>{signedPct(d.worst)}</TableCell>
-                  <TableCell sx={{ fontSize: 12.5, color: C.muted }}>{d.source === "live" ? "Live" : "Bhavcopy"}</TableCell>
+                  <TableCell sx={{ fontSize: 12.5, color: C.muted }}>{d.source === "live" ? "Live" : "EOD"}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell colSpan={8} sx={{ p: 0, borderBottom: isOpen ? undefined : "none" }}>
@@ -501,7 +501,7 @@ export default function CarryView({ onOpenStock }) {
         the price touches it, otherwise at the close. About three in ten of
         these stocks close red the next day, and a 5% band name can fall the
         full 5%. Results before the live snapshots started are rebuilt from the
-        bhavcopy and say nothing about fills.
+        end-of-day data and say nothing about fills.
       </Note>
     </Box>
   );
