@@ -675,8 +675,6 @@ export default function CarryView({ onOpenStock }) {
   }
   if (err && !data) return <Note>{err}</Note>;
 
-  const latest = data?.latest || [];
-
   return (
     <Box>
       <PageIntro
@@ -701,15 +699,12 @@ export default function CarryView({ onOpenStock }) {
         that is what this page is tracking.
       </PageIntro>
 
-      {!data?.as_of ? (
-        <Note>No list yet. The first one is written by the 15:22 snapshot or the evening post-market run.</Note>
+      {!data?.as_of && !intradayData?.as_of ? (
+        <Note>No data yet. The first scan runs during market hours (every 30 minutes).</Note>
       ) : (
         <>
-          <Strip data={data} latest={latest} />
-
           <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2, borderBottom: `1px solid ${C.line}` }}>
-            <Tab label={<TabLabel name="Intraday scan" count={intradayData?.latest?.length || 0} />} sx={{ textTransform: "none" }} />
-            <Tab label={<TabLabel name="EOD list" count={latest.length} />} sx={{ textTransform: "none" }} />
+            <Tab label={<TabLabel name="Today's scan" count={intradayData?.latest?.length || 0} />} sx={{ textTransform: "none" }} />
             <Tab label={<TabLabel name="Track record" count={data.summary?.find((s) => s.bucket === "all")?.n} />} sx={{ textTransform: "none" }} />
           </Tabs>
 
@@ -732,14 +727,7 @@ export default function CarryView({ onOpenStock }) {
             </>
           )}
 
-          {tab === 1 &&
-            (latest.length ? (
-              <TodayTable rows={latest} onOpenStock={onOpenStock} />
-            ) : (
-              <Note>No stock closed on its upper band in the liquid universe this session.</Note>
-            ))}
-
-          {tab === 2 && (
+          {tab === 1 && (
             <>
               <Summary summary={data.summary || []} />
               <Typography sx={{ fontSize: 13, color: C.muted, mb: 1 }}>
