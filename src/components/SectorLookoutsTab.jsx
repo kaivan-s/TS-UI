@@ -152,7 +152,7 @@ function VerdictBadge({ verdict }) {
   if (!verdict) return null;
   const config = {
     crossing: { label: "Crossing", color: C.accent },
-    orderly: { label: "Buy Ready", color: C.good },
+    orderly: { label: "Shape confirmed", color: C.good },
     sellers_won: { label: "Sellers Won", color: C.bad },
     waiting: { label: "Waiting", color: C.muted },
     no_crossing: { label: "No Crossing", color: C.muted },
@@ -473,7 +473,7 @@ function SectorRow({ row, expanded, onToggle, isPremium }) {
             {row.buy_ready && (
               <Chip
                 size="small"
-                label="Buy"
+                label="Confirmed"
                 sx={{ bgcolor: "rgba(125,186,150,0.12)", color: C.good, fontSize: 10 }}
               />
             )}

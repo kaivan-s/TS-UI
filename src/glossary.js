@@ -69,7 +69,7 @@ export const M = {
   },
   to_trigger: {
     label: "To breakout",
-    help: "How far the price still has to rise to close above the 20-day high. Lower is closer to triggering. That close is the event to wait for — this row is not a buy at today's price.",
+    help: "How far the price still has to rise to close above the 20-day high. Lower is closer to triggering. That close is the event the scan waits for — nothing has confirmed at today's price.",
   },
   trigger: {
     label: "Breakout price",
@@ -127,7 +127,7 @@ export const M = {
   // --- For Tom / momentum scoring -------------------------------------
   score: {
     label: "Expected range",
-    help: "0–1 energy score from volume, RSI, ATR, extension from the 20-EMA and money flow. Measured over 15 months, it forecasts how FAR a name travels intraday — the top of the list reached +3% about 9pp more often, holding on 87–92% of sessions. It does not forecast direction: its next-day return edge was +0.02% (p=0.73). Read it as expected movement, not as a better buy.",
+    help: "0–1 energy score from volume, RSI, ATR, extension from the 20-EMA and money flow. Measured over 15 months, it forecasts how FAR a name travels intraday — the top of the list reached +3% about 9pp more often, holding on 87–92% of sessions. It does not forecast direction: its next-day return difference was +0.02% (p=0.73), which is indistinguishable from zero. Read it as expected range of movement, not as a directional signal.",
   },
   ltp: {
     label: "Price",
@@ -305,7 +305,7 @@ export const KIND_HELP = {
   setup: "Classic coil setup inside an accumulating sector.",
   near: "Very close to the breakout level but not quite through.",
   potential: "In an uptrend and coiling, but sector not yet confirmed.",
-  early: "The sector surged today (CROSSING) so the setup is early — no pullback yet to buy into.",
+  early: "The sector surged today (CROSSING) so the setup is early — the pullback shape has not formed yet.",
 };
 
 /** Track Record stat card definitions */

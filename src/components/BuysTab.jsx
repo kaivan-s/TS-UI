@@ -106,9 +106,9 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
           {waking.length > 0 && (
             <Box sx={{ mt: resting.length > 0 ? 4 : 0 }}>
               <SectionHead color={C.warn} title="Sector surged today — early">
-                The volume surge is happening right now, so there is no
-                pullback to buy into yet. Watch rather than act; it may turn
-                into the group above in a few sessions, or fail.
+                The volume surge is happening right now, so the pullback shape
+                has not formed yet. These may turn into the group above in a
+                few sessions, or fail.
               </SectionHead>
               <SetupTable rows={waking} onOpenSector={onOpenSector} onOpenStock={onOpenStock} color={C.warn} label="Early" />
             </Box>

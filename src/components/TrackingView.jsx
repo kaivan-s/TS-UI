@@ -322,7 +322,7 @@ export default function TrackingView({ onOpenSector, onOpenStock }) {
               />
               <HeadCell
                 label="Level"
-                help="The breakout level, frozen at the session the base was found. It does not track the rolling high, or the target would move every day and nothing would ever count as a breakout."
+                help="The breakout level, frozen at the session the base was found. It does not track the rolling high, or the level would move every day and nothing would ever count as a breakout."
                 align="right"
                 sort={sort}
                 sortKey="entry_trigger"

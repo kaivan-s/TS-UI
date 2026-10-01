@@ -144,7 +144,7 @@ function SetupsCard({ buys }) {
     <Card highlight>
       <SectionTitle icon={StarRoundedIcon}>Setups in this Sector</SectionTitle>
       <Typography sx={{ color: "rgba(238,234,227,0.6)", mb: 2.5, fontSize: 13 }}>
-        Coiled stocks inside this pullback. Set an alert at the breakout price — none of these is a buy at today's price.
+        Coiled stocks inside this pullback. The breakout price is the level each one has yet to clear — none of them has confirmed at today's price.
       </Typography>
       <Box sx={{ overflowX: "auto", mx: -2.5, px: 2.5 }}>
         <Table size="small" sx={{ minWidth: 600 }}>

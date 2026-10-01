@@ -263,7 +263,9 @@ export default function StockDrawer({
               </Typography>
             )}
 
-            {/* Entry Plan Card */}
+            {/* Structural levels: arithmetic from the 20-day base and ATR.
+                Deliberately described, not prescribed — no entry/target/stop
+                vocabulary, because that would make this a recommendation. */}
             {plan && (
               <Card highlight={plan.action === "buy"} sx={{ bgcolor: act.bg, borderColor: `${act.fg}33` }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
@@ -279,7 +281,7 @@ export default function StockDrawer({
                     }}
                   />
                   <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.5)" }}>
-                    mechanical levels · not a validated edge
+                    structural levels · arithmetic from the base, not a validated edge
                   </Typography>
                 </Box>
 
@@ -292,17 +294,18 @@ export default function StockDrawer({
                     mb: 2.5,
                   }}
                 >
-                  <Metric label="Entry" value={num(plan.entry, 2)} size="large" color={C.text} />
-                  <Metric label="Stop" value={num(plan.stop, 2)} size="large" color={C.bad} />
-                  <Metric label="Target" value={num(plan.target, 2)} size="large" color={C.good} />
-                  <Metric label="Stretch" value={num(plan.target2, 2)} size="large" color={C.good} />
+                  <Metric label="Reference" value={num(plan.entry, 2)} size="large" color={C.text} />
+                  <Metric label="Structure level" value={num(plan.stop, 2)} size="large" color={C.bad} />
+                  <Metric label="2R level" value={num(plan.target, 2)} size="large" color={C.good} />
+                  <Metric label="Measured move" value={num(plan.target2, 2)} size="large" color={C.good} />
                 </Box>
 
-                {/* Entry input */}
+                {/* Reference-price input: recomputes the levels from a price
+                    the user supplies, rather than the structural default. */}
                 <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", mb: 2 }}>
                   <TextField
                     size="small"
-                    label="Your entry"
+                    label="Your price"
                     value={entryDraft}
                     onChange={(e) => setEntryDraft(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") applyEntry(); }}

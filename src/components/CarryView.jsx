@@ -53,7 +53,7 @@ const BUCKET_LABEL = {
 
 const BUCKET_HELP = {
   "live: sellers present":
-    "At the circuit at 15:22 with shares on offer. These are the only trades that could actually have filled — the bucket that decides whether this list is usable.",
+    "At the circuit at 15:22 with shares on offer. These are the only observations where an order could actually have filled — the bucket that decides whether this list is usable.",
   "live: no sellers (queue)":
     "At the circuit with nothing on offer. A buy order would have joined the queue and most likely not filled.",
   "eod backfill (fill unknown)":
@@ -62,10 +62,10 @@ const BUCKET_HELP = {
 
 // Intraday scanner status colors and labels
 const STATUS_CONFIG = {
-  approaching: { label: "Approaching", color: C.warn, bg: "rgba(196,164,106,0.12)", desc: "Within 1% of circuit — may still be buyable" },
-  at_circuit: { label: "At circuit", color: C.good, bg: "rgba(125,186,150,0.12)", desc: "At the upper limit with sellers present" },
-  heating: { label: "Heating up", color: C.accent, bg: "rgba(99,102,241,0.12)", desc: "Showing momentum toward circuit" },
-  locked: { label: "Locked", color: C.bad, bg: "rgba(200,122,122,0.12)", desc: "At circuit with no sellers — cannot buy" },
+  approaching: { label: "Approaching", color: C.warn, bg: "rgba(196,164,106,0.12)", desc: "Within 1% of the circuit, with offers still showing on the book" },
+  at_circuit: { label: "At circuit", color: C.good, bg: "rgba(125,186,150,0.12)", desc: "At the upper limit with offers still on the book" },
+  heating: { label: "Heating up", color: C.accent, bg: "rgba(99,102,241,0.12)", desc: "Moving toward the circuit but not near it yet" },
+  locked: { label: "Locked", color: C.bad, bg: "rgba(200,122,122,0.12)", desc: "At the circuit with nothing on offer — the book is bid-only" },
 };
 
 const color = (v) => (v == null ? C.muted : v >= 0 ? C.good : C.bad);
@@ -129,7 +129,7 @@ function ResultChip({ row }) {
   return (
     <Chip
       size="small"
-      label={hit ? `Hit +4% · ${signedPct(row.btst)}` : `Missed · ${signedPct(row.btst)}`}
+      label={hit ? `Reached +4% · ${signedPct(row.btst)}` : `Did not reach · ${signedPct(row.btst)}`}
       sx={{
         bgcolor: hit ? "rgba(125,186,150,0.12)" : "rgba(200,122,122,0.12)",
         color: hit ? C.good : C.bad,
@@ -224,7 +224,7 @@ function IntradayTable({ rows, onOpenStock }) {
             <HeadCell label="Change" help="Change from the previous close." align="right" sort={sort} sortKey="pchange" />
             <HeadCell label="Price" help="Last traded price." align="right" sort={sort} sortKey="ltp" />
             <HeadCell label="Circuit" help="Upper circuit limit." align="right" sort={sort} sortKey="upper_circuit" />
-            <HeadCell label="Sellers" help="Shares on offer. Zero means no sellers — cannot buy." align="right" sort={sort} sortKey="total_sell_qty" />
+            <HeadCell label="Sellers" help="Shares on offer. Zero means nothing is on offer, so no order could fill at this price." align="right" sort={sort} sortKey="total_sell_qty" />
             <HeadCell label="Sector" sort={sort} sortKey="sector" />
           </TableRow>
         </TableHead>
@@ -426,7 +426,7 @@ function TodayTable({ rows, onOpenStock }) {
             <HeadCell label="Sellers" help="Total sell quantity pending at 15:22. Zero means nothing is on offer at the circuit." align="right" sort={sort} sortKey="total_sell_qty" />
             <HeadCell label="Fill" help="Whether a buy at the circuit could plausibly have filled." />
             <HeadCell label="Turnover" help="Median daily turnover over the last 20 sessions." align="right" sort={sort} sortKey="med_turn20" />
-            {scored && <HeadCell label="Next session" help="Hit +4% above the close, and the carry trade's result." />}
+            {scored && <HeadCell label="Next session" help="Whether the next session's high reached +4% above the reference close, and the measured move." />}
             <HeadCell label="Sector" sort={sort} sortKey="sector" />
           </TableRow>
         </TableHead>
@@ -486,11 +486,18 @@ function Summary({ summary }) {
   return (
     <>
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 2 }}>
-        <Stat label="STOCKS TRACKED" value={all.n} sub={`${all.sessions} sessions`} />
-        <Stat label="REACHED +4% NEXT DAY" value={pct(all.hit4, 0)} tone={C.good} sub={`${pct(all.gap4, 0)} opened above it`} />
-        <Stat label="AVG CARRY TRADE" value={signedPct(all.mean_btst)} tone={color(all.mean_btst)} sub={`${signedPct(all.net_mean)} after costs`} />
-        <Stat label="WIN RATE" value={pct(all.win_rate, 0)} sub={`worst ${signedPct(all.worst)}`} />
+        <Stat label="STOCKS OBSERVED" value={all.n} sub={`${all.sessions} sessions`} />
+        <Stat label="REACHED +4% NEXT SESSION" value={pct(all.hit4, 0)} tone={C.good} sub={`${pct(all.gap4, 0)} opened above it`} />
+        <Stat label="MEAN NEXT-SESSION MOVE" value={signedPct(all.mean_btst)} tone={color(all.mean_btst)} sub={`${signedPct(all.net_mean)} less costs`} />
+        <Stat label="SHARE CLOSING POSITIVE" value={pct(all.win_rate, 0)} sub={`lowest ${signedPct(all.worst)}`} />
       </Box>
+
+      <Note>
+        Historical observations of past price data over {all.sessions} sessions.
+        These figures are not verified under SEBI's PaRRVA framework and are not
+        a performance claim, a projection, or an indication of any outcome you
+        would obtain.
+      </Note>
 
       <TableContainer sx={{ bgcolor: C.paper, border: `1px solid ${C.line}`, borderRadius: 1, overflowX: "auto", mb: 3 }}>
         <Table size="small" sx={{ minWidth: 760 }}>
@@ -498,13 +505,13 @@ function Summary({ summary }) {
             <TableRow>
               <HeadCell label="Group" />
               <HeadCell label="Stocks" align="right" />
-              <HeadCell label="Hit +4%" help="Next session's high at least 4% above the entry close." align="right" />
-              <HeadCell label="Gap ≥4%" help="Opened at least 4% up — sold at the open." align="right" />
-              <HeadCell label="Avg trade" help="Buy at the close; sell at the open if it gaps past +4%, at +4% if touched, else at the next close." align="right" />
+              <HeadCell label="Reached +4%" help="Share whose next-session high was at least 4% above the reference close." align="right" />
+              <HeadCell label="Gap ≥4%" help="Share that opened at least 4% above the reference close." align="right" />
+              <HeadCell label="Mean move" help="Measured from the reference close to the next session's open where it gapped past +4%, to +4% where that level was touched, otherwise to the next close." align="right" />
               <HeadCell label="Median" align="right" />
-              <HeadCell label="After costs" help="Average minus a 0.25% delivery round trip." align="right" />
-              <HeadCell label="Win rate" align="right" />
-              <HeadCell label="Buy at open" help="Alternative that avoids the circuit queue: buy at the next open, sell at +4% or the close. Has only paid on the 20% band." align="right" />
+              <HeadCell label="Less costs" help="The mean move minus a 0.25% delivery round trip." align="right" />
+              <HeadCell label="Share positive" align="right" />
+              <HeadCell label="Open-reference variant" help="The same measurement taken from the next session's open instead of the close, which sidesteps the circuit queue. Positive only on the 20% band in this sample." align="right" />
             </TableRow>
           </TableHead>
           <TableBody>
@@ -552,12 +559,12 @@ function History({ daily, history, onOpenStock }) {
         <TableHead>
           <TableRow>
             <TableCell sx={{ width: 32 }} />
-            <HeadCell label="List date" help="The session the stocks closed on the circuit. The result is from the session after." />
+            <HeadCell label="List date" help="The session the stocks closed on the circuit. The outcome is from the session after." />
             <HeadCell label="Stocks" align="right" />
-            <HeadCell label="Hit +4%" align="right" />
-            <HeadCell label="Avg trade" align="right" />
-            <HeadCell label="Best" align="right" />
-            <HeadCell label="Worst" align="right" />
+            <HeadCell label="Reached +4%" align="right" />
+            <HeadCell label="Mean move" align="right" />
+            <HeadCell label="Highest" align="right" />
+            <HeadCell label="Lowest" align="right" />
             <HeadCell label="Source" />
           </TableRow>
         </TableHead>
@@ -692,11 +699,12 @@ export default function CarryView({ onOpenStock }) {
           </Button>
         }
       >
-        Stocks that closed on their upper price band. Over the last year a close
-        on the band reached +4% above that close the next session about three
-        times in four; closing at the high without being on the band did
-        nothing. Whether a buy at the circuit actually fills is not yet known —
-        that is what this page is tracking.
+        Stocks that closed on their upper price band, and what the tape did next.
+        In the observed sample a close on the band was followed more often than
+        not by a next-session high at least 4% above it, while closing at the
+        high without being on the band showed no such tendency. Whether an order
+        at the circuit could actually be filled is the open question — that is
+        what this page measures.
       </PageIntro>
 
       {!data?.as_of && !intradayData?.as_of ? (
@@ -713,7 +721,7 @@ export default function CarryView({ onOpenStock }) {
               {intradayData && <IntradayStrip data={intradayData} />}
               <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
                 Stocks approaching their upper circuit — scanned every 30 minutes during market hours.
-                "Approaching" means within 1% of the limit; catch them before they lock.
+                "Approaching" means price is within 1% of the limit and offers are still showing on the book.
               </Typography>
               <IntradayTable rows={intradayData?.latest || []} onOpenStock={onOpenStock} />
               {intradayData?.progression?.length > 0 && (
@@ -741,12 +749,15 @@ export default function CarryView({ onOpenStock }) {
       )}
 
       <Note>
-        Paper tracking, not a recommendation. The carry trade buys at the close
-        and sells the next session at the open if it gaps past +4%, at +4% if
-        the price touches it, otherwise at the close. About three in ten of
-        these stocks close red the next day, and a 5% band name can fall the
-        full 5%. Results before the live snapshots started are rebuilt from the
-        end-of-day data and say nothing about fills.
+        Observational record, not a recommendation and not advice. Every figure
+        here is measured from the reference close to the next session's open
+        where it gapped past +4%, to +4% where that level was touched, otherwise
+        to the next close. These are historical observations of past price data,
+        not verified under SEBI's PaRRVA framework, and not a claim about any
+        outcome you would obtain. A meaningful minority of these stocks close
+        lower the next session, and a 5% band name can fall the full 5%. Rows
+        from before the live snapshots began are rebuilt from end-of-day data
+        and say nothing about whether an order could have been filled.
       </Note>
     </Box>
   );

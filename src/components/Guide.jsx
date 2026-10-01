@@ -135,7 +135,7 @@ const COIL_FIELDS = [
   {
     field: "Coil",
     what: "0–100 rank among names that already passed the hard filters.",
-    read: "Higher = tighter, quieter, more accumulated. 80 is not a buy. It only sorts the watchlist.",
+    read: "Higher = tighter, quieter, more accumulated. 80 is not a signal. It only sorts the watchlist.",
   },
   {
     field: "Pos high",
@@ -184,15 +184,15 @@ const COIL_FIELDS = [
 const CLASSES = [
   {
     group: "acting",
-    do: "The only group that feeds Setups. Do not chase the expansion day itself — find the coiled names in the sector and set an alert at each trigger.",
+    do: "The only group that feeds Setups. The expansion day itself is the loud day rather than the setup; what the scan surfaces is the coiled names inside the sector, each with its own trigger.",
     states: [
       ["Crossing", "Turnover expanded out of quiet with breadth green and the move broad. Something is starting."],
-      ["Pullback", "The intended entry shape: a crossing already fired and today cooled on lighter volume. The rest after the first push."],
+      ["Pullback", "The intended setup shape: a crossing already fired and today cooled on lighter volume. The rest after the first push."],
     ],
   },
   {
     group: "watching",
-    do: "Nothing to buy today. Recheck tomorrow — these are the sectors most likely to become Acting next.",
+    do: "No sector is acting today. Recheck tomorrow — these are the sectors most likely to become Acting next.",
     states: [
       ["Unverified", "Expansion is there, but too few names advanced or delivery was weak. Not confirmed."],
       ["Base", "Quiet and being bought, no expansion yet. Keep its names on the coil list."],
@@ -238,8 +238,8 @@ export default function Guide() {
       />
       <Step
         n="3"
-        title="Do not buy the coil"
-        body="A setup is not a market order. Write down trigger (the 20-day high) and to_trigger, and put an alert there. Act only on a close through it on heavy volume."
+        title="The coil is not the trigger"
+        body="A setup is not a confirmation. The trigger is the 20-day high, and to_trigger is the distance to it; the structure only confirms on a close through that level on heavy volume. Until then the coil is a watchlist entry, nothing more."
       />
       <Step
         n="4"
@@ -254,14 +254,14 @@ export default function Guide() {
       <Step
         n="6"
         title="Breaking out is not the same as working"
-        body="Across 942 resolved episodes, 57% eventually closed through their level, 22% broke down first, and 21% did neither. But of the ones that broke out, fewer than half were still above the level ten sessions later. That is the single most useful number in this app: a breakout is an event, not an outcome, and the base rate for it holding is close to a coin toss. Breakouts on heavy volume held 52% of the time against 41% on light volume — consistent with the advice in step 3, though that comparison is 'still above the level', not a return measurement, and is not a controlled test."
+        body="Across 942 resolved episodes, 57% eventually closed through their level, 22% broke down first, and 21% did neither. But of the ones that broke out, fewer than half were still above the level ten sessions later. That is the single most useful number in this app: a breakout is an event, not an outcome, and the base rate for it holding is close to a coin toss. Breakouts on heavy volume held 52% of the time against 41% on light volume — consistent with the point in step 3, though that comparison is 'still above the level', not a return measurement, and is not a controlled test."
       />
       <Step
         n="7"
         title="Look up any name"
-        body="The header field runs the same coil filters, sector shape, and setup checks on a symbol you type. Put your entry in the drawer to get a mechanical plan: wait / buy / add / hold / sell, plus a stop under the 20-day base (or 1.5 ATR) and a 2R target. Those prices are risk math from this structure, not a measured edge. Click a symbol on any list for the same drawer."
+        body="The header field runs the same coil filters, sector shape, and setup checks on a symbol you type. The drawer reports which structural state the last close sits in — pre-trigger, at trigger, at the pullback line, structure intact, or structure broken — together with the structure level under the 20-day base (or 1.5 ATR), the 2R level and the measured move. Those are arithmetic from the base, not a measured edge and not instructions. Enter your own price to recompute them from it. Click a symbol on any list for the same drawer."
       />
-      <H>What each state means — and what to do</H>
+      <H>What each state means</H>
       <P>
         The Sectors table labels every sector Acting, Watching, or Ruled out.
         The scan works with seven finer states underneath, which is what you
@@ -273,7 +273,7 @@ export default function Guide() {
             <TableRow>
               <TableCell sx={{ width: { xs: 100, sm: 130 } }}>Shown as</TableCell>
               <TableCell sx={{ width: { xs: 220, sm: 320 } }}>States behind it</TableCell>
-              <TableCell>Action</TableCell>
+              <TableCell>How the scan uses it</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
