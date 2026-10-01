@@ -55,3 +55,7 @@ export const getEpisodes = () => json("/api/episodes");
 
 // Upper-circuit carry: latest list, track record, per-session history.
 export const getCarry = () => json("/api/carry");
+
+// Intraday circuit scanner: stocks approaching the upper circuit.
+export const getCarryIntraday = (asOf = null) =>
+  json(asOf ? `/api/carry/intraday?as_of=${asOf}` : "/api/carry/intraday");

@@ -33,7 +33,7 @@ import {
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import { getCarry } from "../api.js";
+import { getCarry, getCarryIntraday } from "../api.js";
 import { C } from "../theme.js";
 import { fmtDate, num, pct } from "../format.js";
 import { HeadCell, Note, PageIntro, TabLabel, useTableSort } from "./ui.jsx";
@@ -58,6 +58,14 @@ const BUCKET_HELP = {
     "At the circuit with nothing on offer. A buy order would have joined the queue and most likely not filled.",
   "eod backfill (fill unknown)":
     "Sessions rebuilt from end-of-day data. The pattern is real here, but the order book is unknown.",
+};
+
+// Intraday scanner status colors and labels
+const STATUS_CONFIG = {
+  approaching: { label: "Approaching", color: C.warn, bg: "rgba(196,164,106,0.12)", desc: "Within 1% of circuit — may still be buyable" },
+  at_circuit: { label: "At circuit", color: C.good, bg: "rgba(125,186,150,0.12)", desc: "At the upper limit with sellers present" },
+  heating: { label: "Heating up", color: C.accent, bg: "rgba(99,102,241,0.12)", desc: "Showing momentum toward circuit" },
+  locked: { label: "Locked", color: C.bad, bg: "rgba(200,122,122,0.12)", desc: "At circuit with no sellers — cannot buy" },
 };
 
 const color = (v) => (v == null ? C.muted : v >= 0 ? C.good : C.bad);
@@ -130,6 +138,228 @@ function ResultChip({ row }) {
         borderRadius: 1,
       }}
     />
+  );
+}
+
+function StatusChip({ status }) {
+  const cfg = STATUS_CONFIG[status] || { label: status, color: C.muted, bg: "rgba(255,255,255,0.04)", desc: "" };
+  return (
+    <Tooltip title={cfg.desc} arrow>
+      <Chip
+        size="small"
+        label={cfg.label}
+        sx={{ bgcolor: cfg.bg, color: cfg.color, fontSize: 11.5, height: 22, borderRadius: 1 }}
+      />
+    </Tooltip>
+  );
+}
+
+function IntradayStrip({ data }) {
+  const { summary, latest_scan, scans } = data;
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: { xs: 1.5, sm: 2.5 },
+        px: { xs: 1.5, sm: 2 },
+        py: 1.5,
+        mb: 2,
+        bgcolor: C.paper,
+        border: `1px solid ${C.line}`,
+        borderRadius: 1,
+      }}
+    >
+      <Typography sx={{ fontSize: 12, color: C.muted, letterSpacing: 0.4 }}>
+        INTRADAY SCAN {data.as_of}
+      </Typography>
+      {(summary?.approaching || 0) > 0 && (
+        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
+          <Typography sx={{ fontSize: 17, color: C.warn, fontWeight: 500 }}>{summary.approaching}</Typography>
+          <Typography sx={{ fontSize: 13, color: C.muted }}>approaching</Typography>
+        </Box>
+      )}
+      {(summary?.at_circuit || 0) > 0 && (
+        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
+          <Typography sx={{ fontSize: 17, color: C.good, fontWeight: 500 }}>{summary.at_circuit}</Typography>
+          <Typography sx={{ fontSize: 13, color: C.muted }}>at circuit</Typography>
+        </Box>
+      )}
+      {(summary?.heating || 0) > 0 && (
+        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
+          <Typography sx={{ fontSize: 17, color: C.accent, fontWeight: 500 }}>{summary.heating}</Typography>
+          <Typography sx={{ fontSize: 13, color: C.muted }}>heating</Typography>
+        </Box>
+      )}
+      <Box sx={{ flex: 1 }} />
+      <Typography sx={{ fontSize: 12.5, color: C.muted }}>
+        {latest_scan ? `Last scan: ${latest_scan} IST` : "No scans yet"} · {scans?.length || 0} scans today
+      </Typography>
+    </Box>
+  );
+}
+
+function IntradayTable({ rows, onOpenStock }) {
+  const sort = useTableSort({
+    key: "distance_to_circuit",
+    dir: "asc",
+    dirFor: (k) => (k === "symbol" || k === "sector" || k === "status" ? "asc" : k === "distance_to_circuit" ? "asc" : "desc"),
+  });
+  const shown = useMemo(() => sort.apply(rows), [rows, sort.key, sort.dir]);
+
+  if (!shown.length) {
+    return <Note>No stocks approaching the circuit right now. Run the scan during market hours (10:00 - 15:00 IST).</Note>;
+  }
+
+  return (
+    <TableContainer sx={{ bgcolor: C.paper, border: `1px solid ${C.line}`, borderRadius: 1, overflowX: "auto", mb: 3 }}>
+      <Table size="small" sx={{ minWidth: 880 }}>
+        <TableHead>
+          <TableRow>
+            <HeadCell label="Symbol" help="Click to open the stock." sort={sort} sortKey="symbol" />
+            <HeadCell label="Status" help="How close to the circuit: heating (2-4%), approaching (within 1%), at_circuit, locked." sort={sort} sortKey="status" />
+            <HeadCell label="Distance" help="How far from the upper circuit (0% = at circuit)." align="right" sort={sort} sortKey="distance_to_circuit" />
+            <HeadCell label="Band" help="The price band (5%, 10%, or 20%)." align="right" sort={sort} sortKey="band" />
+            <HeadCell label="Change" help="Change from the previous close." align="right" sort={sort} sortKey="pchange" />
+            <HeadCell label="Price" help="Last traded price." align="right" sort={sort} sortKey="ltp" />
+            <HeadCell label="Circuit" help="Upper circuit limit." align="right" sort={sort} sortKey="upper_circuit" />
+            <HeadCell label="Sellers" help="Shares on offer. Zero means no sellers — cannot buy." align="right" sort={sort} sortKey="total_sell_qty" />
+            <HeadCell label="Sector" sort={sort} sortKey="sector" />
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {shown.map((r) => (
+            <TableRow key={`${r.as_of}-${r.scan_time}-${r.symbol}`} hover>
+              <TableCell
+                className="row-click linkish"
+                role="button"
+                tabIndex={0}
+                onClick={() => onOpenStock?.(r.symbol)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onOpenStock?.(r.symbol); }}
+                sx={{ fontWeight: 500 }}
+              >
+                {r.symbol}
+              </TableCell>
+              <TableCell><StatusChip status={r.status} /></TableCell>
+              <TableCell align="right" className="num">
+                {r.distance_to_circuit == null ? "—" : `${(r.distance_to_circuit * 100).toFixed(2)}%`}
+              </TableCell>
+              <TableCell align="right" className="num">{r.band == null ? "—" : `${Math.round(r.band * 100)}%`}</TableCell>
+              <TableCell align="right" className="num" sx={{ color: C.good }}>
+                {r.pchange == null ? "—" : `+${Number(r.pchange).toFixed(2)}%`}
+              </TableCell>
+              <TableCell align="right" className="num">{num(r.ltp)}</TableCell>
+              <TableCell align="right" className="num">{num(r.upper_circuit)}</TableCell>
+              <TableCell align="right" className="num" sx={{ color: (r.total_sell_qty || 0) > 0 ? C.good : C.bad }}>
+                {qty(r.total_sell_qty)}
+              </TableCell>
+              <TableCell sx={{ fontSize: 12.5, color: C.muted }}>{r.sector || "—"}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
+function IntradayProgression({ progression, onOpenStock }) {
+  const [open, setOpen] = useState(null);
+
+  if (!progression?.length) {
+    return <Note>No progression data yet. Stocks are tracked as they appear in multiple scans.</Note>;
+  }
+
+  return (
+    <TableContainer sx={{ bgcolor: C.paper, border: `1px solid ${C.line}`, borderRadius: 1, overflowX: "auto", mb: 3 }}>
+      <Table size="small" sx={{ minWidth: 700 }}>
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ width: 32 }} />
+            <HeadCell label="Symbol" help="Click to open the stock." />
+            <HeadCell label="Current" help="Current status." />
+            <HeadCell label="Change" align="right" />
+            <HeadCell label="Distance" help="Distance to upper circuit." align="right" />
+            <HeadCell label="First seen" />
+            <HeadCell label="Times seen" align="right" />
+            <HeadCell label="Fillable" help="Whether sellers are present." />
+            <HeadCell label="Sector" />
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {progression.map((p) => {
+            const isOpen = open === p.symbol;
+            return (
+              <Fragment key={p.symbol}>
+                <TableRow hover className="row-click" onClick={() => setOpen(isOpen ? null : p.symbol)} sx={{ cursor: "pointer" }}>
+                  <TableCell sx={{ color: C.muted, pr: 0 }}>
+                    {isOpen ? <KeyboardArrowDownIcon fontSize="small" /> : <KeyboardArrowRightIcon fontSize="small" />}
+                  </TableCell>
+                  <TableCell
+                    className="row-click linkish"
+                    onClick={(e) => { e.stopPropagation(); onOpenStock?.(p.symbol); }}
+                    sx={{ fontWeight: 500 }}
+                  >
+                    {p.symbol}
+                  </TableCell>
+                  <TableCell><StatusChip status={p.current_status} /></TableCell>
+                  <TableCell align="right" className="num" sx={{ color: C.good }}>
+                    {p.pchange == null ? "—" : `+${Number(p.pchange).toFixed(2)}%`}
+                  </TableCell>
+                  <TableCell align="right" className="num">
+                    {p.distance_to_circuit == null ? "—" : `${(p.distance_to_circuit * 100).toFixed(2)}%`}
+                  </TableCell>
+                  <TableCell sx={{ fontSize: 12.5, color: C.muted }}>{p.first_seen}</TableCell>
+                  <TableCell align="right" className="num">{p.times_seen}</TableCell>
+                  <TableCell>
+                    {p.fillable === true ? (
+                      <Chip size="small" label="Yes" sx={{ bgcolor: "rgba(125,186,150,0.12)", color: C.good, fontSize: 11, height: 20, borderRadius: 1 }} />
+                    ) : p.fillable === false ? (
+                      <Chip size="small" label="No" sx={{ bgcolor: "rgba(200,122,122,0.12)", color: C.bad, fontSize: 11, height: 20, borderRadius: 1 }} />
+                    ) : (
+                      <Typography sx={{ fontSize: 12, color: C.muted }}>—</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ fontSize: 12.5, color: C.muted }}>{p.sector || "—"}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell colSpan={9} sx={{ p: 0, borderBottom: isOpen ? undefined : "none" }}>
+                    <Collapse in={isOpen} unmountOnExit>
+                      <Box sx={{ px: 2, py: 1.5, bgcolor: C.surface }}>
+                        <Typography sx={{ fontSize: 12, color: C.muted, mb: 1 }}>
+                          Progression through today's scans:
+                        </Typography>
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                          {(p.history || []).map((h, i) => (
+                            <Box
+                              key={i}
+                              sx={{
+                                px: 1.5, py: 0.75,
+                                bgcolor: STATUS_CONFIG[h.status]?.bg || "rgba(255,255,255,0.04)",
+                                border: `1px solid ${C.line}`,
+                                borderRadius: 1,
+                              }}
+                            >
+                              <Typography sx={{ fontSize: 11, color: C.muted }}>{h.time}</Typography>
+                              <Typography sx={{ fontSize: 12, color: STATUS_CONFIG[h.status]?.color || C.text, fontWeight: 500 }}>
+                                {STATUS_CONFIG[h.status]?.label || h.status}
+                              </Typography>
+                              <Typography sx={{ fontSize: 11, color: C.muted }}>
+                                +{Number(h.pchange).toFixed(1)}% · {(h.distance * 100).toFixed(2)}% away
+                              </Typography>
+                            </Box>
+                          ))}
+                        </Box>
+                      </Box>
+                    </Collapse>
+                  </TableCell>
+                </TableRow>
+              </Fragment>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }
 
@@ -405,6 +635,7 @@ function History({ daily, history, onOpenStock }) {
 
 export default function CarryView({ onOpenStock }) {
   const [data, setData] = useState(null);
+  const [intradayData, setIntradayData] = useState(null);
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState(null);
   const [tab, setTab] = useState(0);
@@ -413,7 +644,12 @@ export default function CarryView({ onOpenStock }) {
     setBusy(true);
     setErr(null);
     try {
-      setData(await getCarry());
+      const [carryResult, intradayResult] = await Promise.all([
+        getCarry(),
+        getCarryIntraday(),
+      ]);
+      setData(carryResult);
+      setIntradayData(intradayResult);
     } catch (e) {
       setErr(e?.message || "Could not load the carry list");
     } finally {
@@ -422,7 +658,8 @@ export default function CarryView({ onOpenStock }) {
   }, []);
 
   // The list changes twice a day (15:22 snapshot, evening scoring), so a slow
-  // poll is enough to pick either up without a manual reload.
+  // poll is enough to pick either up without a manual reload. Intraday scans
+  // happen every 30 min during market hours.
   useEffect(() => {
     load();
     const id = setInterval(load, POLL_MS);
@@ -471,18 +708,38 @@ export default function CarryView({ onOpenStock }) {
           <Strip data={data} latest={latest} />
 
           <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2, borderBottom: `1px solid ${C.line}` }}>
-            <Tab label={<TabLabel name="Latest list" count={latest.length} />} sx={{ textTransform: "none" }} />
+            <Tab label={<TabLabel name="Intraday scan" count={intradayData?.latest?.length || 0} />} sx={{ textTransform: "none" }} />
+            <Tab label={<TabLabel name="EOD list" count={latest.length} />} sx={{ textTransform: "none" }} />
             <Tab label={<TabLabel name="Track record" count={data.summary?.find((s) => s.bucket === "all")?.n} />} sx={{ textTransform: "none" }} />
           </Tabs>
 
-          {tab === 0 &&
+          {tab === 0 && (
+            <>
+              {intradayData && <IntradayStrip data={intradayData} />}
+              <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
+                Stocks approaching their upper circuit — scanned every 30 minutes during market hours.
+                "Approaching" means within 1% of the limit; catch them before they lock.
+              </Typography>
+              <IntradayTable rows={intradayData?.latest || []} onOpenStock={onOpenStock} />
+              {intradayData?.progression?.length > 0 && (
+                <>
+                  <Typography sx={{ fontSize: 14, fontWeight: 500, color: C.text, mt: 3, mb: 1.5 }}>
+                    Progression through the day
+                  </Typography>
+                  <IntradayProgression progression={intradayData.progression} onOpenStock={onOpenStock} />
+                </>
+              )}
+            </>
+          )}
+
+          {tab === 1 &&
             (latest.length ? (
               <TodayTable rows={latest} onOpenStock={onOpenStock} />
             ) : (
               <Note>No stock closed on its upper band in the liquid universe this session.</Note>
             ))}
 
-          {tab === 1 && (
+          {tab === 2 && (
             <>
               <Summary summary={data.summary || []} />
               <Typography sx={{ fontSize: 13, color: C.muted, mb: 1 }}>
