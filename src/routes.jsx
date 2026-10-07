@@ -176,6 +176,14 @@ export default function AppRoutes() {
         }
       />
       <Route
+        path="/scanners"
+        element={
+          <RequireAuth>
+            <App />
+          </RequireAuth>
+        }
+      />
+      <Route
         path="/guide"
         element={
           <RequireAuth>
