@@ -72,6 +72,15 @@ const color = (v) => (v == null ? C.muted : v >= 0 ? C.good : C.bad);
 const signedPct = (v, d = 1) =>
   v == null ? "—" : `${v > 0 ? "+" : ""}${(v * 100).toFixed(d)}%`;
 const crore = (lakh) => (lakh == null ? "—" : `₹${(lakh / 100).toFixed(1)} cr`);
+const fmtVolRatio = (v) => {
+  if (v == null || Number.isNaN(v)) return "—";
+  const n = Number(v);
+  return n >= 10 ? `${n.toFixed(0)}×` : `${n.toFixed(1)}×`;
+};
+const volColor = (v) => {
+  if (v == null) return C.muted;
+  return v >= 3 ? C.good : v >= 1.5 ? C.text : C.muted;
+};
 const qty = (v) => {
   if (v == null) return "—";
   const n = Number(v);
@@ -225,6 +234,8 @@ function IntradayTable({ rows, onOpenStock }) {
             <HeadCell label="Price" help="Last traded price." align="right" sort={sort} sortKey="ltp" />
             <HeadCell label="Circuit" help="Upper circuit limit." align="right" sort={sort} sortKey="upper_circuit" />
             <HeadCell label="Sellers" help="Shares on offer. Zero means nothing is on offer, so no order could fill at this price." align="right" sort={sort} sortKey="total_sell_qty" />
+            <HeadCell label="Vol" help="Turnover ratio — today's estimated turnover divided by the 20-day median. Higher means unusual activity." align="right" sort={sort} sortKey="vol_ratio" />
+            <HeadCell label="Turnover" help="20-day median daily turnover. Lower-turnover circuit stocks have historically continued more often." align="right" sort={sort} sortKey="med_turn20" />
             <HeadCell label="Sector" sort={sort} sortKey="sector" />
           </TableRow>
         </TableHead>
@@ -254,6 +265,10 @@ function IntradayTable({ rows, onOpenStock }) {
               <TableCell align="right" className="num" sx={{ color: (r.total_sell_qty || 0) > 0 ? C.good : C.bad }}>
                 {qty(r.total_sell_qty)}
               </TableCell>
+              <TableCell align="right" className="num" sx={{ color: volColor(r.vol_ratio) }}>
+                {fmtVolRatio(r.vol_ratio)}
+              </TableCell>
+              <TableCell align="right" className="num">{crore(r.med_turn20)}</TableCell>
               <TableCell sx={{ fontSize: 12.5, color: C.muted }}>{r.sector || "—"}</TableCell>
             </TableRow>
           ))}
@@ -280,6 +295,8 @@ function IntradayProgression({ progression, onOpenStock }) {
             <HeadCell label="Current" help="Current status." />
             <HeadCell label="Change" align="right" />
             <HeadCell label="Distance" help="Distance to upper circuit." align="right" />
+            <HeadCell label="Vol" help="Turnover ratio — estimated turnover vs 20-day median." align="right" />
+            <HeadCell label="Turnover" help="20-day median daily turnover." align="right" />
             <HeadCell label="First seen" />
             <HeadCell label="Times seen" align="right" />
             <HeadCell label="Fillable" help="Whether sellers are present." />
@@ -309,6 +326,10 @@ function IntradayProgression({ progression, onOpenStock }) {
                   <TableCell align="right" className="num">
                     {p.distance_to_circuit == null ? "—" : `${(p.distance_to_circuit * 100).toFixed(2)}%`}
                   </TableCell>
+                  <TableCell align="right" className="num" sx={{ color: volColor(p.vol_ratio) }}>
+                    {fmtVolRatio(p.vol_ratio)}
+                  </TableCell>
+                  <TableCell align="right" className="num">{crore(p.med_turn20)}</TableCell>
                   <TableCell sx={{ fontSize: 12.5, color: C.muted }}>{p.first_seen}</TableCell>
                   <TableCell align="right" className="num">{p.times_seen}</TableCell>
                   <TableCell>
@@ -323,7 +344,7 @@ function IntradayProgression({ progression, onOpenStock }) {
                   <TableCell sx={{ fontSize: 12.5, color: C.muted }}>{p.sector || "—"}</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell colSpan={9} sx={{ p: 0, borderBottom: isOpen ? undefined : "none" }}>
+                  <TableCell colSpan={11} sx={{ p: 0, borderBottom: isOpen ? undefined : "none" }}>
                     <Collapse in={isOpen} unmountOnExit>
                       <Box sx={{ px: 2, py: 1.5, bgcolor: C.surface }}>
                         <Typography sx={{ fontSize: 12, color: C.muted, mb: 1 }}>
@@ -425,7 +446,8 @@ function TodayTable({ rows, onOpenStock }) {
             <HeadCell label="Buyers queued" help="Total buy quantity pending at 15:22." align="right" sort={sort} sortKey="total_buy_qty" />
             <HeadCell label="Sellers" help="Total sell quantity pending at 15:22. Zero means nothing is on offer at the circuit." align="right" sort={sort} sortKey="total_sell_qty" />
             <HeadCell label="Fill" help="Whether a buy at the circuit could plausibly have filled." />
-            <HeadCell label="Turnover" help="Median daily turnover over the last 20 sessions." align="right" sort={sort} sortKey="med_turn20" />
+            <HeadCell label="Vol" help="Turnover ratio — circuit-day turnover divided by the 20-day median. Context only; the study found this does not reliably filter within circuit carries." align="right" sort={sort} sortKey="vol_ratio" />
+            <HeadCell label="Turnover" help="Median daily turnover over the last 20 sessions. Lower-turnover circuit stocks (₹1-5 cr) reached +4% the next session 83% of the time vs 69% for higher-turnover names." align="right" sort={sort} sortKey="med_turn20" />
             {scored && <HeadCell label="Next session" help="Whether the next session's high reached +4% above the reference close, and the measured move." />}
             <HeadCell label="Sector" sort={sort} sortKey="sector" />
           </TableRow>
@@ -453,6 +475,9 @@ function TodayTable({ rows, onOpenStock }) {
                 {qty(r.total_sell_qty)}
               </TableCell>
               <TableCell><FillChip row={r} /></TableCell>
+              <TableCell align="right" className="num" sx={{ color: volColor(r.vol_ratio) }}>
+                {fmtVolRatio(r.vol_ratio)}
+              </TableCell>
               <TableCell align="right" className="num">{crore(r.med_turn20)}</TableCell>
               {scored && <TableCell><ResultChip row={r} /></TableCell>}
               <TableCell sx={{ fontSize: 12.5, color: C.muted }}>{r.sector || "—"}</TableCell>
