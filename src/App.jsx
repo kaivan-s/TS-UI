@@ -14,6 +14,7 @@ import Header from "./components/Header.jsx";
 import SetupsView from "./components/SetupsView.jsx";
 import TrackingView from "./components/TrackingView.jsx";
 import CarryView from "./components/CarryView.jsx";
+import ScannersView from "./components/ScannersView.jsx";
 import SectorsView from "./components/SectorsView.jsx";
 import Guide from "./components/Guide.jsx";
 import Pricing from "./components/Pricing.jsx";
@@ -29,6 +30,7 @@ const PATH_TO_VIEW = {
   "/sectors": "sectors",
   "/tracking": "tracking",
   "/carry": "carry",
+  "/scanners": "scanners",
   "/guide": "guide",
   "/pricing": "pricing",
   "/privacy": "privacy",
@@ -234,6 +236,8 @@ export default function App() {
           )}
 
           {view === "carry" && <CarryView onOpenStock={openStock} />}
+
+          {view === "scanners" && <ScannersView onOpenStock={openStock} />}
 
           {view === "guide" && <Guide />}
 

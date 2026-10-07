@@ -59,3 +59,8 @@ export const getCarry = () => json("/api/carry");
 // Intraday circuit scanner: stocks approaching the upper circuit.
 export const getCarryIntraday = (asOf = null) =>
   json(asOf ? `/api/carry/intraday?as_of=${asOf}` : "/api/carry/intraday");
+
+// Broader market scanners.
+export const getScanners = () => json("/api/scanners");
+export const getScannersIntraday = () => json("/api/scanners/intraday");
+export const getScannersEod = () => json("/api/scanners/eod");
