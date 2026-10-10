@@ -11,7 +11,6 @@ import { RetroGrid } from "./landing/GridBeam.jsx";
 import Particles from "./landing/Particles.jsx";
 import PhoneMockup from "./landing/PhoneMockup.jsx";
 import Marquee from "./landing/Marquee.jsx";
-import BorderBeam from "./landing/BorderBeam.jsx";
 import GlowButton from "./landing/GlowButton.jsx";
 import HowItWorks from "./landing/HowItWorks.jsx";
 import DashboardPreview from "./landing/DashboardPreview.jsx";
@@ -305,7 +304,6 @@ export default function Landing() {
               </ScrollReveal>
             ))}
           </div>
-          <BorderBeam duration={10} color="rgba(142,180,196,0.25)" />
         </div>
       </section>
 
@@ -454,7 +452,6 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <BorderBeam duration={8} color="rgba(142,180,196,0.35)" />
               </div>
             </div>
           </ScrollReveal>

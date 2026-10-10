@@ -1,9 +1,9 @@
 import { createTheme } from "@mui/material/styles";
 
 export const C = {
-  bg: "#0b0c0e",
-  paper: "#121418",
-  surface: "#181b20",
+  bg: "#111215",
+  paper: "#18191e",
+  surface: "#1e2025",
   line: "rgba(238,234,227,0.08)",
   text: "#eeeae3",
   muted: "#8e8a83",

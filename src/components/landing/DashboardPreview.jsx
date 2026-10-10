@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
-import BorderBeam from "./BorderBeam.jsx";
 
 const ROWS = [
   { sector: "BANKS", state: "CROSSING", names: 12, flow: "+₹847cr", color: "#8eb4c4" },
@@ -114,7 +113,6 @@ export default function DashboardPreview() {
         </div>
       </div>
 
-      <BorderBeam duration={6} color="rgba(142,180,196,0.4)" />
       <div className="absolute -inset-20 -z-10 bg-[rgba(142,180,196,0.03)] blur-3xl rounded-full" />
     </motion.div>
   );
