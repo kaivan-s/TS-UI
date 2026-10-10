@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { TELEGRAM_BOT, TELEGRAM_CHANNEL } from "../config.js";
+import { capture } from "../posthog.js";
 import logoIcon from "../Images/favicon.svg";
 
 import SpotlightCard from "./landing/SpotlightCard.jsx";
@@ -146,13 +147,14 @@ export default function Landing() {
           {/* CTA buttons */}
           <TextReveal delay={1.4}>
             <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
-              <GlowButton onClick={() => navigate("/login")}>
+              <GlowButton onClick={() => { capture("cta_clicked", { location: "hero" }); navigate("/login"); }}>
                 Get started free
               </GlowButton>
               <motion.a
                 href={TELEGRAM_BOT}
                 target="_blank"
                 rel="noopener"
+                onClick={() => capture("telegram_clicked", { location: "hero" })}
                 className="group flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.02] px-6 py-3 text-sm text-[#8e8a83] backdrop-blur-sm transition-all hover:border-white/20 hover:bg-white/[0.04] hover:text-[#eeeae3] no-underline"
                 whileHover={{ y: -2 }}
               >
@@ -477,7 +479,7 @@ export default function Landing() {
               Join traders who check Morrow Desk before the market opens.
             </p>
             <div className="mt-10">
-              <GlowButton onClick={() => navigate("/login")}>
+              <GlowButton onClick={() => { capture("cta_clicked", { location: "bottom" }); navigate("/login"); }}>
                 Get started — it&apos;s free
               </GlowButton>
             </div>

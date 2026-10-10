@@ -5,7 +5,10 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 import { AuthProvider } from "./auth.jsx";
 import AppRoutes from "./routes.jsx";
 import { theme } from "./theme.js";
+import { initPostHog } from "./posthog.js";
 import "./index.css";
+
+initPostHog();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

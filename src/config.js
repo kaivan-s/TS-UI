@@ -6,6 +6,8 @@ export function apiUrl(path) {
   return `${API_BASE}${p}`;
 }
 
+/** PostHog: set VITE_POSTHOG_KEY (and optionally VITE_POSTHOG_HOST) in env. */
+
 /** Telegram bot link. Set VITE_TELEGRAM_BOT in env to override. */
 export const TELEGRAM_BOT = import.meta.env.VITE_TELEGRAM_BOT || "https://t.me/nse_circuit_bot";
 export const TELEGRAM_CHANNEL = import.meta.env.VITE_TELEGRAM_CHANNEL || "https://t.me/morrow_desk_free";

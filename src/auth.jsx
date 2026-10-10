@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { apiUrl } from "./config.js";
+import { capture, identifyUser, resetUser, setUserProperties } from "./posthog.js";
 import {
   getAccessToken,
   getSupabase,
@@ -69,8 +70,10 @@ export function AuthProvider({ children }) {
       setSubscriptionId(null);
       setSubscriptionExpires(null);
       setSubscriptionCancelled(false);
+      resetUser();
       return;
     }
+    identifyUser(session);
     let stop = false;
     fetch(apiUrl("/api/me"), {
       headers: { Authorization: `Bearer ${session.access_token}` },
@@ -94,6 +97,11 @@ export function AuthProvider({ children }) {
           setSubscriptionCancelled(data.subscription_cancelled || false);
           setTelegramLinked(data.telegram_linked || false);
           setTelegramLinkCode(data.telegram_link_code || null);
+          setUserProperties({
+            is_premium: data.is_premium || false,
+            plan: data.plan || null,
+            telegram_linked: data.telegram_linked || false,
+          });
         }
       })
       .catch(() => {
@@ -160,6 +168,7 @@ export function AuthProvider({ children }) {
         setBusy(true);
         try {
           const { needsConfirm } = await startSignUp(email, password);
+          capture("signup_started", { method: "email" });
           if (needsConfirm) {
             setNotice("Check your email to confirm the account, then sign in.");
           }
@@ -194,6 +203,7 @@ export function AuthProvider({ children }) {
         if (!session?.access_token) return;
         setError("");
         setBusy(true);
+        capture("checkout_started", { plan: selectedPlan });
         try {
           const r = await fetch(apiUrl("/api/subscription/checkout"), {
             method: "POST",
@@ -205,6 +215,7 @@ export function AuthProvider({ children }) {
           });
           const data = await r.json();
           if (data.url) {
+            capture("checkout_redirected", { plan: selectedPlan });
             window.location.href = data.url;
           } else {
             setError(data.error || "Could not start checkout");

@@ -9,6 +9,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { C } from "./theme.js";
+import { capturePageview } from "./posthog.js";
 import Sidebar from "./components/Sidebar.jsx";
 import Header from "./components/Header.jsx";
 import SetupsView from "./components/SetupsView.jsx";
@@ -42,6 +43,9 @@ export default function App() {
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Track pageviews on route change
+  useEffect(() => { capturePageview(location.pathname); }, [location.pathname]);
 
   // Derive view from URL path
   const view = PATH_TO_VIEW[location.pathname] || "setups";
