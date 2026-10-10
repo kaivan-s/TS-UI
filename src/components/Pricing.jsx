@@ -8,6 +8,7 @@ import CelebrationRoundedIcon from "@mui/icons-material/CelebrationRounded";
 import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
+import { TELEGRAM_BOT } from "../config.js";
 
 const FEATURES = [
   "Full setups list with entry levels",
@@ -88,6 +89,13 @@ export default function Pricing() {
           <Typography sx={{ fontWeight: 600 }}>Welcome to Premium!</Typography>
           <Typography sx={{ fontSize: 14, color: "rgba(238,234,227,0.7)" }}>
             Your subscription is now active. Full access unlocked.
+          </Typography>
+          <Typography sx={{ fontSize: 13, color: "rgba(238,234,227,0.6)", mt: 1 }}>
+            📱 Get alerts on Telegram:{" "}
+            <a href={TELEGRAM_BOT} target="_blank" rel="noopener" style={{ color: C.accent }}>
+              Open the bot
+            </a>
+            {" "}→ send <code>/link {email}</code>
           </Typography>
         </Alert>
       )}
@@ -365,7 +373,11 @@ export default function Pricing() {
           {telegramLinkCode && !telegramLinked ? (
             <>
               <Typography sx={{ fontSize: 13, color: C.muted, mb: 2 }}>
-                Open the <b>@MorrowDeskBot</b> on Telegram and send this code to link your account:
+                Open{" "}
+                <a href={TELEGRAM_BOT} target="_blank" rel="noopener" style={{ color: C.accent, fontWeight: 600 }}>
+                  the bot on Telegram
+                </a>
+                {" "}and send this code to link your account:
               </Typography>
               <Box
                 sx={{
@@ -414,9 +426,20 @@ export default function Pricing() {
                   </Typography>
                 </Box>
               </Box>
-              <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.4)" }}>
-                Premium subscribers get unlimited bot access + channel alerts. To link, message <code>/link {email}</code> to <b>@MorrowDeskBot</b> on Telegram.
-              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexWrap: "wrap" }}>
+                <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.4)", flex: 1, minWidth: 200 }}>
+                  Premium subscribers get unlimited bot access + channel alerts.
+                </Typography>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  href={TELEGRAM_BOT}
+                  target="_blank"
+                  sx={{ color: C.accent, borderColor: "rgba(142,180,196,0.3)", fontSize: 12, fontWeight: 600, textTransform: "none", whiteSpace: "nowrap", "&:hover": { borderColor: C.accent, bgcolor: "rgba(142,180,196,0.06)" } }}
+                >
+                  💬 Open bot on Telegram
+                </Button>
+              </Box>
             </>
           ) : (
             <Typography sx={{ fontSize: 13, color: C.muted }}>

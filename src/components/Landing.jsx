@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Box, Button, Typography } from "@mui/material";
 import { C } from "../theme.js";
+import { TELEGRAM_BOT } from "../config.js";
 import logoIcon from "../Images/favicon.svg";
 
 function FloatingOrb({ delay, duration, size, x, y, color }) {
@@ -200,7 +201,16 @@ export default function Landing() {
                 mt: 2,
               }}
             >
-              NSE · Updated daily
+              NSE · Updated daily ·{" "}
+              <Box
+                component="a"
+                href={TELEGRAM_BOT}
+                target="_blank"
+                rel="noopener"
+                sx={{ color: "rgba(142,180,196,0.5)", textDecoration: "none", "&:hover": { color: C.accent } }}
+              >
+                Also on Telegram
+              </Box>
             </Typography>
           </Box>
         </Section>

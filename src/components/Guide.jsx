@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { C, KLASS_GROUP } from "../theme.js";
 import { BASE_RATES, EVIDENCE_WINDOW } from "../evidence.js";
+import { TELEGRAM_BOT, TELEGRAM_CHANNEL } from "../config.js";
 
 function H({ children }) {
   return (
@@ -260,8 +261,63 @@ function TelegramTab() {
       </P>
 
       <H>Getting started</H>
+      <Box
+        sx={{
+          display: "flex",
+          gap: 1.5,
+          mb: 3,
+          flexWrap: "wrap",
+        }}
+      >
+        <Box
+          component="a"
+          href={TELEGRAM_BOT}
+          target="_blank"
+          rel="noopener"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 1,
+            px: 2.5,
+            py: 1.25,
+            borderRadius: 2,
+            bgcolor: "rgba(142,180,196,0.08)",
+            border: "1px solid rgba(142,180,196,0.2)",
+            color: C.accent,
+            fontSize: 14,
+            fontWeight: 600,
+            textDecoration: "none",
+            "&:hover": { bgcolor: "rgba(142,180,196,0.15)", borderColor: C.accent },
+          }}
+        >
+          🤖 Open bot on Telegram
+        </Box>
+        <Box
+          component="a"
+          href={TELEGRAM_CHANNEL}
+          target="_blank"
+          rel="noopener"
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 1,
+            px: 2.5,
+            py: 1.25,
+            borderRadius: 2,
+            bgcolor: "rgba(125,186,150,0.06)",
+            border: "1px solid rgba(125,186,150,0.2)",
+            color: C.good,
+            fontSize: 14,
+            fontWeight: 600,
+            textDecoration: "none",
+            "&:hover": { bgcolor: "rgba(125,186,150,0.12)", borderColor: C.good },
+          }}
+        >
+          📢 Free channel
+        </Box>
+      </Box>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-        <Step n="1" title="Find the bot" body="Search for @MorrowDeskBot on Telegram, or tap the link after subscribing." />
+        <Step n="1" title="Open the bot" body="Tap the button above or search @MorrowDeskBot on Telegram. Type any stock name to get started — no sign-up needed." />
         <Step n="2" title="Link your account" body="Send /link your@email.com to the bot. Use the same email you signed up with on the website." />
         <Step n="3" title="Verify" body="Log into the website — the Pricing page shows a 6-digit code. Send /verify CODE to the bot. Done." />
       </Box>
