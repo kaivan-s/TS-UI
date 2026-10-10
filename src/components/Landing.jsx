@@ -349,12 +349,6 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <button
-                  onClick={() => navigate("/login")}
-                  className="mt-6 w-full rounded-lg border border-white/10 bg-transparent py-2.5 text-sm font-medium text-[#eeeae3] transition-colors hover:bg-white/[0.05]"
-                >
-                  Start free
-                </button>
               </div>
 
               {/* Premium card */}
@@ -372,12 +366,6 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-                <button
-                  onClick={() => navigate("/pricing")}
-                  className="mt-6 w-full rounded-lg bg-[#8eb4c4] py-2.5 text-sm font-semibold text-[#050506] transition-colors hover:bg-[#a0c4d2]"
-                >
-                  Upgrade to Premium
-                </button>
               </div>
             </div>
           </ScrollReveal>
