@@ -65,11 +65,11 @@ export function ShinyText({ children, className }) {
 
 export function TypeWriter({ words, className }) {
   return (
-    <span className={cn("relative inline-block", className)}>
+    <span className={cn("relative inline-block whitespace-nowrap", className)}>
       {words.map((word, i) => (
         <motion.span
           key={word}
-          className="absolute left-0"
+          className="absolute left-0 top-0 whitespace-nowrap"
           initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
           animate={{
             opacity: [0, 1, 1, 0],
@@ -87,7 +87,7 @@ export function TypeWriter({ words, className }) {
           {word}
         </motion.span>
       ))}
-      <span className="invisible">{words.reduce((a, b) => a.length > b.length ? a : b)}</span>
+      <span className="invisible whitespace-nowrap">{words.reduce((a, b) => a.length > b.length ? a : b)}</span>
     </span>
   );
 }

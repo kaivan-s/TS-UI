@@ -7,7 +7,7 @@ import logoIcon from "../Images/favicon.svg";
 import SpotlightCard from "./landing/SpotlightCard.jsx";
 import NumberTicker from "./landing/NumberTicker.jsx";
 import { TextReveal, LetterPull, GradientText, ShinyText, TypeWriter } from "./landing/AnimatedText.jsx";
-import { RetroGrid, BackgroundBeams } from "./landing/GridBeam.jsx";
+import { RetroGrid } from "./landing/GridBeam.jsx";
 import Particles from "./landing/Particles.jsx";
 import PhoneMockup from "./landing/PhoneMockup.jsx";
 import Marquee from "./landing/Marquee.jsx";
@@ -98,7 +98,6 @@ export default function Landing() {
       <section ref={heroRef} className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4">
         {/* Background layers */}
         <Particles quantity={70} connectLines className="z-[1]" />
-        <BackgroundBeams />
         <Orb className="h-[600px] w-[600px] -left-[5%] -top-[10%]" color="rgba(142,180,196,0.14)" />
         <Orb className="h-[500px] w-[500px] left-[60%] top-[15%]" color="rgba(125,186,150,0.10)" />
         <Orb className="h-[400px] w-[400px] left-[75%] top-[55%]" color="rgba(180,168,210,0.08)" />
