@@ -80,7 +80,7 @@ export default function Landing() {
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
 
   return (
-    <div className="min-h-screen bg-[#050506] text-[#eeeae3]">
+    <div className="min-h-screen bg-[#111215] text-[#eeeae3]">
 
       {/* ── Disclaimer banner ── */}
       <div className="relative z-20 border-b border-[rgba(196,164,106,0.15)] bg-[rgba(196,164,106,0.06)] px-4 py-1.5 text-center">
@@ -440,7 +440,7 @@ export default function Landing() {
 
               {/* Premium card */}
               <div className="relative rounded-2xl border border-[rgba(142,180,196,0.2)] bg-[rgba(142,180,196,0.04)] p-7 text-left animate-pulse-glow">
-                <div className="absolute -top-3 right-4 rounded-full bg-[#8eb4c4] px-3 py-0.5 text-[10px] font-bold text-[#050506]">
+                <div className="absolute -top-3 right-4 rounded-full bg-[#8eb4c4] px-3 py-0.5 text-[10px] font-bold text-[#111215]">
                   POPULAR
                 </div>
                 <div className="mb-1 text-sm font-medium text-[#8eb4c4]">Premium</div>
@@ -465,7 +465,7 @@ export default function Landing() {
           FINAL CTA
          ════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden px-4 py-28">
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050506] via-transparent to-[#050506]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111215] via-transparent to-[#111215]" />
         <Particles quantity={30} color="142,180,196" className="z-0 opacity-30" />
         <Orb className="h-[600px] w-[600px] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" color="rgba(142,180,196,0.08)" />
         <div className="relative z-10 mx-auto max-w-2xl text-center">

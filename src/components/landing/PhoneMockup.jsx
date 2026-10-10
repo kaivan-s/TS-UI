@@ -13,11 +13,11 @@ export default function PhoneMockup() {
   return (
     <div className="relative mx-auto w-[280px] sm:w-[300px]">
       {/* Phone frame */}
-      <div className="rounded-[2.5rem] border border-white/10 bg-[#0a0a0c] p-3 shadow-2xl shadow-black/50">
+      <div className="rounded-[2.5rem] border border-white/10 bg-[#141519] p-3 shadow-2xl shadow-black/50">
         {/* Notch */}
         <div className="mx-auto mb-2 h-5 w-24 rounded-full bg-black" />
         {/* Screen */}
-        <div className="h-[420px] overflow-hidden rounded-[2rem] bg-[#0e1016] px-3 py-4">
+        <div className="h-[420px] overflow-hidden rounded-[2rem] bg-[#18191e] px-3 py-4">
           {/* Header */}
           <div className="mb-3 flex items-center gap-2 border-b border-white/5 pb-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[rgba(142,180,196,0.15)]">

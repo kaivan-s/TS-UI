@@ -29,9 +29,9 @@ export default function DashboardPreview() {
       style={{ rotateX, scale, opacity, transformPerspective: 1200 }}
       className="relative mx-auto max-w-4xl"
     >
-      <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0b0e] shadow-2xl shadow-black/60">
+      <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#141519] shadow-2xl shadow-black/60">
         {/* Window chrome */}
-        <div className="flex items-center gap-2 border-b border-white/[0.06] bg-[#0d0e12] px-4 py-2.5">
+        <div className="flex items-center gap-2 border-b border-white/[0.06] bg-[#18191e] px-4 py-2.5">
           <div className="flex gap-1.5">
             <div className="h-2.5 w-2.5 rounded-full bg-[#c87a7a]/60" />
             <div className="h-2.5 w-2.5 rounded-full bg-[#c4a46a]/60" />
