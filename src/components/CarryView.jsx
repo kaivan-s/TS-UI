@@ -55,7 +55,7 @@ const BUCKET_HELP = {
   "live: sellers present":
     "At the circuit at 15:22 with shares on offer. These are the only observations where an order could actually have filled — the bucket that decides whether this list is usable.",
   "live: no sellers (queue)":
-    "At the circuit with nothing on offer. A buy order would have joined the queue and most likely not filled.",
+    "At the circuit with nothing on offer. An order would have joined the queue and most likely not filled.",
   "eod backfill (fill unknown)":
     "Sessions rebuilt from end-of-day data. The pattern is real here, but the order book is unknown.",
 };
@@ -111,8 +111,8 @@ function FillChip({ row }) {
   return (
     <Tooltip
       title={ok
-        ? "Shares were on offer at the circuit at 15:22 — a buy could have filled."
-        : "Nothing on offer at the circuit — a buy would have queued."}
+        ? "Shares were on offer at the circuit at 15:22 — an order could have filled."
+        : "Nothing on offer at the circuit — an order would have queued."}
       arrow
     >
       <Chip
@@ -443,9 +443,9 @@ function TodayTable({ rows, onOpenStock }) {
             <HeadCell label="Band" help="The price band the stock closed on. 10% and 20% band names have been the stronger carries." align="right" sort={sort} sortKey="band" />
             <HeadCell label="Change" help="Change from the previous close at the time of the snapshot." align="right" sort={sort} sortKey="pchange" />
             <HeadCell label="Price" help="Last traded price — the upper circuit." align="right" sort={sort} sortKey="ltp" />
-            <HeadCell label="Buyers queued" help="Total buy quantity pending at 15:22." align="right" sort={sort} sortKey="total_buy_qty" />
-            <HeadCell label="Sellers" help="Total sell quantity pending at 15:22. Zero means nothing is on offer at the circuit." align="right" sort={sort} sortKey="total_sell_qty" />
-            <HeadCell label="Fill" help="Whether a buy at the circuit could plausibly have filled." />
+            <HeadCell label="Bid queue" help="Total bid quantity pending at 15:22." align="right" sort={sort} sortKey="total_buy_qty" />
+            <HeadCell label="Ask queue" help="Total ask quantity pending at 15:22. Zero means nothing is on offer at the circuit." align="right" sort={sort} sortKey="total_sell_qty" />
+            <HeadCell label="Fill" help="Whether an order at the circuit could plausibly have filled." />
             <HeadCell label="Vol" help="Turnover ratio — circuit-day turnover divided by the 20-day median. Context only; the study found this does not reliably filter within circuit carries." align="right" sort={sort} sortKey="vol_ratio" />
             <HeadCell label="Turnover" help="Median daily turnover over the last 20 sessions. Lower-turnover circuit stocks (₹1-5 cr) reached +4% the next session 83% of the time vs 69% for higher-turnover names." align="right" sort={sort} sortKey="med_turn20" />
             {scored && <HeadCell label="Next session" help="Whether the next session's high reached +4% above the reference close, and the measured move." />}

@@ -358,7 +358,7 @@ export default function Landing() {
                 {[
                   { cmd: "/today", desc: "Sector momentum snapshot", free: true },
                   { cmd: "/delivery", desc: "Delivery % for any stock", free: true },
-                  { cmd: "/setups", desc: "Curated buy setups", free: false },
+                  { cmd: "/setups", desc: "Curated setups", free: false },
                 ].map((item) => (
                   <li key={item.cmd} className="flex items-center gap-3">
                     <code className="rounded-md bg-white/[0.05] px-2.5 py-1 font-mono text-xs text-[#8eb4c4]">{item.cmd}</code>
@@ -445,7 +445,7 @@ export default function Landing() {
                 <div className="text-4xl font-bold text-[#eeeae3]">₹299<span className="text-base font-normal text-[#8e8a83]">/mo</span></div>
                 <div className="mb-6 text-xs text-[#8e8a83]">or ₹1,999/year (save 44%)</div>
                 <ul className="space-y-2.5 text-sm text-[#8e8a83]">
-                  {["Everything in Free", "Curated buy setups", "Outcome tracking", "Telegram premium channel", "Unlimited bot access"].map((f) => (
+                  {["Everything in Free", "Curated setups", "Outcome tracking", "Telegram premium channel", "Unlimited bot access"].map((f) => (
                     <li key={f} className="flex items-center gap-2.5">
                       <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#8eb4c4]/10 text-[10px] text-[#8eb4c4]">✓</span>
                       {f}

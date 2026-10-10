@@ -17,7 +17,7 @@ const STEPS = [
   {
     num: "03",
     title: "Setups surface",
-    desc: "Stocks coiling near highs with drying volume get flagged. When sector + base + flow align, it becomes a buy setup.",
+    desc: "Stocks coiling near highs with drying volume get flagged. When sector + base + flow align, it becomes a setup.",
     icon: "🎯",
   },
   {

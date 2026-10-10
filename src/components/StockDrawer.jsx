@@ -264,7 +264,7 @@ export default function StockDrawer({
             )}
 
             {/* Structural levels: arithmetic from the 20-day base and ATR.
-                Deliberately described, not prescribed — no entry/target/stop
+                Deliberately described, not prescribed — no advisory
                 vocabulary, because that would make this a recommendation. */}
             {plan && (
               <Card highlight={plan.action === "buy"} sx={{ bgcolor: act.bg, borderColor: `${act.fg}33` }}>
