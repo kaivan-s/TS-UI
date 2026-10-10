@@ -351,6 +351,113 @@ export default function Guide() {
       </P>
 
       <Divider sx={{ my: 4, borderColor: C.line }} />
+
+      <H>Telegram — alerts and insights on the go</H>
+      <P>
+        Everything on this website is also available through Telegram: a bot
+        you can query and a channel that delivers the day's key reads to
+        your phone without opening the app.
+      </P>
+
+      <Mute>
+        Search for <b>@MorrowDeskBot</b> on Telegram, or ask for the link after
+        subscribing. Link it to your account with <code>/link your@email.com</code>,
+        verify with the code shown on the Pricing page, and you're set.
+      </Mute>
+
+      <Typography variant="h2" sx={{ mt: 3, mb: 1.5, fontSize: 16 }}>
+        Bot commands
+      </Typography>
+      <Paper variant="outlined" sx={{ overflow: "hidden", mb: 2.5, width: "100%", overflowX: "auto" }}>
+        <Table sx={{ minWidth: 500 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ width: 130 }}>Command</TableCell>
+              <TableCell>What it does</TableCell>
+              <TableCell sx={{ width: 70 }}>Access</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {[
+              ["/today", "Today's brief — top actionable stocks near trigger, strongest sector flow, and market regime (bullish/cautious).", "Free"],
+              ["/heatmap", "Sector rotation map — which sectors are crossing, pulling back, or ruled out. Concise view with a button for all sectors.", "3/day"],
+              ["/flow", "Money flow — sectors ranked by institutional accumulation (CMF). Inflows at the top, outflows at the bottom.", "3/day"],
+              ["/triggers", "Stocks within 2% of their breakout trigger. The closest ones to acting.", "3/day"],
+              ["/delivery", "Unusual delivery activity — stocks where delivery % is well above their 20-day average. Splits into accumulation (price rising) and distribution (price falling).", "3/day"],
+              ["/changed", "What changed since yesterday — sector upgrades/downgrades, new setups entered, setups removed.", "3/day"],
+              ["/sector Name", "Drill into a specific sector. Shows classification, turnover, breadth, CMF, and constituent stocks.", "3/day"],
+              ["/r SYMBOL", "Quick stock report — sector, coil score, distance to trigger, sector shape. Tap 'Full report' for detailed analysis.", "Free"],
+              ["/link email", "Link your Telegram to your website account for premium sync.", "Free"],
+            ].map(([cmd, desc, access]) => (
+              <TableRow key={cmd}>
+                <TableCell className="num" sx={{ fontWeight: 500, color: C.text, fontFamily: "monospace", fontSize: 13 }}>
+                  {cmd}
+                </TableCell>
+                <TableCell sx={{ color: "text.secondary", fontSize: 13.5, lineHeight: 1.55 }}>{desc}</TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    label={access}
+                    sx={{
+                      fontSize: 11,
+                      fontWeight: 600,
+                      bgcolor: access === "Free" ? "rgba(125,186,150,0.12)" : "rgba(142,180,196,0.12)",
+                      color: access === "Free" ? C.good : C.accent,
+                      border: "none",
+                    }}
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Paper>
+      <Mute>
+        Free users get 3 market-view commands per day (heatmap, flow, triggers,
+        delivery, changed, sector). Stock reports with <code>/r</code> are
+        always free. Premium unlocks unlimited use of all commands.
+      </Mute>
+
+      <Typography variant="h2" sx={{ mt: 3, mb: 1.5, fontSize: 16 }}>
+        Channel alerts
+      </Typography>
+      <P>
+        The premium channel delivers structured updates at key points of the
+        trading day. Nothing is random — each message has a purpose and a
+        time.
+      </P>
+      <Paper variant="outlined" sx={{ overflow: "hidden", mb: 2.5, width: "100%", overflowX: "auto" }}>
+        <Table sx={{ minWidth: 500 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ width: 140 }}>When</TableCell>
+              <TableCell sx={{ width: 160 }}>Alert</TableCell>
+              <TableCell>What you get</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {[
+              ["9:00 AM", "Morning Scorecard", "Overnight results: which setups triggered, which held, gap-up/down reads, and what to watch today."],
+              ["Intraday (live)", "Circuit Flash", "Real-time alert when a new stock hits upper circuit. Only fires on new appearances — no spam."],
+              ["12:30 PM", "Midday Pulse", "Market-breadth check halfway through the session. Sector flows, volume trends, and anything developing."],
+              ["7:30 PM", "EOD Wrap", "The full evening read: sector scans, new setups, coil changes, circuit results, and delivery highlights."],
+              ["Saturday", "Weekly Digest", "Week's results + cumulative track record. How many setups triggered, held, broke down."],
+            ].map(([when, name, desc]) => (
+              <TableRow key={name}>
+                <TableCell sx={{ fontWeight: 500, color: C.text, fontSize: 13 }}>{when}</TableCell>
+                <TableCell sx={{ fontWeight: 500, color: C.text, fontSize: 13.5 }}>{name}</TableCell>
+                <TableCell sx={{ color: "text.secondary", fontSize: 13.5, lineHeight: 1.55 }}>{desc}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Paper>
+      <Mute>
+        Alerts are event-driven, not timer-based. A circuit flash only fires when
+        a new stock hits circuit — not every 30 minutes. The goal is signal, not noise.
+      </Mute>
+
+      <Divider sx={{ my: 4, borderColor: C.line }} />
       <Mute>
         This is a screening tool, not advice. It tells you where to look and
         where to put the alert. Position size, stop, and whether the breakout

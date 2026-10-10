@@ -308,50 +308,98 @@ export default function Pricing() {
         </Box>
       )}
 
-      {/* Telegram Link Code — shown when user did /link in bot */}
-      {telegramLinkCode && !telegramLinked && (
-        <Alert
-          severity="info"
-          icon={<span style={{ fontSize: 20 }}>🔗</span>}
-          sx={{
-            mb: 3,
-            bgcolor: "rgba(142,180,196,0.12)",
-            border: "1px solid rgba(142,180,196,0.25)",
-            color: C.text,
-          }}
-        >
-          <Typography sx={{ fontWeight: 600, mb: 0.5 }}>Link your Telegram</Typography>
-          <Typography sx={{ fontSize: 14, color: "rgba(238,234,227,0.7)", mb: 1 }}>
-            Send this code to the Morrow Desk bot:
-          </Typography>
-          <Typography
-            sx={{
-              fontSize: 28,
-              fontWeight: 700,
-              fontFamily: "monospace",
-              letterSpacing: "0.2em",
-              color: C.accent,
-              textAlign: "center",
-              py: 1,
-            }}
-          >
-            {telegramLinkCode}
-          </Typography>
-          <Typography sx={{ fontSize: 13, color: "rgba(238,234,227,0.5)", mt: 1 }}>
-            In the bot, type: <code>/verify {telegramLinkCode}</code>
-          </Typography>
-        </Alert>
-      )}
-
-      {telegramLinked && (
-        <Box sx={{ textAlign: "center", mb: 3 }}>
-          <Chip
-            label="✅ Telegram linked"
-            size="small"
-            sx={{ bgcolor: "rgba(125,186,150,0.15)", color: C.good, fontWeight: 600 }}
-          />
+      {/* Telegram section */}
+      <Box
+        sx={{
+          mb: 3,
+          borderRadius: 2,
+          border: `1px solid ${telegramLinked ? "rgba(125,186,150,0.25)" : C.line}`,
+          bgcolor: telegramLinked ? "rgba(125,186,150,0.04)" : C.paper,
+          overflow: "hidden",
+        }}
+      >
+        <Box sx={{ px: 3, py: 2, borderBottom: `1px solid ${C.line}`, display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box sx={{ fontSize: 20 }}>💬</Box>
+          <Box>
+            <Typography sx={{ fontSize: 15, fontWeight: 600, color: C.text }}>
+              Telegram
+            </Typography>
+            <Typography sx={{ fontSize: 12, color: C.muted }}>
+              {telegramLinked ? "Connected" : "Bot + channel alerts"}
+            </Typography>
+          </Box>
+          {telegramLinked && (
+            <Chip
+              label="Linked"
+              size="small"
+              sx={{ ml: "auto", bgcolor: "rgba(125,186,150,0.15)", color: C.good, fontWeight: 600, fontSize: 11 }}
+            />
+          )}
         </Box>
-      )}
+        <Box sx={{ px: 3, py: 2.5 }}>
+          {telegramLinkCode && !telegramLinked ? (
+            <>
+              <Typography sx={{ fontSize: 13, color: C.muted, mb: 2 }}>
+                Open the <b>@MorrowDeskBot</b> on Telegram and send this code to link your account:
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 1,
+                  py: 2,
+                  px: 3,
+                  borderRadius: 1.5,
+                  bgcolor: "rgba(142,180,196,0.08)",
+                  border: "1px dashed rgba(142,180,196,0.25)",
+                  mb: 2,
+                }}
+              >
+                <Typography sx={{ fontSize: 13, color: C.muted, fontFamily: "monospace" }}>/verify</Typography>
+                <Typography
+                  sx={{
+                    fontSize: 32,
+                    fontWeight: 700,
+                    fontFamily: "monospace",
+                    letterSpacing: "0.15em",
+                    color: C.accent,
+                  }}
+                >
+                  {telegramLinkCode}
+                </Typography>
+              </Box>
+              <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.4)", textAlign: "center" }}>
+                Code expires in 5 minutes
+              </Typography>
+            </>
+          ) : !telegramLinked ? (
+            <>
+              <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, mb: 2 }}>
+                <Box>
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: C.text, mb: 0.5 }}>🤖 Bot</Typography>
+                  <Typography sx={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+                    Look up any stock, view heatmaps, triggers, delivery data, and sector flows on the go.
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: C.text, mb: 0.5 }}>📢 Channel</Typography>
+                  <Typography sx={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+                    Morning scorecard, midday pulse, EOD wrap — delivered to your phone automatically.
+                  </Typography>
+                </Box>
+              </Box>
+              <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.4)" }}>
+                Premium subscribers get unlimited bot access + channel alerts. To link, message <code>/link {email}</code> to <b>@MorrowDeskBot</b> on Telegram.
+              </Typography>
+            </>
+          ) : (
+            <Typography sx={{ fontSize: 13, color: C.muted }}>
+              Your Telegram account is linked. All premium bot commands are unlimited and channel alerts are active.
+            </Typography>
+          )}
+        </Box>
+      </Box>
 
       {/* What's Included */}
       <Box
