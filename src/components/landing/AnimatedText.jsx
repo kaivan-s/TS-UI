@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { cn } from "../../lib/utils.js";
 
 export function TextReveal({ children, className, delay = 0 }) {
   return (
@@ -13,33 +14,41 @@ export function TextReveal({ children, className, delay = 0 }) {
   );
 }
 
-export function WordRotate({ words, className, duration = 3 }) {
+export function LetterPull({ text, className, delay = 0 }) {
+  const letters = text.split("");
   return (
-    <motion.span className={cn("inline-block", className)}>
-      {words.map((word, i) => (
+    <span className={cn("inline-flex overflow-hidden", className)}>
+      {letters.map((letter, i) => (
         <motion.span
-          key={word}
-          className="absolute"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{
-            opacity: [0, 1, 1, 0],
-            y: [20, 0, 0, -20],
-          }}
+          key={i}
+          initial={{ y: "100%", opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
           transition={{
-            duration,
-            delay: i * duration,
-            repeat: Infinity,
-            repeatDelay: (words.length - 1) * duration,
+            duration: 0.5,
+            delay: delay + i * 0.04,
+            ease: [0.16, 1, 0.3, 1],
           }}
+          className="inline-block"
         >
-          {word}
+          {letter === " " ? "\u00A0" : letter}
         </motion.span>
       ))}
-    </motion.span>
+    </span>
   );
 }
 
-import { cn } from "../../lib/utils.js";
+export function GradientText({ children, className }) {
+  return (
+    <span
+      className={cn(
+        "animate-gradient-shift bg-[linear-gradient(90deg,#eeeae3,#8eb4c4,#7dba96,#c4a46a,#eeeae3)] bg-[length:300%_100%] bg-clip-text text-transparent",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
 
 export function ShinyText({ children, className }) {
   return (
@@ -50,6 +59,35 @@ export function ShinyText({ children, className }) {
       )}
     >
       {children}
+    </span>
+  );
+}
+
+export function TypeWriter({ words, className }) {
+  return (
+    <span className={cn("relative inline-block", className)}>
+      {words.map((word, i) => (
+        <motion.span
+          key={word}
+          className="absolute left-0"
+          initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+          animate={{
+            opacity: [0, 1, 1, 0],
+            y: [10, 0, 0, -10],
+            filter: ["blur(4px)", "blur(0px)", "blur(0px)", "blur(4px)"],
+          }}
+          transition={{
+            duration: 3,
+            delay: i * 3,
+            repeat: Infinity,
+            repeatDelay: (words.length - 1) * 3,
+            ease: "easeInOut",
+          }}
+        >
+          {word}
+        </motion.span>
+      ))}
+      <span className="invisible">{words.reduce((a, b) => a.length > b.length ? a : b)}</span>
     </span>
   );
 }
