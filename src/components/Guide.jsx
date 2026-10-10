@@ -317,7 +317,7 @@ function TelegramTab() {
         </Box>
       </Box>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-        <Step n="1" title="Open the bot" body="Tap the button above or search @MorrowDeskBot on Telegram. Type any stock name to get started — no sign-up needed." />
+        <Step n="1" title="Open the bot" body="Tap the button above or search @nse_circuit_bot on Telegram. Type any stock name to get started — no sign-up needed." />
         <Step n="2" title="Link your account" body="Send /link your@email.com to the bot. Use the same email you signed up with on the website." />
         <Step n="3" title="Verify" body="Log into the website — the Pricing page shows a 6-digit code. Send /verify CODE to the bot. Done." />
       </Box>
