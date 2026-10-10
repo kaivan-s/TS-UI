@@ -508,14 +508,32 @@ function Summary({ summary }) {
   ];
   const rows = order.map((b) => summary.find((s) => s.bucket === b)).filter(Boolean);
 
+  // Headline the only bucket where an order could actually have filled. The
+  // blended "all" number includes queue-only and EOD-rebuilt names you could
+  // not have bought, so it is shown as context, not as the hero stat.
+  const fillable = summary.find((s) => s.bucket === "live: sellers present");
+  const allLive = summary.find((s) => s.bucket === "all live");
+  const primary = fillable || allLive || all;
+  const basis = fillable
+    ? "Live snapshots with sellers on offer — the only observations where an order could have filled"
+    : allLive
+    ? "Live snapshots (fill mixed) — no sellers-present history yet"
+    : "Rebuilt from end-of-day data — fill unknown";
+
   return (
     <>
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 2 }}>
-        <Stat label="STOCKS OBSERVED" value={all.n} sub={`${all.sessions} sessions`} />
-        <Stat label="REACHED +4% NEXT SESSION" value={pct(all.hit4, 0)} tone={C.good} sub={`${pct(all.gap4, 0)} opened above it`} />
-        <Stat label="MEAN NEXT-SESSION MOVE" value={signedPct(all.mean_btst)} tone={color(all.mean_btst)} sub={`${signedPct(all.net_mean)} less costs`} />
-        <Stat label="SHARE CLOSING POSITIVE" value={pct(all.win_rate, 0)} sub={`lowest ${signedPct(all.worst)}`} />
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
+        <Stat label="BUYABLE OBSERVED" value={primary.n} sub={`${primary.sessions} sessions`} />
+        <Stat label="REACHED +4% NEXT SESSION" value={pct(primary.hit4, 0)} tone={C.good} sub={`${pct(primary.gap4, 0)} opened above it`} />
+        <Stat label="MEAN NEXT-SESSION MOVE" value={signedPct(primary.mean_btst)} tone={color(primary.mean_btst)} sub={`${signedPct(primary.net_mean)} less costs`} />
+        <Stat label="SHARE CLOSING POSITIVE" value={pct(primary.win_rate, 0)} sub={`lowest ${signedPct(primary.worst)}`} />
       </Box>
+
+      <Typography sx={{ fontSize: 12, color: C.muted, mb: 2 }}>
+        {basis}. Raw pattern across all {all.n} observations (including queue-only
+        and EOD-rebuilt names you could not have bought): reached +4%{" "}
+        {pct(all.hit4, 0)} of the time, mean {signedPct(all.mean_btst)}.
+      </Typography>
 
       <Note>
         Historical observations of past price data over {all.sessions} sessions.
