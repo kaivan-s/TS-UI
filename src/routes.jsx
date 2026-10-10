@@ -168,21 +168,16 @@ export default function AppRoutes() {
         }
       />
       <Route
-        path="/carry"
+        path="/market"
         element={
           <RequireAuth>
             <App />
           </RequireAuth>
         }
       />
-      <Route
-        path="/scanners"
-        element={
-          <RequireAuth>
-            <App />
-          </RequireAuth>
-        }
-      />
+      {/* Legacy redirects */}
+      <Route path="/carry" element={<Navigate to="/market" replace />} />
+      <Route path="/scanners" element={<Navigate to="/market" replace />} />
       <Route
         path="/guide"
         element={

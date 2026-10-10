@@ -665,14 +665,15 @@ function History({ daily, history, onOpenStock }) {
   );
 }
 
-export default function CarryView({ onOpenStock }) {
+export default function CarryView({ onOpenStock, externalData, externalIntraday, embedded }) {
   const [data, setData] = useState(null);
   const [intradayData, setIntradayData] = useState(null);
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(!embedded);
   const [err, setErr] = useState(null);
   const [tab, setTab] = useState(0);
 
   const load = useCallback(async () => {
+    if (embedded) return;
     setBusy(true);
     setErr(null);
     try {
@@ -687,74 +688,77 @@ export default function CarryView({ onOpenStock }) {
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [embedded]);
 
-  // The list changes twice a day (15:22 snapshot, evening scoring), so a slow
-  // poll is enough to pick either up without a manual reload. Intraday scans
-  // happen every 30 min during market hours.
   useEffect(() => {
+    if (embedded) return;
     load();
     const id = setInterval(load, POLL_MS);
     return () => clearInterval(id);
-  }, [load]);
+  }, [load, embedded]);
 
-  if (busy && !data) {
+  const d = embedded ? externalData : data;
+  const intra = embedded ? externalIntraday : intradayData;
+
+  if (!embedded && busy && !d) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
         <CircularProgress size={28} sx={{ color: C.accent }} />
       </Box>
     );
   }
-  if (err && !data) return <Note>{err}</Note>;
+  if (!embedded && err && !d) return <Note>{err}</Note>;
 
   return (
     <Box>
-      <PageIntro
-        title="Circuit carry"
-        action={
-          <Button
-            size="small"
-            variant="outlined"
-            onClick={load}
-            disabled={busy}
-            startIcon={busy ? <CircularProgress size={14} /> : <RefreshRoundedIcon fontSize="small" />}
-            sx={{ color: C.muted, borderColor: "rgba(238,234,227,0.12)", textTransform: "none" }}
-          >
-            Refresh
-          </Button>
-        }
-      >
-        Stocks that closed on their upper price band, and what the tape did next.
-        In the observed sample a close on the band was followed more often than
-        not by a next-session high at least 4% above it, while closing at the
-        high without being on the band showed no such tendency. Whether an order
-        at the circuit could actually be filled is the open question — that is
-        what this page measures.
-      </PageIntro>
+      {!embedded && (
+        <PageIntro
+          title="Circuit carry"
+          action={
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={load}
+              disabled={busy}
+              startIcon={busy ? <CircularProgress size={14} /> : <RefreshRoundedIcon fontSize="small" />}
+              sx={{ color: C.muted, borderColor: "rgba(238,234,227,0.12)", textTransform: "none" }}
+            >
+              Refresh
+            </Button>
+          }
+        >
+          Stocks that closed on their upper price band, and what the tape did next.
+          In the observed sample a close on the band was followed more often than
+          not by a next-session high at least 4% above it, while closing at the
+          high without being on the band showed no such tendency. Whether an order
+          at the circuit could actually be filled is the open question — that is
+          what this page measures.
+        </PageIntro>
+      )}
 
-      {!data?.as_of && !intradayData?.as_of ? (
+      {!d?.as_of && !intra?.as_of ? (
         <Note>No data yet. The first scan runs during market hours (every 30 minutes).</Note>
       ) : (
         <>
           <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2, borderBottom: `1px solid ${C.line}` }}>
-            <Tab label={<TabLabel name="Today's scan" count={intradayData?.latest?.length || 0} />} sx={{ textTransform: "none" }} />
-            <Tab label={<TabLabel name="Track record" count={data.summary?.find((s) => s.bucket === "all")?.n} />} sx={{ textTransform: "none" }} />
+            <Tab label={<TabLabel name="Today's scan" count={intra?.latest?.length || 0} />} sx={{ textTransform: "none" }} />
+            <Tab label={<TabLabel name="Track record" count={d?.summary?.find((s) => s.bucket === "all")?.n} />} sx={{ textTransform: "none" }} />
           </Tabs>
 
           {tab === 0 && (
             <>
-              {intradayData && <IntradayStrip data={intradayData} />}
+              {intra && <IntradayStrip data={intra} />}
               <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
                 Stocks approaching their upper circuit — scanned every 30 minutes during market hours.
                 "Approaching" means price is within 1% of the limit and offers are still showing on the book.
               </Typography>
-              <IntradayTable rows={intradayData?.latest || []} onOpenStock={onOpenStock} />
-              {intradayData?.progression?.length > 0 && (
+              <IntradayTable rows={intra?.latest || []} onOpenStock={onOpenStock} />
+              {intra?.progression?.length > 0 && (
                 <>
                   <Typography sx={{ fontSize: 14, fontWeight: 500, color: C.text, mt: 3, mb: 1.5 }}>
                     Progression through the day
                   </Typography>
-                  <IntradayProgression progression={intradayData.progression} onOpenStock={onOpenStock} />
+                  <IntradayProgression progression={intra.progression} onOpenStock={onOpenStock} />
                 </>
               )}
             </>
@@ -762,12 +766,12 @@ export default function CarryView({ onOpenStock }) {
 
           {tab === 1 && (
             <>
-              <Summary summary={data.summary || []} />
+              <Summary summary={d?.summary || []} />
               <Typography sx={{ fontSize: 13, color: C.muted, mb: 1 }}>
                 By session — click a date for the stocks behind it
-                {data.pending ? ` · ${data.pending} awaiting their next session` : ""}
+                {d?.pending ? ` · ${d.pending} awaiting their next session` : ""}
               </Typography>
-              <History daily={data.daily || []} history={data.history || []} onOpenStock={onOpenStock} />
+              <History daily={d?.daily || []} history={d?.history || []} onOpenStock={onOpenStock} />
             </>
           )}
         </>

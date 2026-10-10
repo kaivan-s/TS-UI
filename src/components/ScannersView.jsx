@@ -223,13 +223,14 @@ function SectorTable({ rows }) {
   );
 }
 
-export default function ScannersView({ onOpenStock }) {
+export default function ScannersView({ onOpenStock, externalData, embedded, embeddedTab }) {
   const [data, setData] = useState(null);
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(!embedded);
   const [err, setErr] = useState(null);
   const [tab, setTab] = useState(0);
 
   const load = useCallback(async () => {
+    if (embedded) return;
     setBusy(true);
     setErr(null);
     try {
@@ -239,25 +240,71 @@ export default function ScannersView({ onOpenStock }) {
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [embedded]);
 
   useEffect(() => {
+    if (embedded) return;
     load();
     const id = setInterval(load, POLL_MS);
     return () => clearInterval(id);
-  }, [load]);
+  }, [load, embedded]);
 
-  if (busy && !data) {
+  const d = embedded ? externalData : data;
+  const activeTab = embedded ? embeddedTab : tab;
+
+  if (!embedded && busy && !d) {
     return <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}><CircularProgress size={28} sx={{ color: C.accent }} /></Box>;
   }
-  if (err && !data) return <Note>{err}</Note>;
+  if (!embedded && err && !d) return <Note>{err}</Note>;
 
-  const movers = data?.big_movers || [];
-  const volume = data?.unusual_volume || [];
-  const streaks = data?.momentum_streaks || [];
-  const breakouts = data?.breakouts_52w || [];
-  const sectors = data?.sector_pulse || [];
-  const scanTime = data?.scan_time;
+  const movers = d?.big_movers || [];
+  const volume = d?.unusual_volume || [];
+  const streaks = d?.momentum_streaks || [];
+  const breakouts = d?.breakouts_52w || [];
+  const sectors = d?.sector_pulse || [];
+  const scanTime = d?.scan_time;
+
+  const content = (
+    <>
+      {activeTab === 0 && <>
+        <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
+          Stocks up 5% or more from the previous close right now.
+        </Typography>
+        <MoversTable rows={movers} onOpenStock={onOpenStock} />
+      </>}
+      {activeTab === 1 && <>
+        <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
+          Stocks trading at 2× or more their normal 20-day average volume, with positive momentum.
+        </Typography>
+        <VolumeTable rows={volume} onOpenStock={onOpenStock} />
+      </>}
+      {activeTab === 2 && <>
+        <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
+          Stocks with 3 or more consecutive up days and at least 5% cumulative gain. Updates after market close.
+        </Typography>
+        <StreaksTable rows={streaks} onOpenStock={onOpenStock} />
+      </>}
+      {activeTab === 3 && <>
+        <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
+          Stocks at or within 2% of their 52-week high, with above-average volume. Updates after market close.
+        </Typography>
+        <BreakoutsTable rows={breakouts} onOpenStock={onOpenStock} />
+      </>}
+      {activeTab === 4 && <>
+        <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
+          Which sectors are moving today — sorted by average stock performance.
+        </Typography>
+        <SectorTable rows={sectors} />
+      </>}
+
+      <Note>
+        Informational watchlists, not recommendations. A stock appearing here means it had
+        notable price or volume action today — it says nothing about what it will do tomorrow.
+      </Note>
+    </>
+  );
+
+  if (embedded) return content;
 
   return (
     <Box>
@@ -289,42 +336,7 @@ export default function ScannersView({ onOpenStock }) {
         <Tab label={<TabLabel name="Sector pulse" count={sectors.length} />} sx={{ textTransform: "none" }} />
       </Tabs>
 
-      {tab === 0 && <>
-        <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
-          Stocks up 5% or more from the previous close right now.
-        </Typography>
-        <MoversTable rows={movers} onOpenStock={onOpenStock} />
-      </>}
-      {tab === 1 && <>
-        <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
-          Stocks trading at 2× or more their normal 20-day average volume, with positive momentum.
-        </Typography>
-        <VolumeTable rows={volume} onOpenStock={onOpenStock} />
-      </>}
-      {tab === 2 && <>
-        <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
-          Stocks with 3 or more consecutive up days and at least 5% cumulative gain. Updates after market close.
-        </Typography>
-        <StreaksTable rows={streaks} onOpenStock={onOpenStock} />
-      </>}
-      {tab === 3 && <>
-        <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
-          Stocks at or within 2% of their 52-week high, with above-average volume. Updates after market close.
-        </Typography>
-        <BreakoutsTable rows={breakouts} onOpenStock={onOpenStock} />
-      </>}
-      {tab === 4 && <>
-        <Typography sx={{ fontSize: 13, color: C.muted, mb: 1.5 }}>
-          Which sectors are moving today — sorted by average stock performance.
-        </Typography>
-        <SectorTable rows={sectors} />
-      </>}
-
-      <Note>
-        Informational watchlists, not recommendations. A stock appearing here means it had
-        notable price or volume action today — it says nothing about what it will do tomorrow.
-        The circuit carry tab is the only scanner on this platform with a measured statistical edge.
-      </Note>
+      {content}
     </Box>
   );
 }

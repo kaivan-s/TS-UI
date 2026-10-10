@@ -5,7 +5,6 @@ import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRou
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
-import RadarRoundedIcon from "@mui/icons-material/RadarRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
@@ -37,18 +36,11 @@ const NAV_ITEMS = [
     desc: "What happened to past bases",
   },
   {
-    id: "carry",
-    path: "/carry",
+    id: "market",
+    path: "/market",
     Icon: BoltRoundedIcon,
-    label: "Circuit carry",
-    desc: "Upper-circuit names, next day",
-  },
-  {
-    id: "scanners",
-    path: "/scanners",
-    Icon: RadarRoundedIcon,
-    label: "Market scanners",
-    desc: "Volume, movers, streaks, breakouts",
+    label: "Market",
+    desc: "Circuits, movers, volume, streaks",
   },
   {
     id: "guide",
