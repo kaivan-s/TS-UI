@@ -144,7 +144,7 @@ const TABS = [
 ];
 
 const BOT_COMMANDS = [
-  ["/today", "Today's brief — top actionable stocks near trigger, strongest sector flow, and market regime.", "Free"],
+  ["/today", "Today's brief — stocks closest to their breakout trigger, strongest sector flow, and market regime.", "Free"],
   ["/r SYMBOL", "Quick stock report — sector, coil score, distance to trigger, sector shape. Tap 'Full report' for detail.", "Free"],
   ["/heatmap", "Sector rotation map — which sectors are crossing, pulling back, or ruled out.", "3/day"],
   ["/flow", "Money flow — sectors ranked by institutional accumulation (CMF).", "3/day"],
@@ -161,7 +161,7 @@ const CHANNEL_ALERTS = [
   ["Intraday", "⚡ Circuit Flash", "Real-time alert when a new stock hits upper circuit. Only fires on new appearances — no repeated spam."],
   ["12:30 PM", "📊 Midday Pulse", "Market-breadth check halfway through the session. Sector flows, volume trends, and anything developing."],
   ["7:30 PM", "🌙 EOD Wrap", "The full evening read: sector scans, new setups, coil changes, circuit results, and delivery highlights."],
-  ["Saturday", "📋 Weekly Digest", "Week's results + cumulative track record. How many setups triggered, held, broke down."],
+  ["Saturday", "📋 Weekly Digest", "Week's observations — how many setups triggered, held, broke down. Methodology check, not performance claim."],
 ];
 
 // ── Methodology tab ──
@@ -397,7 +397,7 @@ function TelegramTab() {
 
       <H>What's behind each view</H>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-        <Step n="🗺️" title="Heatmap" body="Groups all 59 sectors by their classification — Crossing, Pullback, Base, Down, Disqualified. The concise view shows only actionable sectors; tap 'Show all' for the full map. Same data as the Sectors tab on the website." />
+        <Step n="🗺️" title="Heatmap" body="Groups all 59 sectors by their classification — Crossing, Pullback, Base, Down, Disqualified. The concise view shows sectors in uptrend; tap 'Show all' for the full map. Same data as the Sectors tab on the website." />
         <Step n="🔄" title="Flow" body="Ranks sectors by 20-day Chaikin Money Flow (CMF). Positive CMF = close near the high on volume = institutional accumulation. Negative = distribution. The split into inflows / neutral / outflows makes it scannable in seconds." />
         <Step n="🎯" title="Triggers" body="Stocks from the coil pool that are within 2% of their 20-day high. These are the names closest to a breakout. The trigger is the level, not the stock — it only confirms on a close through it on volume." />
         <Step n="📦" title="Delivery" body="Stocks where today's delivery % is ≥1.3× their own 20-day average and ≥40% absolute. Split into accumulation (price rising + high delivery = institutions buying) and distribution (price falling + high delivery = institutions exiting). This is an NSE-unique metric." />

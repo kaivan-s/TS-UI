@@ -442,8 +442,8 @@ export default function Landing() {
                   POPULAR
                 </div>
                 <div className="mb-1 text-sm font-medium text-[#8eb4c4]">Premium</div>
-                <div className="text-4xl font-bold text-[#eeeae3]">₹299<span className="text-base font-normal text-[#8e8a83]">/mo</span></div>
-                <div className="mb-6 text-xs text-[#8e8a83]">or ₹1,999/year (save 44%)</div>
+                <div className="text-4xl font-bold text-[#eeeae3]">₹499<span className="text-base font-normal text-[#8e8a83]">/mo</span></div>
+                <div className="mb-6 text-xs text-[#8e8a83]">or ₹3,999/year (save 33%)</div>
                 <ul className="space-y-2.5 text-sm text-[#8e8a83]">
                   {["Everything in Free", "Curated setups", "Outcome tracking", "Telegram premium channel", "Unlimited bot access"].map((f) => (
                     <li key={f} className="flex items-center gap-2.5">

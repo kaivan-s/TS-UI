@@ -742,7 +742,7 @@ export default function CarryView({ onOpenStock, externalData, externalIntraday,
         <>
           <Tabs value={tab} onChange={(_, v) => setTab(v)} sx={{ mb: 2, borderBottom: `1px solid ${C.line}` }}>
             <Tab label={<TabLabel name="Today's scan" count={intra?.latest?.length || 0} />} sx={{ textTransform: "none" }} />
-            <Tab label={<TabLabel name="Track record" count={d?.summary?.find((s) => s.bucket === "all")?.n} />} sx={{ textTransform: "none" }} />
+            <Tab label={<TabLabel name="Past observations" count={d?.summary?.find((s) => s.bucket === "all")?.n} />} sx={{ textTransform: "none" }} />
           </Tabs>
 
           {tab === 0 && (

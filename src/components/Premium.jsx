@@ -51,7 +51,7 @@ export function PremiumGate({ children, feature = "This feature" }) {
         {feature} is Premium
       </Typography>
       <Typography sx={{ fontSize: 14, color: C.muted, mb: 3, maxWidth: 320 }}>
-        Upgrade to access the full scan results, coiled bases, and actionable setups.
+        Upgrade to access the full scan results, coiled bases, and curated setups.
       </Typography>
       <Button
         variant="contained"

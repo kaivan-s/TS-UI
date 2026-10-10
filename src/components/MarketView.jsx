@@ -4,7 +4,7 @@
  * Top-level tabs:
  *   Circuit carry · Big movers · Unusual volume · Streaks · 52w breakouts · Sector pulse
  *
- * Circuit carry has its own internal sub-tabs (Today's scan / Track record).
+ * Circuit carry has its own internal sub-tabs (Today's scan / Past observations).
  */
 
 import { useCallback, useEffect, useState } from "react";
