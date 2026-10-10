@@ -17,6 +17,8 @@ const FEATURES = [
   "Sector shape analysis",
   "Episode tracking & resolution",
   "Stock lookup with planning",
+  "Telegram bot — unlimited market views",
+  "Telegram channel — daily alerts & insights",
 ];
 
 const COMPARISON = [
@@ -24,10 +26,13 @@ const COMPARISON = [
   { feature: "Guide & methodology", free: true, premium: true },
   { feature: "Episode tracking", free: true, premium: true },
   { feature: "Stock lookup", free: true, premium: true },
+  { feature: "Telegram bot (3/day)", free: true, premium: false },
   { feature: "Setups preview (1)", free: true, premium: false },
   { feature: "Full setups list", free: false, premium: true },
   { feature: "Leaders at rest (20)", free: false, premium: true },
   { feature: "Sector details & history", free: false, premium: true },
+  { feature: "Telegram bot (unlimited)", free: false, premium: true },
+  { feature: "Telegram channel alerts", free: false, premium: true },
 ];
 
 function formatDate(dateStr) {
@@ -41,7 +46,7 @@ function formatDate(dateStr) {
 }
 
 export default function Pricing() {
-  const { upgrade, busy, isPremium, plan: currentPlan, email, refreshSubscription, cancelSubscription, subscriptionExpires, subscriptionCancelled } = useAuth();
+  const { upgrade, busy, isPremium, plan: currentPlan, email, refreshSubscription, cancelSubscription, subscriptionExpires, subscriptionCancelled, telegramLinked, telegramLinkCode } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [showSuccess, setShowSuccess] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -300,6 +305,51 @@ export default function Pricing() {
           <Typography sx={{ fontSize: 13, color: "rgba(238,234,227,0.5)" }}>
             Subscription cancelled · Access until {formatDate(subscriptionExpires)}
           </Typography>
+        </Box>
+      )}
+
+      {/* Telegram Link Code — shown when user did /link in bot */}
+      {telegramLinkCode && !telegramLinked && (
+        <Alert
+          severity="info"
+          icon={<span style={{ fontSize: 20 }}>🔗</span>}
+          sx={{
+            mb: 3,
+            bgcolor: "rgba(142,180,196,0.12)",
+            border: "1px solid rgba(142,180,196,0.25)",
+            color: C.text,
+          }}
+        >
+          <Typography sx={{ fontWeight: 600, mb: 0.5 }}>Link your Telegram</Typography>
+          <Typography sx={{ fontSize: 14, color: "rgba(238,234,227,0.7)", mb: 1 }}>
+            Send this code to the Morrow Desk bot:
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: 28,
+              fontWeight: 700,
+              fontFamily: "monospace",
+              letterSpacing: "0.2em",
+              color: C.accent,
+              textAlign: "center",
+              py: 1,
+            }}
+          >
+            {telegramLinkCode}
+          </Typography>
+          <Typography sx={{ fontSize: 13, color: "rgba(238,234,227,0.5)", mt: 1 }}>
+            In the bot, type: <code>/verify {telegramLinkCode}</code>
+          </Typography>
+        </Alert>
+      )}
+
+      {telegramLinked && (
+        <Box sx={{ textAlign: "center", mb: 3 }}>
+          <Chip
+            label="✅ Telegram linked"
+            size="small"
+            sx={{ bgcolor: "rgba(125,186,150,0.15)", color: C.good, fontWeight: 600 }}
+          />
         </Box>
       )}
 

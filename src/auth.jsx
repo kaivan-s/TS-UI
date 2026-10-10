@@ -25,6 +25,8 @@ export function AuthProvider({ children }) {
   const [subscriptionId, setSubscriptionId] = useState(null);
   const [subscriptionExpires, setSubscriptionExpires] = useState(null);
   const [subscriptionCancelled, setSubscriptionCancelled] = useState(false);
+  const [telegramLinked, setTelegramLinked] = useState(false);
+  const [telegramLinkCode, setTelegramLinkCode] = useState(null);
 
   useEffect(() => {
     let dead = false;
@@ -90,6 +92,8 @@ export function AuthProvider({ children }) {
           setSubscriptionId(data.subscription_id || null);
           setSubscriptionExpires(data.subscription_expires || null);
           setSubscriptionCancelled(data.subscription_cancelled || false);
+          setTelegramLinked(data.telegram_linked || false);
+          setTelegramLinkCode(data.telegram_link_code || null);
         }
       })
       .catch(() => {
@@ -124,6 +128,8 @@ export function AuthProvider({ children }) {
       subscriptionId,
       subscriptionExpires,
       subscriptionCancelled,
+      telegramLinked,
+      telegramLinkCode,
       signInWithGoogle: async () => {
         setError("");
         setNotice("");
@@ -261,7 +267,7 @@ export function AuthProvider({ children }) {
       },
       getAccessToken,
     };
-  }, [session, configured, loading, denied, error, notice, busy, isPremium, plan, subscriptionId, subscriptionExpires, subscriptionCancelled]);
+  }, [session, configured, loading, denied, error, notice, busy, isPremium, plan, subscriptionId, subscriptionExpires, subscriptionCancelled, telegramLinked, telegramLinkCode]);
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
