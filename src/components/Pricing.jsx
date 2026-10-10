@@ -4,7 +4,6 @@ import { Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogC
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
-import WorkspacePremiumRoundedIcon from "@mui/icons-material/WorkspacePremiumRounded";
 import CelebrationRoundedIcon from "@mui/icons-material/CelebrationRounded";
 import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
 import { C } from "../theme.js";
@@ -152,14 +151,14 @@ export default function Pricing() {
             mb: 1.5,
           }}
         >
-          {isPremium ? "Your Plan" : "Choose your plan"}
+          {isPremium ? "Your Plan" : "Upgrade to Premium"}
         </Typography>
         <Typography sx={{ fontSize: 16, color: "rgba(238,234,227,0.6)", maxWidth: 400, mx: "auto" }}>
           {isPremium 
             ? subscriptionCancelled
               ? `Access until ${formatDate(subscriptionExpires)}`
-              : `You're on the ${currentPlan === "yearly" ? "Pro" : "Premium"} plan`
-            : "Full access to setups, sectors, and tracking tools"
+              : `Premium · billed ${currentPlan === "yearly" ? "yearly" : "monthly"}`
+            : "Full access to setups, sectors, tracking, and Telegram"
           }
         </Typography>
       </Box>
@@ -173,19 +172,19 @@ export default function Pricing() {
           mb: 4,
         }}
       >
-        {/* Monthly Plan */}
+        {/* Monthly */}
         <Box
           sx={{
             p: 3,
             borderRadius: 2,
             bgcolor: C.paper,
-            border: `1px solid ${isPremium && currentPlan === "monthly" ? C.good : C.line}`,
+            border: `1px solid ${isPremium && currentPlan === "monthly" && !subscriptionCancelled ? C.good : C.line}`,
             position: "relative",
           }}
         >
           {isPremium && currentPlan === "monthly" && (
             <Chip
-              label={subscriptionCancelled ? "Cancelling" : "Current"}
+              label={subscriptionCancelled ? "Cancelling" : "Current plan"}
               size="small"
               sx={{
                 position: "absolute",
@@ -200,19 +199,19 @@ export default function Pricing() {
           )}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
             <StarRoundedIcon sx={{ fontSize: 20, color: C.accent }} />
-            <Typography sx={{ fontSize: 16, fontWeight: 600, color: C.text }}>Premium</Typography>
+            <Typography sx={{ fontSize: 16, fontWeight: 600, color: C.text }}>Monthly</Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 1 }}>
             <Typography sx={{ fontSize: 32, fontWeight: 700, color: C.text }}>₹499</Typography>
             <Typography sx={{ fontSize: 14, color: "rgba(238,234,227,0.5)" }}>/month</Typography>
           </Box>
           <Typography sx={{ fontSize: 13, color: "rgba(238,234,227,0.5)", mb: 3 }}>
-            Billed monthly
+            Billed monthly · cancel anytime
           </Typography>
           <Button
             fullWidth
             variant="contained"
-            disabled={busy || (isPremium && currentPlan === "monthly" && !subscriptionCancelled)}
+            disabled={busy || (isPremium && !subscriptionCancelled)}
             onClick={() => upgrade("monthly")}
             sx={{
               py: 1.25,
@@ -221,27 +220,41 @@ export default function Pricing() {
               fontWeight: 600,
               "&:hover": { bgcolor: "#7aa4b4" },
               "&.Mui-disabled": {
-                bgcolor: isPremium && currentPlan === "monthly" && !subscriptionCancelled ? "rgba(125,186,150,0.15)" : "rgba(238,234,227,0.08)",
-                color: isPremium && currentPlan === "monthly" && !subscriptionCancelled ? C.good : "rgba(238,234,227,0.4)",
+                bgcolor: isPremium && currentPlan === "monthly" && !subscriptionCancelled
+                  ? "rgba(125,186,150,0.15)"
+                  : "rgba(238,234,227,0.08)",
+                color: isPremium && currentPlan === "monthly" && !subscriptionCancelled
+                  ? C.good
+                  : "rgba(238,234,227,0.4)",
               },
             }}
           >
-            {busy ? "Loading…" : isPremium && currentPlan === "monthly" && !subscriptionCancelled ? "Active" : subscriptionCancelled ? "Resubscribe" : "Get Premium"}
+            {busy
+              ? "Loading…"
+              : isPremium && currentPlan === "monthly" && !subscriptionCancelled
+                ? "✓ Active"
+                : isPremium && currentPlan === "yearly" && !subscriptionCancelled
+                  ? "On yearly plan"
+                  : subscriptionCancelled
+                    ? "Resubscribe"
+                    : "Get Premium"}
           </Button>
         </Box>
 
-        {/* Yearly Plan */}
+        {/* Yearly */}
         <Box
           sx={{
             p: 3,
             borderRadius: 2,
             bgcolor: "rgba(125,186,150,0.04)",
-            border: `1px solid ${isPremium && currentPlan === "yearly" ? C.good : "rgba(125,186,150,0.2)"}`,
+            border: `1px solid ${isPremium && currentPlan === "yearly" && !subscriptionCancelled ? C.good : "rgba(125,186,150,0.2)"}`,
             position: "relative",
           }}
         >
           <Chip
-            label={isPremium && currentPlan === "yearly" ? (subscriptionCancelled ? "Cancelling" : "Current") : "Save 33%"}
+            label={isPremium && currentPlan === "yearly"
+              ? (subscriptionCancelled ? "Cancelling" : "Current plan")
+              : "Save 33%"}
             size="small"
             sx={{
               position: "absolute",
@@ -254,15 +267,15 @@ export default function Pricing() {
             }}
           />
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-            <WorkspacePremiumRoundedIcon sx={{ fontSize: 20, color: C.good }} />
-            <Typography sx={{ fontSize: 16, fontWeight: 600, color: C.text }}>Pro</Typography>
+            <StarRoundedIcon sx={{ fontSize: 20, color: C.good }} />
+            <Typography sx={{ fontSize: 16, fontWeight: 600, color: C.text }}>Yearly</Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.5, mb: 1 }}>
             <Typography sx={{ fontSize: 32, fontWeight: 700, color: C.text }}>₹3,999</Typography>
             <Typography sx={{ fontSize: 14, color: "rgba(238,234,227,0.5)" }}>/year</Typography>
           </Box>
           <Typography sx={{ fontSize: 13, color: "rgba(238,234,227,0.5)", mb: 3 }}>
-            ₹333/month · Save ₹1,989
+            ₹333/month · save ₹1,989
           </Typography>
           <Button
             fullWidth
@@ -276,12 +289,24 @@ export default function Pricing() {
               fontWeight: 600,
               "&:hover": { bgcolor: "#6aa880" },
               "&.Mui-disabled": {
-                bgcolor: isPremium && currentPlan === "yearly" && !subscriptionCancelled ? "rgba(125,186,150,0.15)" : "rgba(238,234,227,0.08)",
-                color: isPremium && currentPlan === "yearly" && !subscriptionCancelled ? C.good : "rgba(238,234,227,0.4)",
+                bgcolor: isPremium && currentPlan === "yearly" && !subscriptionCancelled
+                  ? "rgba(125,186,150,0.15)"
+                  : "rgba(238,234,227,0.08)",
+                color: isPremium && currentPlan === "yearly" && !subscriptionCancelled
+                  ? C.good
+                  : "rgba(238,234,227,0.4)",
               },
             }}
           >
-            {busy ? "Loading…" : isPremium && currentPlan === "yearly" && !subscriptionCancelled ? "Active" : subscriptionCancelled ? "Resubscribe" : "Get Pro"}
+            {busy
+              ? "Loading…"
+              : isPremium && currentPlan === "yearly" && !subscriptionCancelled
+                ? "✓ Active"
+                : isPremium && currentPlan === "monthly" && !subscriptionCancelled
+                  ? "Switch to yearly"
+                  : subscriptionCancelled
+                    ? "Resubscribe"
+                    : "Get Premium · Yearly"}
           </Button>
         </Box>
       </Box>
@@ -453,7 +478,7 @@ export default function Pricing() {
             Free
           </Typography>
           <Typography sx={{ fontSize: 12, fontWeight: 600, color: C.good, textTransform: "uppercase", letterSpacing: "0.04em", textAlign: "center" }}>
-            Pro
+            Premium
           </Typography>
         </Box>
         {COMPARISON.map((row, i) => (

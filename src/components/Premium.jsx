@@ -222,7 +222,7 @@ export function PremiumBadge({ small = false }) {
       }}
     >
       <StarRoundedIcon sx={{ fontSize: small ? 12 : 14 }} />
-      {plan === "yearly" ? "Pro" : "Premium"}
+      Premium
     </Box>
   );
 }
