@@ -82,6 +82,10 @@ export const getFundamentalsScreen = (params = {}) => {
 export const getResultsCalendar = (days = 45) =>
   json(`/api/results-calendar?days=${days}`);
 
+// Chart data
+export const getChartData = (symbol, period = "1y") =>
+  json(`/api/chart-data?symbol=${encodeURIComponent(symbol)}&period=${period}`);
+
 // Watchlist
 export const getWatchlist = () => json("/api/watchlist");
 export const addToWatchlist = (symbol, notes) =>
