@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
 import {
   Box,
-  Button,
   Chip,
   Drawer,
   IconButton,
@@ -11,7 +9,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -29,14 +26,6 @@ import { BookmarkButton } from "../watchlist.jsx";
 import { C } from "../theme.js";
 import { fmtDate, num, pct } from "../format.js";
 import { M } from "../glossary.js";
-
-const ACTION = {
-  buy: { fg: C.good, bg: "rgba(125,186,150,0.08)" },
-  add: { fg: C.accent, bg: "rgba(142,180,196,0.08)" },
-  hold: { fg: C.warn, bg: "rgba(196,164,106,0.08)" },
-  sell: { fg: C.bad, bg: "rgba(229,115,115,0.08)" },
-  wait: { fg: C.muted, bg: "rgba(238,234,227,0.04)" },
-};
 
 const PHASE = {
   broke_out: { fg: C.warn, label: "Broke out" },
@@ -156,25 +145,9 @@ function SectionTitle({ icon: Icon, children }) {
 }
 
 export default function StockDrawer({
-  open, onClose, data, loading, onOpenSector, onLookup, onEntry,
+  open, onClose, data, loading, onOpenSector, onLookup,
 }) {
   const m = data?.metrics || {};
-  const plan = data?.plan;
-  const act = ACTION[plan?.action] || ACTION.wait;
-  const [entryDraft, setEntryDraft] = useState("");
-
-  useEffect(() => {
-    if (!open) return;
-    const shown = plan?.entry ?? plan?.suggested_entry;
-    setEntryDraft(shown != null ? String(shown) : "");
-  }, [open, data?.symbol, plan?.entry, plan?.suggested_entry]);
-
-  const applyEntry = () => {
-    const n = Number(entryDraft);
-    if (!Number.isFinite(n) || n <= 0) return;
-    onEntry?.(n);
-  };
-
   const filters = data?.filters || [];
   const passedFilters = filters.filter((f) => f.ok).length;
   const totalFilters = filters.length;
@@ -292,87 +265,6 @@ export default function StockDrawer({
 
             {/* TradingView chart */}
             <TvChart symbol={data.symbol} height={420} />
-
-            {/* Structural levels: arithmetic from the 20-day base and ATR.
-                Deliberately described, not prescribed — no advisory
-                vocabulary, because that would make this a recommendation. */}
-            {plan && (
-              <Card highlight={plan.action === "buy"} sx={{ bgcolor: act.bg, borderColor: `${act.fg}33` }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
-                  <Chip
-                    size="small"
-                    label={plan.action_label || plan.action}
-                    sx={{
-                      bgcolor: act.fg,
-                      color: C.bg,
-                      fontWeight: 700,
-                      fontSize: 11,
-                      textTransform: "uppercase",
-                    }}
-                  />
-                  <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.5)" }}>
-                    structural levels · arithmetic from the base, not a validated edge
-                  </Typography>
-                </Box>
-
-                {/* Price levels grid */}
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(4, 1fr)",
-                    gap: 2,
-                    mb: 2.5,
-                  }}
-                >
-                  <Metric label="Reference" value={num(plan.entry, 2)} size="large" color={C.text} />
-                  <Metric label="Structure level" value={num(plan.stop, 2)} size="large" color={C.bad} />
-                  <Metric label="2R level" value={num(plan.target, 2)} size="large" color={C.good} />
-                  <Metric label="Measured move" value={num(plan.target2, 2)} size="large" color={C.good} />
-                </Box>
-
-                {/* Reference-price input: recomputes the levels from a price
-                    the user supplies, rather than the structural default. */}
-                <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", mb: 2 }}>
-                  <TextField
-                    size="small"
-                    label="Your price"
-                    value={entryDraft}
-                    onChange={(e) => setEntryDraft(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") applyEntry(); }}
-                    sx={{ width: 120 }}
-                  />
-                  <Button
-                    size="small"
-                    variant="contained"
-                    onClick={applyEntry}
-                    disabled={loading}
-                    sx={{
-                      bgcolor: C.accent,
-                      color: C.bg,
-                      fontWeight: 600,
-                      "&:hover": { bgcolor: "#7aa4b4" },
-                    }}
-                  >
-                    Recalc
-                  </Button>
-                  {plan.suggested_entry != null && entryDraft !== String(plan.suggested_entry) && (
-                    <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.5)" }}>
-                      system: {num(plan.suggested_entry, 2)}
-                    </Typography>
-                  )}
-                </Box>
-
-                {/* Risk info */}
-                <Typography sx={{ fontSize: 13, lineHeight: 1.6, color: "rgba(238,234,227,0.65)" }}>
-                  {plan.why}
-                  {plan.risk != null && plan.rr != null && (
-                    <Box component="span" sx={{ color: C.good, fontWeight: 600 }}>
-                      {" "}Risk ₹{num(plan.risk, 2)} · {num(plan.rr, 1)}R
-                    </Box>
-                  )}
-                </Typography>
-              </Card>
-            )}
 
             {/* Fundamentals Card */}
             {data.fundamentals && data.fundamentals.market_cap_cr != null && (() => {

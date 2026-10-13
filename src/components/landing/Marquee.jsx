@@ -1,36 +1,21 @@
 import { cn } from "../../lib/utils.js";
 
 const ITEMS = [
-  { name: "HDFCBANK", change: "+2.1%", up: true },
-  { name: "RELIANCE", change: "+1.4%", up: true },
-  { name: "INFY", change: "+3.2%", up: true },
-  { name: "TITAN", change: "-0.8%", up: false },
-  { name: "TCS", change: "+1.7%", up: true },
-  { name: "ICICIBANK", change: "+2.5%", up: true },
-  { name: "BAJFINANCE", change: "-1.2%", up: false },
-  { name: "SBIN", change: "+1.9%", up: true },
-  { name: "BHARTIARTL", change: "+0.6%", up: true },
-  { name: "LT", change: "+2.8%", up: true },
-  { name: "ITC", change: "+1.1%", up: true },
-  { name: "KOTAKBANK", change: "-0.3%", up: false },
-  { name: "AXISBANK", change: "+2.4%", up: true },
-  { name: "MARUTI", change: "+1.6%", up: true },
-  { name: "SUNPHARMA", change: "+3.5%", up: true },
+  "HDFCBANK", "RELIANCE", "INFY", "TITAN", "TCS", "ICICIBANK",
+  "BAJFINANCE", "SBIN", "BHARTIARTL", "LT", "ITC", "KOTAKBANK",
+  "AXISBANK", "MARUTI", "SUNPHARMA",
 ];
 
 function TickerRow({ reverse = false }) {
   const items = reverse ? [...ITEMS].reverse() : ITEMS;
   return (
     <div className={cn("flex gap-4", reverse ? "animate-marquee-reverse" : "animate-marquee")}>
-      {[...items, ...items].map((item, i) => (
+      {[...items, ...items].map((name, i) => (
         <div
           key={i}
-          className="flex shrink-0 items-center gap-2 rounded-lg border border-white/[0.04] bg-white/[0.02] px-3 py-1.5"
+          className="flex shrink-0 items-center rounded-lg border border-white/[0.04] bg-white/[0.02] px-3 py-1.5"
         >
-          <span className="font-mono text-xs font-medium text-[#eeeae3]/70">{item.name}</span>
-          <span className={cn("font-mono text-[11px] font-medium", item.up ? "text-[#7dba96]" : "text-[#c87a7a]")}>
-            {item.change}
-          </span>
+          <span className="font-mono text-xs font-medium text-[#eeeae3]/70">{name}</span>
         </div>
       ))}
     </div>

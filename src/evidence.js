@@ -84,17 +84,15 @@ const METHOD = (n) =>
 export const STAT_STRIPS = {
   setups: {
     stats: [
-      { value: "66%", label: "beat the market over 20 days" },
-      { value: "+3.7%", label: "median excess return" },
-      { value: 151, label: "names measured" },
+      { value: "66%", label: "above the market median, 20 days later" },
+      { value: 151, label: "names, each counted once" },
     ],
     tip: METHOD(151),
   },
   coils: {
     stats: [
-      { value: "59%", label: "beat the market over 20 days" },
-      { value: "+1.7%", label: "median excess return" },
-      { value: 377, label: "names measured" },
+      { value: "59%", label: "above the market median, 20 days later" },
+      { value: 377, label: "names, each counted once" },
     ],
     tip: METHOD(377),
   },

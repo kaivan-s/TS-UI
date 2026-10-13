@@ -42,7 +42,7 @@ function SectionHead({ color, title, children }) {
 }
 
 // Sectors whose shape checks all passed come first inside each section.
-const byConfidence = (a, b) => Number(b.recommended) - Number(a.recommended);
+const byConfidence = (a, b) => Number(b.shape_confirmed) - Number(a.shape_confirmed);
 
 export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
   // Split on the sector's own state so each heading matches its rows.
@@ -51,7 +51,7 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
   const other = rows.filter(
     (r) => r.sector_klass !== "PULLBACK" && r.sector_klass !== "CROSSING",
   );
-  const nConfirmed = rows.filter((r) => r.recommended).length;
+  const nConfirmed = rows.filter((r) => r.shape_confirmed).length;
 
   // This list is usually one sector wearing several names — across the
   // backtest window a single sector was half or more of it on 85% of the
@@ -223,7 +223,7 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                           color: color,
                         }}
                       />
-                      {r.recommended && (
+                      {r.shape_confirmed && (
                         <Tooltip
                           title="Every shape check on this sector passed: the crossing came from quiet and the red days since have traded lighter. This is the subset the backtest measures."
                           placement="top"

@@ -172,8 +172,10 @@ function MethodologyTab() {
         Sectors show where money is moving. The coil scan shows which names are
         tight. Setups are the overlap, and the overlap is where the edge is:
         over {EVIDENCE_WINDOW}, {Math.round(BASE_RATES.setups.winRate * 100)}%
-        of setups beat the market over the following 20 days against{" "}
-        {Math.round(BASE_RATES.coils.winRate * 100)}% for coils alone. Neither
+        of setups traded above the same session's all-stock median over the
+        following 20 days, against{" "}
+        {Math.round(BASE_RATES.coils.winRate * 100)}% for coils alone. That is
+        a backtest base rate from one window, not a return to expect. Neither
         is a market order — the breakout is the close through the trigger on
         volume. Type a symbol in the header to run the same gates on any name.
       </Mute>
@@ -185,7 +187,7 @@ function MethodologyTab() {
       <Step n="4" title="Leaders at rest — the other cut" body="Switch the Setups page to Leaders at rest to drop the requirement that the sector is acting. Instead, the same coil pool is cut to stocks in the top 30% of the whole market on return over the twelve months ending a month ago, with anything in a disqualified sector removed. Survivors are ranked by that return divided by its volatility, so a steady trend outranks an erratic one, and the top 20 are shown. The top of that list is a proven leader that has gone quiet, which is a different bet from Sector agrees and picks up mostly different names. Twelve-month momentum is the one reading in the app that orders outcomes consistently; the risk-adjusted ordering is newer and still being measured, so treat it as a priority order, not a promise." />
       <Step n="5" title="Tracking — what happened to the last lot" body="Every other screen is tonight's snapshot, so a name that disappears leaves no trace. Tracking gives each base an identity from the session it first cleared the filters until it resolves, and says which of the four things happened: it broke out, it fell 7% below where it appeared, it stopped clearing the filters, or twenty sessions passed with neither. A base survives gaps of up to three sessions, because about half of all drop-offs are back within ten and ending an episode on the first miss reported the same base as dead and then brand new a week later. Read the top line first — it counts only what changed in the last session, so a quiet evening says so." />
       <Step n="6" title="Breaking out is not the same as working" body="Across 942 resolved episodes, 57% eventually closed through their level, 22% broke down first, and 21% did neither. But of the ones that broke out, fewer than half were still above the level ten sessions later. That is the single most useful number in this app: a breakout is an event, not an outcome, and the base rate for it holding is close to a coin toss. Breakouts on heavy volume held 52% of the time against 41% on light volume — consistent with the point in step 3, though that comparison is 'still above the level', not a return measurement, and is not a controlled test." />
-      <Step n="7" title="Look up any name" body="The header field runs the same coil filters, sector shape, and setup checks on a symbol you type. The drawer reports which structural state the last close sits in — pre-trigger, at trigger, at the pullback line, structure intact, or structure broken — together with the structure level under the 20-day base (or 1.5 ATR), the 2R level and the measured move. Those are arithmetic from the base, not a measured edge and not instructions. Enter your own price to recompute them from it. Click a symbol on any list for the same drawer." />
+      <Step n="7" title="Look up any name" body="The header field runs the same coil filters, sector shape, and setup checks on a symbol you type. The drawer reports the structural state of the last close, the coil filters, and the sector behind the name. Those are observations about the chart, not instructions. Click a symbol on any list for the same drawer." />
 
       <H>What each state means</H>
       <P>

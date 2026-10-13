@@ -287,7 +287,6 @@ export default function App() {
         loading={stockLoading}
         onOpenSector={openSector}
         onLookup={openStock}
-        onEntry={(price) => stockQuery && openStock(stock?.symbol || stockQuery, price)}
       />
     </Box>
   );

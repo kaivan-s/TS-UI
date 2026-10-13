@@ -6,8 +6,9 @@ import { EVIDENCE_WINDOW, STAT_STRIPS } from "../evidence.js";
  * What a list has historically been worth, stated up front.
  *
  * This replaces the paragraph of disclaimers each list used to carry. A
- * reader who sees "66% beat the market, median +3.7%" already knows a third
- * of these go nowhere, which the hedging was trying and failing to say.
+ * reader who sees "66% above the market median, 20 days later" already
+ * knows a third of these go nowhere. The figure is a backtest base rate,
+ * not a return to expect.
  */
 export default function BaseRate({ metric }) {
   const strip = STAT_STRIPS[metric];

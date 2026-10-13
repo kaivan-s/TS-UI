@@ -28,7 +28,7 @@ const FILTERS = [
   {
     id: "agree",
     label: "Sector agrees",
-    help: "Coiled stocks whose sector is also waking up or resting after waking up. Grouped by sector, because names inside one sector tend to resolve together. Measured +3.7% median excess over 20 sessions against the all-stock median.",
+    help: "Coiled stocks whose sector is also waking up or resting after waking up. Grouped by sector, because names inside one sector tend to resolve together. In the backtest window, more of these traded above the same session's all-stock median 20 days later than coils alone. One window, not a promise.",
   },
   {
     id: "rest",

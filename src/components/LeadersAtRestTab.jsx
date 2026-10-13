@@ -209,7 +209,7 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                   key={r.symbol}
                   hover
                   sx={
-                    r.recommended
+                    r.shape_confirmed
                       ? { "& td:first-of-type": { boxShadow: `inset 2px 0 0 ${C.good}` } }
                       : undefined
                   }
@@ -226,7 +226,7 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                     onClick={() => onOpenStock?.(r.symbol)}
                   >
                     {r.symbol}
-                    {r.recommended && (
+                    {r.shape_confirmed && (
                       <Tooltip
                         title="This stock's sector is also waking up or resting after waking up, so it appears under Sector agrees too."
                         placement="top"
