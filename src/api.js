@@ -64,3 +64,16 @@ export const getCarryIntraday = (asOf = null) =>
 export const getScanners = () => json("/api/scanners");
 export const getScannersIntraday = () => json("/api/scanners/intraday");
 export const getScannersEod = () => json("/api/scanners/eod");
+
+// Fundamentals screen
+export const getFundamentalsScreen = (params = {}) => {
+  const qs = new URLSearchParams();
+  if (params.min_mcap) qs.set("min_mcap", params.min_mcap);
+  if (params.max_pe) qs.set("max_pe", params.max_pe);
+  if (params.min_growth) qs.set("min_growth", params.min_growth);
+  if (params.sector) qs.set("sector", params.sector);
+  if (params.sort) qs.set("sort", params.sort);
+  if (params.order) qs.set("order", params.order);
+  qs.set("limit", params.limit || 500);
+  return json(`/api/fundamentals/screen?${qs}`);
+};

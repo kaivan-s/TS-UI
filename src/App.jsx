@@ -18,6 +18,7 @@ import MarketView from "./components/MarketView.jsx";
 import SectorsView from "./components/SectorsView.jsx";
 import Guide from "./components/Guide.jsx";
 import Pricing from "./components/Pricing.jsx";
+import FundamentalsView from "./components/FundamentalsView.jsx";
 import PrivacyPolicy from "./components/PrivacyPolicy.jsx";
 import TermsConditions from "./components/TermsConditions.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
@@ -29,6 +30,7 @@ const PATH_TO_VIEW = {
   "/setups": "setups",
   "/sectors": "sectors",
   "/tracking": "tracking",
+  "/fundamentals": "fundamentals",
   "/market": "market",
   "/carry": "market",
   "/scanners": "market",
@@ -237,6 +239,10 @@ export default function App() {
 
           {view === "tracking" && (
             <TrackingView onOpenSector={openSector} onOpenStock={openStock} />
+          )}
+
+          {view === "fundamentals" && (
+            <FundamentalsView onOpenStock={openStock} />
           )}
 
           {view === "market" && <MarketView onOpenStock={openStock} />}

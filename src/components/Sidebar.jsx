@@ -8,6 +8,7 @@ import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
+import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
 import CloseIcon from "@mui/icons-material/Close";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
@@ -34,6 +35,13 @@ const NAV_ITEMS = [
     Icon: HistoryRoundedIcon,
     label: "Tracking",
     desc: "What happened to past bases",
+  },
+  {
+    id: "fundamentals",
+    path: "/fundamentals",
+    Icon: AccountBalanceRoundedIcon,
+    label: "Fundamentals",
+    desc: "PE, earnings, promoter, growth",
   },
   {
     id: "market",
