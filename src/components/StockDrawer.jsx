@@ -23,6 +23,7 @@ import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";
 import BarChartRoundedIcon from "@mui/icons-material/BarChartRounded";
 import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
 import KlassChip from "./KlassChip.jsx";
+import TvChart from "./TvChart.jsx";
 import { HeadCell } from "./ui.jsx";
 import { BookmarkButton } from "../watchlist.jsx";
 import { C } from "../theme.js";
@@ -288,6 +289,9 @@ export default function StockDrawer({
                 {data.why}
               </Typography>
             )}
+
+            {/* TradingView chart */}
+            <TvChart symbol={data.symbol} height={420} />
 
             {/* Structural levels: arithmetic from the 20-day base and ATR.
                 Deliberately described, not prescribed — no advisory
