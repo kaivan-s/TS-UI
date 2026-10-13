@@ -29,19 +29,21 @@ const COLORS = {
 };
 
 function TvChartInner({ symbol, height = 400 }) {
-  const chartRef = useRef(null);
   const containerRef = useRef(null);
+  const chartObjRef = useRef(null);
   const [period, setPeriod] = useState("1y");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Create chart once per symbol
+  // Single effect: create chart + fetch data together
   useEffect(() => {
-    if (!symbol || !containerRef.current) return;
-
     const container = containerRef.current;
+    if (!symbol || !container) return;
+
+    let cancelled = false;
     const chartHeight = height - 36;
 
+    // Create chart
     const chart = createChart(container, {
       layout: {
         background: { type: ColorType.Solid, color: COLORS.bg },
@@ -57,13 +59,8 @@ function TvChartInner({ symbol, height = 400 }) {
         vertLine: { color: COLORS.crosshair, labelBackgroundColor: "#333" },
         horzLine: { color: COLORS.crosshair, labelBackgroundColor: "#333" },
       },
-      rightPriceScale: {
-        borderColor: COLORS.border,
-      },
-      timeScale: {
-        borderColor: COLORS.border,
-        timeVisible: false,
-      },
+      rightPriceScale: { borderColor: COLORS.border },
+      timeScale: { borderColor: COLORS.border, timeVisible: false },
       width: container.clientWidth,
       height: chartHeight,
     });
@@ -86,8 +83,9 @@ function TvChartInner({ symbol, height = 400 }) {
       scaleMargins: { top: 0.8, bottom: 0 },
     });
 
-    chartRef.current = { chart, candleSeries, volumeSeries };
+    chartObjRef.current = { chart, candleSeries, volumeSeries };
 
+    // Resize handler
     const ro = new ResizeObserver(() => {
       if (container.clientWidth > 0) {
         chart.applyOptions({ width: container.clientWidth });
@@ -95,37 +93,35 @@ function TvChartInner({ symbol, height = 400 }) {
     });
     ro.observe(container);
 
-    return () => {
-      ro.disconnect();
-      chart.remove();
-      chartRef.current = null;
-    };
-  }, [symbol, height]);
-
-  // Fetch data when symbol or period changes
-  useEffect(() => {
-    if (!symbol || !chartRef.current) return;
-
+    // Fetch data
     setLoading(true);
     setError("");
 
     getChartData(symbol, period)
       .then((d) => {
-        if (!chartRef.current) return;
-        const { candleSeries, volumeSeries, chart } = chartRef.current;
-
+        if (cancelled) return;
         if (!d.data?.length) {
           setError("No chart data available");
           return;
         }
-
         candleSeries.setData(d.data);
         volumeSeries.setData(d.volume || []);
         chart.timeScale().fitContent();
       })
-      .catch((e) => setError(e.message || "Failed to load chart"))
-      .finally(() => setLoading(false));
-  }, [symbol, period]);
+      .catch((e) => {
+        if (!cancelled) setError(e.message || "Failed to load chart");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+      ro.disconnect();
+      chart.remove();
+      chartObjRef.current = null;
+    };
+  }, [symbol, period, height]);
 
   if (!symbol) return null;
 
