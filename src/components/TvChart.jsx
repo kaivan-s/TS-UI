@@ -1,9 +1,9 @@
 /**
  * Candlestick + Volume chart using TradingView's lightweight-charts v5.
  *
- * Data comes from our own backend (/api/chart-data) which pulls from
- * Yahoo Finance. Waits for the drawer animation before creating the chart
- * so the container has a real width.
+ * Uses autoSize:true so the chart fills its container automatically —
+ * no manual width measurement, no drawer animation timing issues.
+ * Data from our backend (/api/chart-data → Yahoo Finance).
  */
 
 import { useEffect, useRef, useState, memo } from "react";
@@ -31,105 +31,99 @@ const COLORS = {
 
 function TvChartInner({ symbol, height = 400 }) {
   const containerRef = useRef(null);
+  const chartRef = useRef(null);
+  const candleRef = useRef(null);
+  const volumeRef = useRef(null);
   const [period, setPeriod] = useState("1y");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Create chart once per symbol — autoSize handles drawer animation
   useEffect(() => {
-    const container = containerRef.current;
-    if (!symbol || !container) return;
+    if (!symbol || !containerRef.current) return;
 
-    let cancelled = false;
-    let chart = null;
-    let ro = null;
-    const chartHeight = height - 36;
+    const chart = createChart(containerRef.current, {
+      autoSize: true,
+      layout: {
+        background: { type: ColorType.Solid, color: COLORS.bg },
+        textColor: COLORS.text,
+        fontFamily: "'Inter', -apple-system, sans-serif",
+        fontSize: 11,
+      },
+      grid: {
+        vertLines: { color: COLORS.grid },
+        horzLines: { color: COLORS.grid },
+      },
+      crosshair: {
+        vertLine: { color: COLORS.crosshair, labelBackgroundColor: "#333" },
+        horzLine: { color: COLORS.crosshair, labelBackgroundColor: "#333" },
+      },
+      rightPriceScale: { borderColor: COLORS.border },
+      timeScale: { borderColor: COLORS.border, timeVisible: false },
+    });
 
-    // Wait for the drawer slide animation to finish so the container
-    // has a real width. Without this, createChart gets width=0.
-    const timer = setTimeout(() => {
-      if (cancelled) return;
+    const candles = chart.addSeries(CandlestickSeries, {
+      upColor: COLORS.up,
+      downColor: COLORS.down,
+      borderUpColor: COLORS.up,
+      borderDownColor: COLORS.down,
+      wickUpColor: COLORS.up,
+      wickDownColor: COLORS.down,
+    });
 
-      const w = container.clientWidth;
-      if (w < 50) return; // still not visible
+    const volumes = chart.addSeries(HistogramSeries, {
+      priceFormat: { type: "volume" },
+      priceScaleId: "volume",
+    });
 
-      chart = createChart(container, {
-        layout: {
-          background: { type: ColorType.Solid, color: COLORS.bg },
-          textColor: COLORS.text,
-          fontFamily: "'Inter', -apple-system, sans-serif",
-          fontSize: 11,
-        },
-        grid: {
-          vertLines: { color: COLORS.grid },
-          horzLines: { color: COLORS.grid },
-        },
-        crosshair: {
-          vertLine: { color: COLORS.crosshair, labelBackgroundColor: "#333" },
-          horzLine: { color: COLORS.crosshair, labelBackgroundColor: "#333" },
-        },
-        rightPriceScale: { borderColor: COLORS.border },
-        timeScale: { borderColor: COLORS.border, timeVisible: false },
-        width: w,
-        height: chartHeight,
-      });
+    chart.priceScale("volume").applyOptions({
+      scaleMargins: { top: 0.8, bottom: 0 },
+    });
 
-      const candleSeries = chart.addSeries(CandlestickSeries, {
-        upColor: COLORS.up,
-        downColor: COLORS.down,
-        borderUpColor: COLORS.up,
-        borderDownColor: COLORS.down,
-        wickUpColor: COLORS.up,
-        wickDownColor: COLORS.down,
-      });
-
-      const volumeSeries = chart.addSeries(HistogramSeries, {
-        priceFormat: { type: "volume" },
-        priceScaleId: "volume",
-      });
-
-      chart.priceScale("volume").applyOptions({
-        scaleMargins: { top: 0.8, bottom: 0 },
-      });
-
-      ro = new ResizeObserver(() => {
-        if (container.clientWidth > 0 && chart) {
-          chart.applyOptions({ width: container.clientWidth });
-        }
-      });
-      ro.observe(container);
-
-      // Fetch data
-      setLoading(true);
-      setError("");
-
-      getChartData(symbol, period)
-        .then((d) => {
-          if (cancelled || !chart) return;
-          if (!d.data?.length) {
-            setError("No chart data available");
-            return;
-          }
-          candleSeries.setData(d.data);
-          volumeSeries.setData(d.volume || []);
-          chart.timeScale().fitContent();
-        })
-        .catch((e) => {
-          if (!cancelled) setError(e.message || "Failed to load chart");
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
-        });
-    }, 350); // wait for MUI Drawer slide transition
+    chartRef.current = chart;
+    candleRef.current = candles;
+    volumeRef.current = volumes;
 
     return () => {
-      cancelled = true;
-      clearTimeout(timer);
-      if (ro) ro.disconnect();
-      if (chart) chart.remove();
+      chart.remove();
+      chartRef.current = null;
+      candleRef.current = null;
+      volumeRef.current = null;
     };
-  }, [symbol, period, height]);
+  }, [symbol]);
+
+  // Fetch data when symbol or period changes
+  useEffect(() => {
+    if (!symbol || !candleRef.current) return;
+
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+
+    getChartData(symbol, period)
+      .then((d) => {
+        if (cancelled || !candleRef.current) return;
+        if (!d.data?.length) {
+          setError("No chart data available");
+          return;
+        }
+        candleRef.current.setData(d.data);
+        volumeRef.current.setData(d.volume || []);
+        chartRef.current.timeScale().fitContent();
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e.message || "Failed to load chart");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [symbol, period]);
 
   if (!symbol) return null;
+
+  const chartHeight = height - 36;
 
   return (
     <Box
@@ -175,7 +169,11 @@ function TvChartInner({ symbol, height = 400 }) {
         </ToggleButtonGroup>
       </Box>
 
-      <div ref={containerRef} style={{ width: "100%", height: height - 36 }} />
+      {/* Container must have explicit height for autoSize to work */}
+      <div
+        ref={containerRef}
+        style={{ width: "100%", height: chartHeight }}
+      />
 
       {(loading || error) && (
         <Box
