@@ -9,6 +9,7 @@ import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CloseIcon from "@mui/icons-material/Close";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
@@ -42,6 +43,13 @@ const NAV_ITEMS = [
     Icon: AccountBalanceRoundedIcon,
     label: "Fundamentals",
     desc: "PE, earnings, promoter, growth",
+  },
+  {
+    id: "results",
+    path: "/results",
+    Icon: CalendarMonthRoundedIcon,
+    label: "Results",
+    desc: "Upcoming quarterly earnings dates",
   },
   {
     id: "market",

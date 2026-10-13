@@ -77,3 +77,7 @@ export const getFundamentalsScreen = (params = {}) => {
   qs.set("limit", params.limit || 500);
   return json(`/api/fundamentals/screen?${qs}`);
 };
+
+// Results calendar
+export const getResultsCalendar = (days = 45) =>
+  json(`/api/results-calendar?days=${days}`);
