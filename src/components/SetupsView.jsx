@@ -21,7 +21,6 @@ import BuysTab from "./BuysTab.jsx";
 import LeadersAtRestTab from "./LeadersAtRestTab.jsx";
 import { C } from "../theme.js";
 
-// How many rows to show free users as a preview
 const FREE_PREVIEW_SETUPS = 1;
 const FREE_PREVIEW_LEADERS = 2;
 
@@ -38,6 +37,124 @@ const FILTERS = [
   },
 ];
 
+function MarketQuietCard({ status }) {
+  const bullish = status?.bullish_sectors ?? 0;
+  const total = status?.total_sectors ?? 59;
+  const pct = total ? Math.round((bullish / total) * 100) : 0;
+  const nCoil = status?.n_coil ?? 0;
+  const session = status?.session || status?.as_of || "—";
+  const lastSetupDate = status?.dates?.setups;
+
+  return (
+    <Box
+      sx={{
+        mt: 1,
+        mb: 3,
+        px: 2.5,
+        py: 2.5,
+        borderRadius: 2,
+        border: `1px solid ${C.line}`,
+        bgcolor: C.paper,
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5 }}>
+        <Box sx={{
+          width: 36, height: 36, borderRadius: "50%",
+          bgcolor: "rgba(196,164,106,0.10)", display: "flex",
+          alignItems: "center", justifyContent: "center", fontSize: 18,
+        }}>
+          ⏸️
+        </Box>
+        <Box>
+          <Typography sx={{ fontSize: 15, fontWeight: 600, color: C.text }}>
+            Market isn't offering setups right now
+          </Typography>
+          <Typography sx={{ fontSize: 12, color: C.muted }}>
+            As of {session} — the scan ran, but no sectors qualify
+          </Typography>
+        </Box>
+      </Box>
+
+      <Box sx={{
+        display: "flex", gap: 2, flexWrap: "wrap", mt: 2, mb: 2,
+        "& > div": {
+          flex: "1 1 120px", px: 1.5, py: 1.25, borderRadius: 1,
+          bgcolor: C.surface, border: `1px solid ${C.line}`,
+        },
+      }}>
+        <Box>
+          <Typography sx={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            Sectors in uptrend
+          </Typography>
+          <Typography sx={{ fontSize: 20, fontWeight: 700, color: bullish > 0 ? C.warn : C.muted }}>
+            {bullish}<Typography component="span" sx={{ fontSize: 13, color: C.muted, fontWeight: 400 }}>/{total}</Typography>
+          </Typography>
+          <Typography sx={{ fontSize: 11, color: C.muted }}>
+            {pct}% — needs ≥40% for setups
+          </Typography>
+        </Box>
+        <Box>
+          <Typography sx={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            Coiled stocks
+          </Typography>
+          <Typography sx={{ fontSize: 20, fontWeight: 700, color: C.text }}>
+            {nCoil}
+          </Typography>
+          <Typography sx={{ fontSize: 11, color: C.muted }}>
+            compressed — waiting for sectors
+          </Typography>
+        </Box>
+        <Box>
+          <Typography sx={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5 }}>
+            Last setups
+          </Typography>
+          <Typography sx={{ fontSize: 20, fontWeight: 700, color: C.text }}>
+            {lastSetupDate || "—"}
+          </Typography>
+          <Typography sx={{ fontSize: 11, color: C.muted }}>
+            most recent qualifying list
+          </Typography>
+        </Box>
+      </Box>
+
+      <Typography sx={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+        Setups appear when a coiled stock's sector is also in CROSSING or PULLBACK.
+        Right now most sectors are basing or declining, so the intersection is empty.
+        This is the system working — not every session produces a setup,
+        and sitting out is part of the methodology.
+      </Typography>
+      <Typography sx={{ fontSize: 12, color: C.muted, mt: 1.5, fontStyle: "italic" }}>
+        💡 Check "Leaders at rest" — it doesn't require sector agreement
+        and is usually populated even in quiet markets.
+      </Typography>
+    </Box>
+  );
+}
+
+function StaleSetupsBanner({ status }) {
+  return (
+    <Box
+      sx={{
+        mb: 2,
+        px: 1.5,
+        py: 1.25,
+        borderRadius: 1,
+        border: `1px solid ${C.line}`,
+        bgcolor: "rgba(196,164,106,0.06)",
+      }}
+    >
+      <Typography sx={{ fontSize: 13, color: C.warn }}>
+        No sector agreed in the {status?.session || status?.as_of} session
+      </Typography>
+      <Typography sx={{ fontSize: 12, color: C.muted, mt: 0.25 }}>
+        Below is the last list that had any, from{" "}
+        {status?.dates?.setups} — history, not tonight's candidates.
+        Leaders at rest is current.
+      </Typography>
+    </Box>
+  );
+}
+
 export default function SetupsView({
   buys,
   rest,
@@ -50,14 +167,11 @@ export default function SetupsView({
 
   const counts = { agree: buys.length, rest: rest.length };
 
-  // For free users: slice the data to preview count
   const previewBuys = isPremium ? buys : buys.slice(0, FREE_PREVIEW_SETUPS);
   const previewRest = isPremium ? rest : rest.slice(0, FREE_PREVIEW_LEADERS);
 
-  // A night where no sector agreed saves no setup rows, so the newest ones
-  // in the table are from an earlier session. They still render, but saying
-  // nothing would present a four-day-old list as tonight's.
   const setupsStale = (status?.stale || []).includes("setups");
+  const noSetupsAtAll = buys.length === 0 && setupsStale;
 
   return (
     <Box>
@@ -99,38 +213,36 @@ export default function SetupsView({
 
       {filter === "agree" ? (
         <>
-          {setupsStale && (
-            <Box
-              sx={{
-                mb: 2,
-                px: 1.5,
-                py: 1.25,
-                borderRadius: 1,
-                border: `1px solid ${C.line}`,
-                bgcolor: "rgba(196,164,106,0.06)",
-              }}
+          {noSetupsAtAll ? (
+            <MarketQuietCard status={status} />
+          ) : setupsStale ? (
+            <>
+              <StaleSetupsBanner status={status} />
+              <PremiumOverlay
+                previewCount={FREE_PREVIEW_SETUPS}
+                totalCount={buys.length}
+                feature="Full setups list"
+              >
+                <BuysTab
+                  rows={previewBuys}
+                  onOpenSector={onOpenSector}
+                  onOpenStock={onOpenStock}
+                />
+              </PremiumOverlay>
+            </>
+          ) : (
+            <PremiumOverlay
+              previewCount={FREE_PREVIEW_SETUPS}
+              totalCount={buys.length}
+              feature="Full setups list"
             >
-              <Typography sx={{ fontSize: 13, color: C.warn }}>
-                No sector agreed in the {status?.session} session.
-              </Typography>
-              <Typography sx={{ fontSize: 12, color: C.muted, mt: 0.25 }}>
-                Below is the last list that had any, from{" "}
-                {status?.dates?.setups} — history, not tonight's candidates.
-                Leaders at rest is current.
-              </Typography>
-            </Box>
+              <BuysTab
+                rows={previewBuys}
+                onOpenSector={onOpenSector}
+                onOpenStock={onOpenStock}
+              />
+            </PremiumOverlay>
           )}
-          <PremiumOverlay
-            previewCount={FREE_PREVIEW_SETUPS}
-            totalCount={buys.length}
-            feature="Full setups list"
-          >
-            <BuysTab
-              rows={previewBuys}
-              onOpenSector={onOpenSector}
-              onOpenStock={onOpenStock}
-            />
-          </PremiumOverlay>
         </>
       ) : (
         <PremiumOverlay
