@@ -82,9 +82,12 @@ export const getFundamentalsScreen = (params = {}) => {
 export const getResultsCalendar = (days = 45) =>
   json(`/api/results-calendar?days=${days}`);
 
-// Chart data
-export const getChartData = (symbol, period = "1y") =>
-  json(`/api/chart-data?symbol=${encodeURIComponent(symbol)}&period=${period}`);
+// Chart data — uses raw fetch (the json() wrapper's res.json() fails on large responses)
+export const getChartData = async (symbol, period = "1y") => {
+  const res = await fetch(`/api/chart-data?symbol=${encodeURIComponent(symbol)}&period=${period}`);
+  if (!res.ok) throw new Error(`Chart data: HTTP ${res.status}`);
+  return res.json();
+};
 
 // Watchlist
 export const getWatchlist = () => json("/api/watchlist");
