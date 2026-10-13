@@ -21,6 +21,7 @@ import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";
 import BarChartRoundedIcon from "@mui/icons-material/BarChartRounded";
+import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
 import KlassChip from "./KlassChip.jsx";
 import { HeadCell } from "./ui.jsx";
 import { C } from "../theme.js";
@@ -44,6 +45,27 @@ const PHASE = {
   momentum: { fg: C.warn, label: "Volume break" },
   watching: { fg: C.muted, label: "Watching" },
 };
+
+const TREND = {
+  "↑↑": { label: "Accelerating", fg: C.good, bg: "rgba(125,186,150,0.12)" },
+  "↑":  { label: "Growing",      fg: C.good, bg: "rgba(125,186,150,0.08)" },
+  "→":  { label: "Flat",         fg: C.warn, bg: "rgba(196,164,106,0.08)" },
+  "↓":  { label: "Declining",    fg: C.bad,  bg: "rgba(200,122,122,0.08)" },
+  "?":  { label: "No data",      fg: C.muted, bg: "rgba(238,234,227,0.04)" },
+};
+
+function fmtCr(v) {
+  if (v == null || Number.isNaN(Number(v))) return "—";
+  const n = Number(v);
+  if (n >= 100000) return `₹${(n / 100000).toFixed(1)}L Cr`;
+  if (n >= 1000) return `₹${(n / 1000).toFixed(1)}K Cr`;
+  return `₹${n.toFixed(0)} Cr`;
+}
+
+function growthColor(v) {
+  if (v == null) return undefined;
+  return v > 0.05 ? C.good : v < -0.05 ? C.bad : C.warn;
+}
 
 function PhaseChip({ phase, label }) {
   const p = PHASE[phase] || PHASE.watching;
@@ -343,6 +365,80 @@ export default function StockDrawer({
                 </Typography>
               </Card>
             )}
+
+            {/* Fundamentals Card */}
+            {data.fundamentals && data.fundamentals.market_cap_cr != null && (() => {
+              const f = data.fundamentals;
+              const t = TREND[f.earnings_trend] || TREND["?"];
+              return (
+                <Card>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+                    <SectionTitle icon={AccountBalanceRoundedIcon}>Fundamentals</SectionTitle>
+                    <Chip
+                      size="small"
+                      label={`${f.earnings_trend || "?"} ${t.label}`}
+                      sx={{ bgcolor: t.bg, color: t.fg, fontWeight: 600, fontSize: 12 }}
+                    />
+                  </Box>
+
+                  {/* Row 1: Headline numbers */}
+                  <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 2.5, mb: 2.5 }}>
+                    <Metric label="Market Cap" value={fmtCr(f.market_cap_cr)} />
+                    <Metric label="PE (TTM)" value={f.pe_ttm != null ? num(f.pe_ttm, 1) : "—"}
+                            color={f.pe_ttm > 0 && f.pe_ttm < 25 ? C.good : f.pe_ttm > 50 ? C.bad : undefined} />
+                    <Metric label="Promoter %" value={f.promoter_pct != null ? `${num(f.promoter_pct, 1)}%` : "—"}
+                            color={f.promoter_pct >= 50 ? C.good : f.promoter_pct < 30 ? C.bad : undefined} />
+                    <Metric label="OPM" value={f.latest_opm_pct != null ? `${num(f.latest_opm_pct, 1)}%` : "—"}
+                            color={f.latest_opm_pct > 15 ? C.good : f.latest_opm_pct < 5 ? C.bad : undefined} />
+                  </Box>
+
+                  {/* Row 2: TTM + growth */}
+                  <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 2.5, mb: 2.5 }}>
+                    <Metric label="TTM Revenue" value={fmtCr(f.ttm_revenue_cr)} />
+                    <Metric label="TTM PAT" value={fmtCr(f.ttm_pat_cr)} />
+                    <Metric label="Rev Growth YoY" value={f.latest_revenue_growth_yoy != null ? pct(f.latest_revenue_growth_yoy) : "—"}
+                            color={growthColor(f.latest_revenue_growth_yoy)} />
+                    <Metric label="PAT Growth YoY" value={f.latest_pat_growth_yoy != null ? pct(f.latest_pat_growth_yoy) : "—"}
+                            color={growthColor(f.latest_pat_growth_yoy)} />
+                  </Box>
+
+                  {/* Quarterly breakdown mini-table */}
+                  {f.quarters?.length > 0 && (
+                    <Box sx={{ overflowX: "auto" }}>
+                      <Table size="small" sx={{ minWidth: 380 }}>
+                        <TableHead>
+                          <TableRow>
+                            <HeadCell label="Quarter" />
+                            <HeadCell label="Revenue" align="right" />
+                            <HeadCell label="PAT" align="right" />
+                            <HeadCell label="OPM %" align="right" />
+                            <HeadCell label="EPS" align="right" />
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {f.quarters.slice(0, 6).map((q) => (
+                            <TableRow key={q.quarter} sx={{ "&:last-child td": { border: 0 } }}>
+                              <TableCell sx={{ fontSize: 12, py: 0.8, fontWeight: 500 }}>{q.quarter}</TableCell>
+                              <TableCell align="right" className="num" sx={{ fontSize: 12, py: 0.8 }}>{fmtCr(q.revenue_cr)}</TableCell>
+                              <TableCell align="right" className="num" sx={{ fontSize: 12, py: 0.8,
+                                color: q.pat_cr > 0 ? C.good : q.pat_cr < 0 ? C.bad : undefined }}>{fmtCr(q.pat_cr)}</TableCell>
+                              <TableCell align="right" className="num" sx={{ fontSize: 12, py: 0.8 }}>{q.opm_pct != null ? `${num(q.opm_pct, 1)}%` : "—"}</TableCell>
+                              <TableCell align="right" className="num" sx={{ fontSize: 12, py: 0.8 }}>{q.eps_basic != null ? num(q.eps_basic, 2) : "—"}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </Box>
+                  )}
+
+                  {f.industry && (
+                    <Typography sx={{ fontSize: 11, color: "rgba(238,234,227,0.4)", mt: 1.5 }}>
+                      {f.industry}{f.updated_at ? ` · Updated ${fmtDate(f.updated_at?.slice(0, 10))}` : ""}
+                    </Typography>
+                  )}
+                </Card>
+              );
+            })()}
 
             {/* Coil Status Card */}
             {filters.length > 0 && (
