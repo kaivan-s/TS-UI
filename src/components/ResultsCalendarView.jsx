@@ -86,58 +86,91 @@ function RelativeBadge({ dateStr }) {
   return null;
 }
 
-/** One stock row in the day-detail panel. */
-function DetailRow({ r, onOpenStock }) {
+/** A compact labelled statistic used inside the detail card. */
+function Stat({ label, value, color = C.text, tip }) {
+  const body = (
+    <Box sx={{ minWidth: 0 }}>
+      <Typography sx={{ fontSize: 9.5, color: C.muted, letterSpacing: "0.05em", textTransform: "uppercase", lineHeight: 1.4 }}>
+        {label}
+      </Typography>
+      <Typography className="num" sx={{ fontSize: 12.5, fontWeight: 600, color, lineHeight: 1.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        {value}
+      </Typography>
+    </Box>
+  );
+  return tip ? <Tooltip title={tip} arrow placement="top">{body}</Tooltip> : body;
+}
+
+/** One stock card in the day-detail panel. */
+function DetailCard({ r, onOpenStock }) {
   const t = r.earnings_trend || "?";
   const ts = TREND_STYLE[t] || TREND_STYLE["?"];
+  const peColor = r.pe_ttm > 0 && r.pe_ttm < 25 ? C.good : r.pe_ttm > 50 ? C.bad : C.text;
   return (
     <Box
       onClick={() => onOpenStock?.(r.symbol)}
       sx={{
-        display: "flex", alignItems: "center", gap: 2, px: 2, py: 1,
-        borderRadius: 1,
+        p: 1.5,
+        borderRadius: 1.5,
+        border: `1px solid ${C.line}`,
+        bgcolor: "rgba(238,234,227,0.025)",
         cursor: onOpenStock ? "pointer" : "default",
-        "&:hover": { bgcolor: "rgba(238,234,227,0.04)" },
-        transition: "background 0.1s",
+        transition: "border-color 0.1s, background 0.1s, transform 0.1s",
+        "&:hover": onOpenStock ? {
+          borderColor: C.accent,
+          bgcolor: "rgba(142,180,196,0.06)",
+        } : {},
       }}
     >
-      <Box sx={{ minWidth: 180 }}>
-        <Typography sx={{ fontSize: 13.5, fontWeight: 600, color: C.text }}>{r.symbol}</Typography>
-        {r.name && (
-          <Typography sx={{ fontSize: 11, color: C.muted, lineHeight: 1.3 }}>
-            {r.name.length > 35 ? r.name.slice(0, 33) + "…" : r.name}
+      {/* Top: symbol + name, trend badge on the right */}
+      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 1 }}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography sx={{ fontSize: 14, fontWeight: 700, color: C.text, letterSpacing: "-0.01em" }}>
+            {r.symbol}
           </Typography>
-        )}
-      </Box>
-      <Tooltip title={ts.label} placement="top" arrow>
-        <Typography sx={{ fontSize: 16, color: ts.color, fontWeight: 600, minWidth: 28, textAlign: "center", cursor: "help" }}>
-          {ts.icon}
-        </Typography>
-      </Tooltip>
-      <Typography className="num" sx={{ fontSize: 12, color: C.muted, minWidth: 80, textAlign: "right" }}>
-        {fmtCr(r.market_cap_cr)}
-      </Typography>
-      <Typography className="num" sx={{
-        fontSize: 12, minWidth: 50, textAlign: "right",
-        color: r.pe_ttm > 0 && r.pe_ttm < 25 ? C.good : r.pe_ttm > 50 ? C.bad : C.muted,
-      }}>
-        {r.pe_ttm != null ? `${num(r.pe_ttm, 1)}x` : "—"}
-      </Typography>
-      {r.eps_estimate != null && (
-        <Tooltip title={`EPS estimate: ₹${num(r.eps_estimate, 2)} (range: ${num(r.eps_low, 2)}–${num(r.eps_high, 2)})`} arrow>
-          <Typography className="num" sx={{ fontSize: 12, color: C.accent, minWidth: 90, cursor: "help" }}>
-            EPS est ₹{num(r.eps_estimate, 1)}
-          </Typography>
+          {r.name && (
+            <Typography sx={{ fontSize: 11, color: C.muted, lineHeight: 1.35, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              {r.name}
+            </Typography>
+          )}
+        </Box>
+        <Tooltip title={ts.label} placement="top" arrow>
+          <Box sx={{
+            display: "flex", alignItems: "center", gap: 0.5, flexShrink: 0,
+            px: 0.75, py: "2px", borderRadius: 999,
+            bgcolor: `${ts.color}1f`,
+          }}>
+            <Typography sx={{ fontSize: 13, color: ts.color, fontWeight: 700, lineHeight: 1 }}>{ts.icon}</Typography>
+            <Typography sx={{ fontSize: 10, color: ts.color, fontWeight: 600 }}>{ts.label}</Typography>
+          </Box>
         </Tooltip>
+      </Box>
+
+      {/* Stats grid */}
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 1, mb: r.industry ? 1 : 0 }}>
+        <Stat label="Mkt cap" value={fmtCr(r.market_cap_cr) || "—"} color={C.text} />
+        <Stat label="P/E" value={r.pe_ttm != null ? `${num(r.pe_ttm, 1)}x` : "—"} color={peColor} />
+        <Stat
+          label="EPS est"
+          value={r.eps_estimate != null ? `₹${num(r.eps_estimate, 1)}` : "—"}
+          color={r.eps_estimate != null ? C.accent : C.muted}
+          tip={r.eps_estimate != null ? `EPS estimate ₹${num(r.eps_estimate, 2)} (range ${num(r.eps_low, 2)}–${num(r.eps_high, 2)})` : undefined}
+        />
+        <Stat
+          label="Rev est"
+          value={r.revenue_estimate_cr != null ? fmtCr(r.revenue_estimate_cr) : "—"}
+          color={r.revenue_estimate_cr != null ? C.text : C.muted}
+        />
+      </Box>
+
+      {/* Industry footer */}
+      {r.industry && (
+        <Box sx={{ pt: 1, borderTop: `1px solid ${C.line}` }}>
+          <Typography sx={{ fontSize: 10.5, color: C.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {r.industry}
+          </Typography>
+        </Box>
       )}
-      {r.revenue_estimate_cr != null && (
-        <Typography className="num" sx={{ fontSize: 12, color: C.muted, minWidth: 90 }}>
-          Rev est {fmtCr(r.revenue_estimate_cr)}
-        </Typography>
-      )}
-      <Typography sx={{ fontSize: 11, color: "rgba(238,234,227,0.35)", flex: 1, textAlign: "right" }}>
-        {r.industry || ""}
-      </Typography>
     </Box>
   );
 }
@@ -475,9 +508,13 @@ export default function ResultsCalendarView({ onOpenStock }) {
                 </Typography>
                 <RelativeBadge dateStr={selected} />
               </Box>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, pl: 1 }}>
+              <Box sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                gap: 1.25,
+              }}>
                 {selectedRows.map((r) => (
-                  <DetailRow key={r.symbol} r={r} onOpenStock={onOpenStock} />
+                  <DetailCard key={r.symbol} r={r} onOpenStock={onOpenStock} />
                 ))}
               </Box>
             </Box>
@@ -509,9 +546,13 @@ export default function ResultsCalendarView({ onOpenStock }) {
                 </Typography>
                 <RelativeBadge dateStr={dateStr} />
               </Box>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, pl: 1 }}>
+              <Box sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                gap: 1.25,
+              }}>
                 {items.map((r) => (
-                  <DetailRow key={r.symbol} r={r} onOpenStock={onOpenStock} />
+                  <DetailCard key={r.symbol} r={r} onOpenStock={onOpenStock} />
                 ))}
               </Box>
             </Box>
