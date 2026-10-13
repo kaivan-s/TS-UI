@@ -10,6 +10,7 @@ import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
 import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import CloseIcon from "@mui/icons-material/Close";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
@@ -36,6 +37,13 @@ const NAV_ITEMS = [
     Icon: HistoryRoundedIcon,
     label: "Tracking",
     desc: "What happened to past bases",
+  },
+  {
+    id: "watchlist",
+    path: "/watchlist",
+    Icon: BookmarkRoundedIcon,
+    label: "Watchlist",
+    desc: "Your saved stocks",
   },
   {
     id: "fundamentals",

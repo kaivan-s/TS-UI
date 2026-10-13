@@ -23,7 +23,8 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
-import { HeadCell, PageIntro, useTableSort } from "./ui.jsx";
+import { HeadCell, PageIntro, TvCopyButton, useTableSort } from "./ui.jsx";
+import { BookmarkButton } from "../watchlist.jsx";
 import { C } from "../theme.js";
 import { num, pct } from "../format.js";
 import { getFundamentalsScreen } from "../api.js";
@@ -184,6 +185,7 @@ export default function FundamentalsView({ onOpenStock }) {
             >
               CSV
             </Button>
+            <TvCopyButton symbols={shown.map((r) => r.symbol)} />
           </Box>
         }
       >
@@ -274,6 +276,7 @@ export default function FundamentalsView({ onOpenStock }) {
           <Table stickyHeader sx={{ minWidth: 1100 }}>
             <TableHead>
               <TableRow>
+                <HeadCell label="" sx={{ width: 32, p: 0 }} />
                 <HeadCell label="Symbol" sort={sort} sortKey="symbol" />
                 <HeadCell label="Industry" sort={sort} sortKey="industry" sx={{ minWidth: 160 }} />
                 <HeadCell label="MCap" help="Market capitalisation in Crores" align="right" sort={sort} sortKey="market_cap_cr" />
@@ -295,6 +298,9 @@ export default function FundamentalsView({ onOpenStock }) {
                 const ts = TREND_STYLE[t] || TREND_STYLE["?"];
                 return (
                   <TableRow key={r.symbol} hover>
+                    <TableCell sx={{ py: 0, px: 0.5, width: 32 }}>
+                      <BookmarkButton symbol={r.symbol} />
+                    </TableCell>
                     <TableCell
                       className={onOpenStock ? "linkish" : undefined}
                       sx={{ fontWeight: 500 }}

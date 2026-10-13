@@ -81,3 +81,16 @@ export const getFundamentalsScreen = (params = {}) => {
 // Results calendar
 export const getResultsCalendar = (days = 45) =>
   json(`/api/results-calendar?days=${days}`);
+
+// Watchlist
+export const getWatchlist = () => json("/api/watchlist");
+export const addToWatchlist = (symbol, notes) =>
+  json("/api/watchlist", {
+    method: "POST",
+    body: JSON.stringify({ symbol, notes }),
+  });
+export const removeFromWatchlist = (symbol) =>
+  json("/api/watchlist", {
+    method: "DELETE",
+    body: JSON.stringify({ symbol }),
+  });

@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { AuthProvider } from "./auth.jsx";
+import { WatchlistProvider } from "./watchlist.jsx";
 import AppRoutes from "./routes.jsx";
 import { theme } from "./theme.js";
 import { initPostHog } from "./posthog.js";
@@ -16,7 +17,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <AuthProvider>
-          <AppRoutes />
+          <WatchlistProvider>
+            <AppRoutes />
+          </WatchlistProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

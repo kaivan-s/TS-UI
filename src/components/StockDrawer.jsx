@@ -24,6 +24,7 @@ import BarChartRoundedIcon from "@mui/icons-material/BarChartRounded";
 import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
 import KlassChip from "./KlassChip.jsx";
 import { HeadCell } from "./ui.jsx";
+import { BookmarkButton } from "../watchlist.jsx";
 import { C } from "../theme.js";
 import { fmtDate, num, pct } from "../format.js";
 import { M } from "../glossary.js";
@@ -237,9 +238,12 @@ export default function StockDrawer({
               )}
             </Box>
           </Box>
-          <IconButton onClick={onClose} size="small" sx={{ color: C.muted, mt: 0.5 }}>
-            <CloseIcon />
-          </IconButton>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
+            {data?.symbol && <BookmarkButton symbol={data.symbol} size="medium" />}
+            <IconButton onClick={onClose} size="small" sx={{ color: C.muted }}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
         </Box>
       </Box>
 

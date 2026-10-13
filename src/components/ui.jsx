@@ -328,6 +328,62 @@ export function WhyRow({ cols, children }) {
   );
 }
 
+/**
+ * Copy a list of NSE symbols to clipboard in TradingView format (NSE:SYMBOL).
+ * Returns a promise so callers can show feedback.
+ */
+export function copyToTradingView(symbols) {
+  const text = symbols.map((s) => `NSE:${s}`).join(",");
+  return navigator.clipboard.writeText(text);
+}
+
+/**
+ * "Copy to TradingView" button. Pass symbols as an array.
+ * Shows a brief "Copied!" confirmation, then reverts.
+ */
+export function TvCopyButton({ symbols = [], label, size = "small", sx }) {
+  const [copied, setCopied] = useState(false);
+  const count = symbols.length;
+
+  const handleCopy = () => {
+    if (!count) return;
+    copyToTradingView(symbols).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <Tooltip
+      title={
+        copied
+          ? `Copied ${count} symbols!`
+          : `Copy ${count} symbols as NSE:SYMBOL for TradingView watchlists`
+      }
+      arrow
+    >
+      <span>
+        <Button
+          size={size}
+          disabled={!count}
+          onClick={handleCopy}
+          sx={{
+            fontSize: 12,
+            textTransform: "none",
+            color: copied ? C.good : C.muted,
+            borderColor: copied ? C.good : C.line,
+            "&:hover": { borderColor: C.accent, color: C.accent },
+            ...sx,
+          }}
+          variant="outlined"
+        >
+          {copied ? "✓ Copied" : label || `TV · ${count}`}
+        </Button>
+      </span>
+    </Tooltip>
+  );
+}
+
 export function AccentRow({ color = C.line, children, ...rest }) {
   return (
     <TableRow

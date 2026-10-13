@@ -23,6 +23,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import { TvCopyButton } from "./ui.jsx";
 import { C } from "../theme.js";
 import { num } from "../format.js";
 import { getResultsCalendar } from "../api.js";
@@ -341,6 +342,7 @@ export default function ResultsCalendarView({ onOpenStock }) {
             <ToggleButton value="calendar">Calendar</ToggleButton>
             <ToggleButton value="list">List</ToggleButton>
           </ToggleButtonGroup>
+          <TvCopyButton symbols={Object.values(byDate).flat().map((r) => r.symbol)} />
         </Box>
       </Box>
 

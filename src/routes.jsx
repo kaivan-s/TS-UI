@@ -179,6 +179,14 @@ export default function AppRoutes() {
       <Route path="/carry" element={<Navigate to="/market" replace />} />
       <Route path="/scanners" element={<Navigate to="/market" replace />} />
       <Route
+        path="/watchlist"
+        element={
+          <RequireAuth>
+            <App />
+          </RequireAuth>
+        }
+      />
+      <Route
         path="/fundamentals"
         element={
           <RequireAuth>

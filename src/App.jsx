@@ -18,6 +18,7 @@ import MarketView from "./components/MarketView.jsx";
 import SectorsView from "./components/SectorsView.jsx";
 import Guide from "./components/Guide.jsx";
 import Pricing from "./components/Pricing.jsx";
+import WatchlistView from "./components/WatchlistView.jsx";
 import FundamentalsView from "./components/FundamentalsView.jsx";
 import ResultsCalendarView from "./components/ResultsCalendarView.jsx";
 import PrivacyPolicy from "./components/PrivacyPolicy.jsx";
@@ -25,12 +26,14 @@ import TermsConditions from "./components/TermsConditions.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
 import StockDrawer from "./components/StockDrawer.jsx";
 import { getDashboard, getSector, getStock, getSymbols } from "./api.js";
+import { useWatchlist } from "./watchlist.jsx";
 
 // Map URL paths to view names
 const PATH_TO_VIEW = {
   "/setups": "setups",
   "/sectors": "sectors",
   "/tracking": "tracking",
+  "/watchlist": "watchlist",
   "/fundamentals": "fundamentals",
   "/results": "results",
   "/market": "market",
@@ -133,9 +136,11 @@ export default function App() {
   };
 
   // Counts for sidebar badges
+  const { count: watchlistCount } = useWatchlist();
   const counts = {
     setups: status?.n_buys ?? buys.length,
     sectors: status?.actionable ?? 0,
+    watchlist: watchlistCount || undefined,
   };
 
   return (
@@ -241,6 +246,10 @@ export default function App() {
 
           {view === "tracking" && (
             <TrackingView onOpenSector={openSector} onOpenStock={openStock} />
+          )}
+
+          {view === "watchlist" && (
+            <WatchlistView onOpenStock={openStock} />
           )}
 
           {view === "fundamentals" && (

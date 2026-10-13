@@ -11,8 +11,9 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { AccentRow, CoilBar, HeadCell, Note, PageIntro, WhyRow } from "./ui.jsx";
+import { AccentRow, CoilBar, HeadCell, Note, PageIntro, TvCopyButton, WhyRow } from "./ui.jsx";
 import BaseRate from "./BaseRate.jsx";
+import { BookmarkButton } from "../watchlist.jsx";
 import { C } from "../theme.js";
 import { num, pct } from "../format.js";
 
@@ -79,6 +80,12 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
           </>
         )}
       </PageIntro>
+
+      {rows.length > 0 && (
+        <Box sx={{ mb: 1.5 }}>
+          <TvCopyButton symbols={rows.map((r) => r.symbol)} />
+        </Box>
+      )}
 
       <BaseRate metric="setups" />
 
@@ -158,6 +165,7 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
       <Table sx={{ minWidth: 750 }}>
         <TableHead>
           <TableRow>
+            <HeadCell label="" sx={{ width: 32, p: 0 }} />
             <HeadCell label="Symbol" />
             <HeadCell k="adj" align="right" />
             <HeadCell label="Earnings" help="Trajectory of year-on-year profit growth across recent quarters. ↑↑ accelerating, ↑ growing, → flat, ↓ declining." align="center" />
@@ -174,7 +182,7 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
             <Fragment key={g.sector}>
               <TableRow>
                 <TableCell
-                  colSpan={9}
+                  colSpan={10}
                   sx={{ py: 0.9, bgcolor: "rgba(238,234,227,0.03)" }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -197,6 +205,9 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
               {g.rows.map((r) => (
                 <Fragment key={r.symbol}>
                   <AccentRow color={color}>
+                    <TableCell sx={{ py: 0, px: 0.5, width: 32 }}>
+                      <BookmarkButton symbol={r.symbol} />
+                    </TableCell>
                     <TableCell
                       className={onOpenStock ? "linkish" : undefined}
                       sx={{ fontWeight: 500 }}
@@ -253,7 +264,7 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                     <TableCell align="right" className="num">{num(r.vol_ratio)}</TableCell>
                     <TableCell align="right" className="num">{num(r.cmf)}</TableCell>
                   </AccentRow>
-                  {r.why && <WhyRow cols={9}>{r.why}</WhyRow>}
+                  {r.why && <WhyRow cols={10}>{r.why}</WhyRow>}
                 </Fragment>
               ))}
             </Fragment>

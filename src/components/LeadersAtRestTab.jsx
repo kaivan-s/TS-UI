@@ -30,7 +30,8 @@ import {
   Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { CoilBar, HeadCell, MultiSelect, Note, PageIntro, useTableSort } from "./ui.jsx";
+import { CoilBar, HeadCell, MultiSelect, Note, PageIntro, TvCopyButton, useTableSort } from "./ui.jsx";
+import { BookmarkButton } from "../watchlist.jsx";
 import { C } from "../theme.js";
 import { num, pct } from "../format.js";
 
@@ -119,6 +120,7 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                 ),
               }}
             />
+            <TvCopyButton symbols={shown.map((r) => r.symbol)} />
           </Box>
         }
       >
@@ -168,6 +170,7 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                   sort={sort}
                   sortKey="rank"
                 />
+                <HeadCell label="" sx={{ width: 32, p: 0 }} />
                 <HeadCell label="Symbol" sort={sort} sortKey="symbol" />
                 <HeadCell
                   label="12m momentum"
@@ -213,6 +216,9 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                 >
                   <TableCell align="right" className="num" sx={{ color: C.muted }}>
                     {r.rank}
+                  </TableCell>
+                  <TableCell sx={{ py: 0, px: 0.5, width: 32 }}>
+                    <BookmarkButton symbol={r.symbol} />
                   </TableCell>
                   <TableCell
                     className={onOpenStock ? "linkish" : undefined}
