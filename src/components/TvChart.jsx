@@ -1,5 +1,5 @@
 /**
- * Candlestick + Volume chart using TradingView's lightweight-charts.
+ * Candlestick + Volume chart using TradingView's lightweight-charts v5.
  *
  * Data comes from our own backend (/api/chart-data) which pulls from
  * Yahoo Finance. No embed restrictions — we own the data and the chart.
@@ -7,7 +7,7 @@
 
 import { useEffect, useRef, useState, memo } from "react";
 import { Box, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
-import { createChart, ColorType } from "lightweight-charts";
+import { createChart, ColorType, CandlestickSeries, HistogramSeries } from "lightweight-charts";
 import { C } from "../theme.js";
 import { getChartData } from "../api.js";
 
@@ -18,7 +18,7 @@ const PERIODS = [
   { value: "5y", label: "5Y" },
 ];
 
-const CHART_COLORS = {
+const COLORS = {
   bg: "#141414",
   text: "rgba(238,234,227,0.45)",
   grid: "rgba(238,234,227,0.04)",
@@ -35,48 +35,49 @@ function TvChartInner({ symbol, height = 400 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Create chart once per symbol
   useEffect(() => {
     if (!symbol || !containerRef.current) return;
 
     const container = containerRef.current;
+    const chartHeight = height - 36;
 
-    // Create chart
     const chart = createChart(container, {
       layout: {
-        background: { type: ColorType.Solid, color: CHART_COLORS.bg },
-        textColor: CHART_COLORS.text,
+        background: { type: ColorType.Solid, color: COLORS.bg },
+        textColor: COLORS.text,
         fontFamily: "'Inter', -apple-system, sans-serif",
         fontSize: 11,
       },
       grid: {
-        vertLines: { color: CHART_COLORS.grid },
-        horzLines: { color: CHART_COLORS.grid },
+        vertLines: { color: COLORS.grid },
+        horzLines: { color: COLORS.grid },
       },
       crosshair: {
-        vertLine: { color: CHART_COLORS.crosshair, labelBackgroundColor: "#333" },
-        horzLine: { color: CHART_COLORS.crosshair, labelBackgroundColor: "#333" },
+        vertLine: { color: COLORS.crosshair, labelBackgroundColor: "#333" },
+        horzLine: { color: COLORS.crosshair, labelBackgroundColor: "#333" },
       },
       rightPriceScale: {
-        borderColor: CHART_COLORS.border,
+        borderColor: COLORS.border,
       },
       timeScale: {
-        borderColor: CHART_COLORS.border,
+        borderColor: COLORS.border,
         timeVisible: false,
       },
       width: container.clientWidth,
-      height: height - 36,
+      height: chartHeight,
     });
 
-    const candleSeries = chart.addCandlestickSeries({
-      upColor: CHART_COLORS.up,
-      downColor: CHART_COLORS.down,
-      borderUpColor: CHART_COLORS.up,
-      borderDownColor: CHART_COLORS.down,
-      wickUpColor: CHART_COLORS.up,
-      wickDownColor: CHART_COLORS.down,
+    const candleSeries = chart.addSeries(CandlestickSeries, {
+      upColor: COLORS.up,
+      downColor: COLORS.down,
+      borderUpColor: COLORS.up,
+      borderDownColor: COLORS.down,
+      wickUpColor: COLORS.up,
+      wickDownColor: COLORS.down,
     });
 
-    const volumeSeries = chart.addHistogramSeries({
+    const volumeSeries = chart.addSeries(HistogramSeries, {
       priceFormat: { type: "volume" },
       priceScaleId: "volume",
     });
@@ -87,7 +88,6 @@ function TvChartInner({ symbol, height = 400 }) {
 
     chartRef.current = { chart, candleSeries, volumeSeries };
 
-    // Resize handler
     const ro = new ResizeObserver(() => {
       if (container.clientWidth > 0) {
         chart.applyOptions({ width: container.clientWidth });
@@ -134,12 +134,11 @@ function TvChartInner({ symbol, height = 400 }) {
       sx={{
         borderRadius: 2,
         overflow: "hidden",
-        border: `1px solid ${CHART_COLORS.border}`,
-        bgcolor: CHART_COLORS.bg,
+        border: `1px solid ${COLORS.border}`,
+        bgcolor: COLORS.bg,
         position: "relative",
       }}
     >
-      {/* Period selector */}
       <Box
         sx={{
           display: "flex",
@@ -161,7 +160,7 @@ function TvChartInner({ symbol, height = 400 }) {
           sx={{
             "& .MuiToggleButton-root": {
               px: 1, py: 0.25, fontSize: 11, color: C.muted,
-              borderColor: CHART_COLORS.border, textTransform: "none",
+              borderColor: COLORS.border, textTransform: "none",
               "&.Mui-selected": { color: C.text, bgcolor: "rgba(238,234,227,0.06)" },
             },
           }}
@@ -174,10 +173,8 @@ function TvChartInner({ symbol, height = 400 }) {
         </ToggleButtonGroup>
       </Box>
 
-      {/* Chart container */}
       <div ref={containerRef} style={{ width: "100%", height: height - 36 }} />
 
-      {/* Loading / error overlay */}
       {(loading || error) && (
         <Box
           sx={{
