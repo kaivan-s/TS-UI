@@ -34,6 +34,14 @@ import { CoilBar, HeadCell, MultiSelect, Note, PageIntro, useTableSort } from ".
 import { C } from "../theme.js";
 import { num, pct } from "../format.js";
 
+const TREND_STYLE = {
+  "↑↑": { color: C.good, label: "Accelerating" },
+  "↑":  { color: C.good, label: "Growing" },
+  "→":  { color: "#c4a46a", label: "Flat" },
+  "↓":  { color: C.bad, label: "Declining" },
+  "?":  { color: C.muted, label: "No data" },
+};
+
 export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpenStock }) {
   const [q, setQ] = useState("");
   const [sectorPick, setSectorPick] = useState([]);
@@ -181,6 +189,7 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                   sort={sort}
                   sortKey="sector"
                 />
+                <HeadCell label="Earnings" help="Trajectory of year-on-year profit growth across recent quarters. ↑↑ accelerating, ↑ growing, → flat, ↓ declining." align="center" sort={sort} sortKey="earnings_trend" />
                 <HeadCell k="adj" align="right" sort={sort} />
                 <HeadCell k="to_trigger" align="right" sort={sort} />
                 <HeadCell k="coil" sx={{ minWidth: 120 }} sort={sort} />
@@ -263,6 +272,19 @@ export default function LeadersAtRestTab({ rows, coilReady, onOpenSector, onOpen
                     sx={{ maxWidth: 220 }}
                   >
                     {r.sector}
+                  </TableCell>
+                  <TableCell align="center">
+                    {(() => {
+                      const t = r.earnings_trend || "?";
+                      const s = TREND_STYLE[t] || TREND_STYLE["?"];
+                      return (
+                        <Tooltip title={s.label} placement="top" arrow>
+                          <Typography component="span" sx={{ fontSize: 16, color: s.color, fontWeight: 600, cursor: "help" }}>
+                            {t}
+                          </Typography>
+                        </Tooltip>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell align="right" className="num">{num(r.adj, 2)}</TableCell>
                   <TableCell align="right" className="num">{pct(r.to_trigger, 1)}</TableCell>

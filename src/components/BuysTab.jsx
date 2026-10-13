@@ -16,6 +16,14 @@ import BaseRate from "./BaseRate.jsx";
 import { C } from "../theme.js";
 import { num, pct } from "../format.js";
 
+const TREND_STYLE = {
+  "↑↑": { color: C.good, label: "Accelerating" },
+  "↑":  { color: C.good, label: "Growing" },
+  "→":  { color: "#c4a46a", label: "Flat" },
+  "↓":  { color: C.bad, label: "Declining" },
+  "?":  { color: C.muted, label: "No data" },
+};
+
 function SectionHead({ color, title, children }) {
   return (
     <>
@@ -152,6 +160,7 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
           <TableRow>
             <HeadCell label="Symbol" />
             <HeadCell k="adj" align="right" />
+            <HeadCell label="Earnings" help="Trajectory of year-on-year profit growth across recent quarters. ↑↑ accelerating, ↑ growing, → flat, ↓ declining." align="center" />
             <HeadCell k="coil" sx={{ minWidth: 140 }} />
             <HeadCell k="pos_hi" align="right" />
             <HeadCell k="to_trigger" align="right" />
@@ -165,7 +174,7 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
             <Fragment key={g.sector}>
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={9}
                   sx={{ py: 0.9, bgcolor: "rgba(238,234,227,0.03)" }}
                 >
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -222,6 +231,19 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                       )}
                     </TableCell>
                     <TableCell align="right" className="num">{num(r.adj, 2)}</TableCell>
+                    <TableCell align="center">
+                      {(() => {
+                        const t = r.earnings_trend || "?";
+                        const s = TREND_STYLE[t] || TREND_STYLE["?"];
+                        return (
+                          <Tooltip title={s.label} placement="top" arrow>
+                            <Typography component="span" sx={{ fontSize: 16, color: s.color, fontWeight: 600, cursor: "help" }}>
+                              {t}
+                            </Typography>
+                          </Tooltip>
+                        );
+                      })()}
+                    </TableCell>
                     <TableCell>
                       <CoilBar value={r.coil} />
                     </TableCell>
@@ -231,7 +253,7 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                     <TableCell align="right" className="num">{num(r.vol_ratio)}</TableCell>
                     <TableCell align="right" className="num">{num(r.cmf)}</TableCell>
                   </AccentRow>
-                  {r.why && <WhyRow cols={8}>{r.why}</WhyRow>}
+                  {r.why && <WhyRow cols={9}>{r.why}</WhyRow>}
                 </Fragment>
               ))}
             </Fragment>
