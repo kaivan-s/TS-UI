@@ -3,11 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import {
   Alert,
   Box,
+  Button,
+  Dialog,
   LinearProgress,
   Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
+import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
 import { C } from "./theme.js";
 import { capturePageview } from "./posthog.js";
 import Sidebar from "./components/Sidebar.jsx";
@@ -52,8 +55,27 @@ export default function App() {
   const theme = useTheme();
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const { trial, trialDaysLeft } = useAuth();
+  const { isPremium, trial, trialDaysLeft, startTrial, busy } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [trialDialogOpen, setTrialDialogOpen] = useState(false);
+
+  // Show trial dialog once per session for eligible (non-premium, no active trial) users
+  useEffect(() => {
+    if (isPremium || trial) return;
+    const dismissed = sessionStorage.getItem("trial_dialog_dismissed");
+    if (!dismissed) setTrialDialogOpen(true);
+  }, [isPremium, trial]);
+
+  const dismissTrialDialog = () => {
+    setTrialDialogOpen(false);
+    sessionStorage.setItem("trial_dialog_dismissed", "1");
+  };
+
+  const handleStartTrial = async () => {
+    await startTrial?.();
+    setTrialDialogOpen(false);
+    sessionStorage.setItem("trial_dialog_dismissed", "1");
+  };
 
   // Track pageviews on route change
   useEffect(() => { capturePageview(location.pathname); }, [location.pathname]);
@@ -336,6 +358,137 @@ export default function App() {
         loading={sectorLoading}
         onOpenStock={openStock}
       />
+
+      {/* Trial offer dialog */}
+      <Dialog
+        open={trialDialogOpen}
+        onClose={dismissTrialDialog}
+        PaperProps={{
+          sx: {
+            bgcolor: "#15161b",
+            border: `1px solid ${C.line}`,
+            borderRadius: 3,
+            maxWidth: 440,
+            width: "100%",
+            mx: 2,
+            overflow: "visible",
+          },
+        }}
+        slotProps={{ backdrop: { sx: { bgcolor: "rgba(0,0,0,0.65)" } } }}
+      >
+        <Box sx={{ p: { xs: 3, sm: 4 }, textAlign: "center" }}>
+          {/* Icon */}
+          <Box
+            sx={{
+              width: 56,
+              height: 56,
+              borderRadius: 3,
+              bgcolor: "rgba(142,180,196,0.1)",
+              border: "1px solid rgba(142,180,196,0.2)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              mx: "auto",
+              mb: 2.5,
+            }}
+          >
+            <RocketLaunchRoundedIcon sx={{ fontSize: 28, color: C.accent }} />
+          </Box>
+
+          {/* Heading */}
+          <Typography
+            sx={{
+              fontSize: { xs: 20, sm: 22 },
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              color: C.text,
+              mb: 0.75,
+            }}
+          >
+            Try Pro Desk — free for 3 days
+          </Typography>
+
+          <Typography sx={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6, mb: 3 }}>
+            Unlock every setup, every scan, unlimited stock lookups, and full Telegram bot access.
+            No card needed — it activates instantly.
+          </Typography>
+
+          {/* Feature pills */}
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: 0.75,
+              mb: 3.5,
+            }}
+          >
+            {[
+              "Full setups list",
+              "Unlimited lookups",
+              "All movers & drivers",
+              "Sector deep-dives",
+              "Telegram bot unlimited",
+            ].map((f) => (
+              <Box
+                key={f}
+                sx={{
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 5,
+                  bgcolor: "rgba(142,180,196,0.08)",
+                  border: "1px solid rgba(142,180,196,0.15)",
+                  fontSize: 11.5,
+                  fontWeight: 500,
+                  color: C.text,
+                  fontFamily: '"IBM Plex Mono", ui-monospace, monospace',
+                }}
+              >
+                {f}
+              </Box>
+            ))}
+          </Box>
+
+          {/* CTA */}
+          <Button
+            fullWidth
+            variant="contained"
+            disabled={busy}
+            onClick={handleStartTrial}
+            sx={{
+              py: 1.4,
+              borderRadius: 1.5,
+              bgcolor: C.accent,
+              color: "#0e0f12",
+              fontFamily: '"IBM Plex Mono", ui-monospace, monospace',
+              fontSize: 14,
+              fontWeight: 700,
+              textTransform: "none",
+              "&:hover": { bgcolor: "#a5c7d4" },
+              "&.Mui-disabled": { bgcolor: "rgba(142,180,196,0.2)", color: C.muted },
+            }}
+          >
+            {busy ? "Starting…" : "Start 3-day free trial"}
+          </Button>
+
+          {/* Dismiss */}
+          <Button
+            fullWidth
+            onClick={dismissTrialDialog}
+            sx={{
+              mt: 1,
+              py: 0.75,
+              fontFamily: '"IBM Plex Mono", ui-monospace, monospace',
+              fontSize: 12,
+              color: C.muted,
+              textTransform: "none",
+              "&:hover": { bgcolor: "transparent", color: C.text },
+            }}
+          >
+            Maybe later
+          </Button>
+        </Box>
+      </Dialog>
     </Box>
   );
 }
