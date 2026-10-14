@@ -114,6 +114,10 @@ export const removeFromWatchlist = (symbol) =>
     body: JSON.stringify({ symbol }),
   });
 
+// Trial
+export const startTrial = () =>
+  json("/api/trial/start", { method: "POST" });
+
 // Feedback
 export const submitFeedback = (message, category = "general", rating = null) =>
   json("/api/feedback", {

@@ -292,6 +292,37 @@ export function AuthProvider({ children }) {
           setBusy(false);
         }
       },
+      startTrial: async () => {
+        if (!session?.access_token) return { ok: false, error: "Not signed in" };
+        setError("");
+        setBusy(true);
+        try {
+          const r = await fetch(apiUrl("/api/trial/start"), {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+              "Content-Type": "application/json",
+            },
+          });
+          const data = await r.json();
+          if (data.ok) {
+            setIsPremium(true);
+            setPlan("trial");
+            setTrial(true);
+            setTrialDaysLeft(data.trial_days_left || TRIAL_DAYS);
+            setSubscriptionExpires(data.expires_at || null);
+            return { ok: true };
+          } else {
+            setError(data.error || "Could not start trial");
+            return { ok: false, error: data.error };
+          }
+        } catch (e) {
+          setError(e.message || "Trial start failed");
+          return { ok: false, error: e.message };
+        } finally {
+          setBusy(false);
+        }
+      },
       getAccessToken,
     };
   }, [session, configured, loading, denied, error, notice, busy, isPremium, plan, trial, trialDaysLeft, subscriptionId, subscriptionExpires, subscriptionCancelled, telegramLinked, telegramLinkCode]);

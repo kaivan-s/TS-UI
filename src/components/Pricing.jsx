@@ -112,6 +112,9 @@ export default function Pricing() {
     email,
     refreshSubscription,
     cancelSubscription,
+    startTrial,
+    trial,
+    trialDaysLeft,
     subscriptionExpires,
     subscriptionCancelled,
     telegramLinked,
@@ -371,6 +374,78 @@ export default function Pricing() {
           )}
         </Box>
       </Box>
+
+      {/* Trial CTA — show only to free users who haven't used a trial */}
+      {!isPremium && (
+        <Box
+          sx={{
+            mb: 3.5,
+            p: { xs: 2.5, sm: 3 },
+            borderRadius: 2.5,
+            bgcolor: "#15161b",
+            border: "1px solid rgba(142,180,196,0.25)",
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "stretch", sm: "center" },
+            justifyContent: "space-between",
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography sx={{ fontSize: 16, fontWeight: 600, color: C.text, mb: 0.35 }}>
+              Try Pro Desk free for 3 days
+            </Typography>
+            <Typography sx={{ fontSize: 13, color: C.muted, lineHeight: 1.5 }}>
+              Full access to every screen, every setup, unlimited stock lookups — no card required.
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            disabled={busy}
+            onClick={startTrial}
+            sx={{
+              flexShrink: 0,
+              fontFamily: MONO,
+              fontSize: 13,
+              fontWeight: 600,
+              textTransform: "none",
+              bgcolor: C.accent,
+              color: "#0e0f12",
+              px: 3.5,
+              py: 1.25,
+              borderRadius: 1.5,
+              "&:hover": { bgcolor: "#a5c7d4" },
+              "&.Mui-disabled": { bgcolor: "rgba(142,180,196,0.2)", color: C.muted },
+            }}
+          >
+            {busy ? "Starting…" : "Start free trial →"}
+          </Button>
+        </Box>
+      )}
+
+      {/* Trial active badge — show when on trial */}
+      {trial && (
+        <Box
+          sx={{
+            mb: 3.5,
+            p: { xs: 2, sm: 2.5 },
+            borderRadius: 2.5,
+            bgcolor: "rgba(125,186,150,0.06)",
+            border: "1px solid rgba(125,186,150,0.25)",
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+          }}
+        >
+          <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: C.good, flexShrink: 0 }} />
+          <Typography sx={{ fontSize: 13.5, color: C.text }}>
+            <Box component="span" sx={{ fontWeight: 600, color: C.good }}>Trial active</Box>
+            {" · "}
+            {trialDaysLeft > 1 ? `${trialDaysLeft} days left` : trialDaysLeft === 1 ? "Last day" : "Expires today"}
+            {" — you have full Pro access. Subscribe before it ends to keep everything unlocked."}
+          </Typography>
+        </Box>
+      )}
 
       {/* 3-Column Pricing Tier Grid */}
       <Box

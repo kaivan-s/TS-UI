@@ -12,6 +12,37 @@ import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
 
+const MONO = '"IBM Plex Mono", ui-monospace, monospace';
+
+function TrialCTA({ inline = false }) {
+  const { trial, startTrial, busy } = useAuth();
+  if (trial) return null;
+  return (
+    <Button
+      onClick={startTrial}
+      disabled={busy}
+      sx={{
+        fontFamily: MONO,
+        fontSize: inline ? 12 : 12.5,
+        fontWeight: 600,
+        textTransform: "none",
+        color: C.accent,
+        ...(inline
+          ? { px: 1, py: 0.25, minWidth: 0 }
+          : {
+              border: `1px solid rgba(142,180,196,0.3)`,
+              borderRadius: 1.5,
+              px: 2.5,
+              py: 0.75,
+              "&:hover": { bgcolor: "rgba(142,180,196,0.08)", borderColor: C.accent },
+            }),
+      }}
+    >
+      {busy ? "Starting…" : "or start 3-day free trial"}
+    </Button>
+  );
+}
+
 /**
  * Gate that only renders children if user is premium.
  * Otherwise shows an upgrade prompt.
@@ -53,21 +84,24 @@ export function PremiumGate({ children, feature = "This feature" }) {
       <Typography sx={{ fontSize: 14, color: C.muted, mb: 3, maxWidth: 320 }}>
         Upgrade to access the full scan results, coiled bases, and curated setups.
       </Typography>
-      <Button
-        variant="contained"
-        onClick={() => upgrade("monthly")}
-        disabled={busy}
-        startIcon={<StarRoundedIcon />}
-        sx={{
-          bgcolor: C.accent,
-          color: C.bg,
-          fontWeight: 600,
-          px: 3,
-          "&:hover": { bgcolor: "#7aa4b4" },
-        }}
-      >
-        {busy ? "Loading…" : "Upgrade for ₹499/month"}
-      </Button>
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.25 }}>
+        <Button
+          variant="contained"
+          onClick={() => upgrade("monthly")}
+          disabled={busy}
+          startIcon={<StarRoundedIcon />}
+          sx={{
+            bgcolor: C.accent,
+            color: C.bg,
+            fontWeight: 600,
+            px: 3,
+            "&:hover": { bgcolor: "#7aa4b4" },
+          }}
+        >
+          {busy ? "Loading…" : "Upgrade for ₹499/month"}
+        </Button>
+        <TrialCTA />
+      </Box>
     </Box>
   );
 }
@@ -116,22 +150,25 @@ export function PremiumOverlay({
             Upgrade to see the full list
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          onClick={() => upgrade("monthly")}
-          disabled={busy}
-          startIcon={<StarRoundedIcon />}
-          sx={{
-            bgcolor: C.accent,
-            color: C.bg,
-            fontWeight: 600,
-            px: 2.5,
-            flexShrink: 0,
-            "&:hover": { bgcolor: "#7aa4b4" },
-          }}
-        >
-          {busy ? "Loading…" : "Upgrade · ₹499/mo"}
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexShrink: 0, flexWrap: "wrap" }}>
+          <Button
+            variant="contained"
+            onClick={() => upgrade("monthly")}
+            disabled={busy}
+            startIcon={<StarRoundedIcon />}
+            sx={{
+              bgcolor: C.accent,
+              color: C.bg,
+              fontWeight: 600,
+              px: 2.5,
+              flexShrink: 0,
+              "&:hover": { bgcolor: "#7aa4b4" },
+            }}
+          >
+            {busy ? "Loading…" : "Upgrade · ₹499/mo"}
+          </Button>
+          <TrialCTA inline />
+        </Box>
       </Box>
     </Box>
   );
@@ -179,21 +216,24 @@ export function LockedTab({ name }) {
           ? "Setups combine sector strength with coiled stocks. Upgrade to see the shortlist."
           : "This feature requires a premium subscription."}
       </Typography>
-      <Button
-        variant="contained"
-        onClick={() => upgrade("monthly")}
-        disabled={busy}
-        startIcon={<StarRoundedIcon />}
-        sx={{
-          bgcolor: C.accent,
-          color: C.bg,
-          fontWeight: 600,
-          px: 3,
-          "&:hover": { bgcolor: "#7aa4b4" },
-        }}
-      >
-        {busy ? "Loading…" : "Unlock for ₹499/month"}
-      </Button>
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1.25 }}>
+        <Button
+          variant="contained"
+          onClick={() => upgrade("monthly")}
+          disabled={busy}
+          startIcon={<StarRoundedIcon />}
+          sx={{
+            bgcolor: C.accent,
+            color: C.bg,
+            fontWeight: 600,
+            px: 3,
+            "&:hover": { bgcolor: "#7aa4b4" },
+          }}
+        >
+          {busy ? "Loading…" : "Unlock for ₹499/month"}
+        </Button>
+        <TrialCTA />
+      </Box>
     </Box>
   );
 }
