@@ -177,7 +177,23 @@ function TonePill({ tone = "muted", children }) {
 }
 
 function Check({ ok }) {
-  if (ok) return <CheckCircleRoundedIcon sx={{ fontSize: 16, color: C.good, mt: 0.15, flexShrink: 0 }} />;
+  if (ok === true) return <CheckCircleRoundedIcon sx={{ fontSize: 16, color: C.good, mt: 0.15, flexShrink: 0 }} />;
+  if (ok === null || ok === undefined) {
+    return (
+      <Box
+        component="span"
+        sx={{
+          width: 14,
+          height: 14,
+          mt: 0.3,
+          borderRadius: "50%",
+          border: `1.5px solid ${C.warn}`,
+          bgcolor: "rgba(196,164,106,0.12)",
+          flexShrink: 0,
+        }}
+      />
+    );
+  }
   return <CancelRoundedIcon sx={{ fontSize: 16, color: C.bad, mt: 0.15, flexShrink: 0 }} />;
 }
 
@@ -642,9 +658,9 @@ function TechnicalCard({ t }) {
   );
 }
 
-function CoilAndScanCard({ data, m, filters, passedFilters, totalFilters, coilProgress, onOpenSector }) {
+function CoilAndScanCard({ m, filters, passedFilters, totalFilters, coilProgress }) {
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5, height: "100%" }}>
       {/* Scan Metrics Card */}
       <Card>
         <SectionTitle icon={ShowChartRoundedIcon}>Scan Metrics · Price &amp; Position</SectionTitle>
@@ -670,7 +686,7 @@ function CoilAndScanCard({ data, m, filters, passedFilters, totalFilters, coilPr
 
       {/* Coil Gate Diagnostics */}
       {filters.length > 0 && (
-        <Card>
+        <Card sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
             <SectionTitle sx={{ mb: 0 }}>Coil Gate Diagnostics</SectionTitle>
             <Box
@@ -704,7 +720,7 @@ function CoilAndScanCard({ data, m, filters, passedFilters, totalFilters, coilPr
               },
             }}
           />
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.9 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1, justifyContent: "space-between", flex: 1 }}>
             {filters.map((f) => (
               <Box key={f.id} sx={{ display: "flex", gap: 1.15, alignItems: "flex-start" }}>
                 <Check ok={f.ok} />
@@ -724,48 +740,187 @@ function CoilAndScanCard({ data, m, filters, passedFilters, totalFilters, coilPr
           </Box>
         </Card>
       )}
+    </Box>
+  );
+}
 
-      {/* Sector Context */}
-      {data.shape?.verdict_text && (
-        <Card>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.25 }}>
-            <SectionTitle icon={TrendingUpRoundedIcon} sx={{ mb: 0 }}>
-              Sector Rotation Context
-            </SectionTitle>
-            {data.sector && (
-              <Box
-                role="button"
-                tabIndex={0}
-                onClick={() => onOpenSector?.(data.sector)}
-                sx={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 0.5,
-                  px: 1.1,
-                  py: 0.3,
-                  borderRadius: 1,
-                  bgcolor: "rgba(142,180,196,0.12)",
-                  border: "1px solid rgba(142,180,196,0.28)",
-                  color: C.accent,
-                  fontFamily: MONO,
-                  fontWeight: 600,
-                  fontSize: 11,
-                  cursor: "pointer",
-                  "&:hover": { bgcolor: "rgba(142,180,196,0.18)" },
-                }}
-              >
-                <span>{data.sector}</span>
-                <OpenInNewRoundedIcon sx={{ fontSize: 12 }} />
+const SECTOR_VERDICT = {
+  orderly: { label: "Orderly Pullback", tone: "good" },
+  crossing: { label: "Crossing Day", tone: "warn" },
+  waiting: { label: "Waiting for Rest", tone: "warn" },
+  sellers_won: { label: "Sellers Won", tone: "bad" },
+  expand_not_quiet: { label: "Not From Quiet", tone: "bad" },
+  no_crossing: { label: "No Recent Crossing", tone: "muted" },
+};
+
+function SectorRotationCard({ data, onOpenSector }) {
+  const shape = data?.shape;
+  if (!shape?.verdict_text && !data?.sector) return null;
+
+  const cross = shape?.crossing;
+  const checks = shape?.checks || [];
+  const vMeta = SECTOR_VERDICT[shape?.verdict] || SECTOR_VERDICT.no_crossing;
+
+  return (
+    <Card>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            lg: checks.length > 0 ? "minmax(0, 1.15fr) minmax(0, 1fr)" : "1fr",
+          },
+          gap: 2.5,
+          alignItems: "stretch",
+        }}
+      >
+        {/* Left: Sector Header + Verdict + Crossing Telemetry */}
+        <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 1.75 }}>
+          <Box>
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1, mb: 1.25 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+                <SectionTitle icon={TrendingUpRoundedIcon} sx={{ mb: 0 }}>
+                  Sector Rotation Context
+                </SectionTitle>
+                {data.sector_klass && <KlassChip klass={data.sector_klass} />}
+                {shape?.verdict && <TonePill tone={vMeta.tone}>{vMeta.label}</TonePill>}
+              </Box>
+
+              {data.sector && (
+                <Box
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => onOpenSector?.(data.sector)}
+                  sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 0.6,
+                    px: 1.2,
+                    py: 0.35,
+                    borderRadius: 1.25,
+                    bgcolor: "rgba(142,180,196,0.12)",
+                    border: "1px solid rgba(142,180,196,0.28)",
+                    color: C.accent,
+                    fontFamily: MONO,
+                    fontWeight: 600,
+                    fontSize: 11,
+                    cursor: "pointer",
+                    "&:hover": { bgcolor: "rgba(142,180,196,0.18)" },
+                  }}
+                >
+                  <span>{data.sector}</span>
+                  <OpenInNewRoundedIcon sx={{ fontSize: 12 }} />
+                </Box>
+              )}
+            </Box>
+
+            <Typography sx={{ fontSize: 13.5, lineHeight: 1.6, color: C.text }}>
+              {shape?.verdict_text}
+            </Typography>
+
+            {data.sector_note && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mt: 1 }}>
+                <Typography sx={{ fontFamily: MONO, fontSize: 10, color: C.muted, letterSpacing: "0.08em" }}>
+                  SCAN SUMMARY:
+                </Typography>
+                <Box
+                  component="span"
+                  sx={{
+                    px: 0.85,
+                    py: 0.15,
+                    borderRadius: 0.75,
+                    bgcolor: "#111216",
+                    border: `1px solid ${C.line}`,
+                    fontFamily: MONO,
+                    fontSize: 11,
+                    color: C.muted,
+                  }}
+                >
+                  {data.sector_note}
+                </Box>
               </Box>
             )}
           </Box>
-          <Typography sx={{ fontSize: 13, lineHeight: 1.6, color: C.muted }}>
-            {data.shape.verdict_text}
-            {data.sector_note ? ` ${data.sector_note}` : ""}
-          </Typography>
-        </Card>
-      )}
-    </Box>
+
+          {cross && (
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" }, gap: 1 }}>
+              <Metric
+                label="Crossing Date"
+                value={fmtDate(cross.date)}
+                hint="Most recent session where sector turnover expanded from a quiet base on positive breadth."
+              />
+              <Metric
+                label="Crossing T_rel"
+                value={cross.T_rel != null ? `${num(cross.T_rel, 2)}×` : "—"}
+                color={cross.T_rel >= 1.3 ? C.good : undefined}
+                hint="Sector turnover expansion vs cross-sector median on the crossing day."
+              />
+              <Metric
+                label="Crossing Breadth"
+                value={cross.B != null ? `${cross.B > 0 ? "+" : ""}${num(cross.B, 2)}` : "—"}
+                color={cross.B >= 0.15 ? C.good : undefined}
+                hint="Net advancing minus declining share on the crossing session."
+              />
+              <Metric
+                label="Prior Quiet Base"
+                value={cross.quiet_days_prior != null ? `${cross.quiet_days_prior}/5 days` : "—"}
+                color={cross.quiet_days_prior >= 3 ? C.good : C.warn}
+                hint="Quiet sessions (<1.2× own average turnover) in the 5 days before the crossing."
+              />
+            </Box>
+          )}
+        </Box>
+
+        {/* Right: Sector Shape Gate Checks */}
+        {checks.length > 0 && (
+          <Box
+            sx={{
+              p: 1.75,
+              borderRadius: 1.75,
+              bgcolor: "#111216",
+              border: `1px solid ${C.line}`,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              gap: 1.25,
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+              <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em", color: C.muted, textTransform: "uppercase" }}>
+                Sector Pullback Verification Gates
+              </Typography>
+              <Box
+                component="span"
+                sx={{
+                  px: 0.8,
+                  py: 0.15,
+                  borderRadius: 0.75,
+                  bgcolor: shape?.buy_ready ? "rgba(125,186,150,0.12)" : "rgba(238,234,227,0.05)",
+                  border: `1px solid ${shape?.buy_ready ? "rgba(125,186,150,0.3)" : C.line}`,
+                  fontFamily: MONO,
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: shape?.buy_ready ? C.good : C.muted,
+                }}
+              >
+                {shape?.buy_ready ? "SECTOR AGREES" : "NOT READY"}
+              </Box>
+            </Box>
+
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1, my: "auto" }}>
+              {checks.map((c) => (
+                <Box key={c.id} sx={{ display: "flex", gap: 1.15, alignItems: "flex-start" }}>
+                  <Check ok={c.ok} />
+                  <Typography sx={{ fontSize: 12.5, lineHeight: 1.45, color: c.ok ? C.text : C.muted }}>
+                    {c.text}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+      </Box>
+    </Card>
   );
 }
 
@@ -1595,22 +1750,25 @@ export default function StockPage({ onOpenSector }) {
                     lg: section === "all" && tech ? "repeat(2, minmax(0, 1fr))" : "1fr",
                   },
                   gap: 2.5,
-                  alignItems: "start",
+                  alignItems: "stretch",
                 }}
               >
                 {(section === "all" || section === "chart") && tech && <TechnicalCard t={tech} />}
                 {(section === "all" || section === "coil") && (
                   <CoilAndScanCard
-                    data={data}
                     m={m}
                     filters={filters}
                     passedFilters={passedFilters}
                     totalFilters={totalFilters}
                     coilProgress={coilProgress}
-                    onOpenSector={onOpenSector}
                   />
                 )}
               </Box>
+            )}
+
+            {/* Row 2.5: Dedicated Full-Width Sector Rotation Context */}
+            {(section === "all" || section === "coil") && data.shape?.verdict_text && (
+              <SectorRotationCard data={data} onOpenSector={onOpenSector} />
             )}
 
             {/* Row 3: Fundamentals & Recent Session History */}

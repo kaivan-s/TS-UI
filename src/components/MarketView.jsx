@@ -25,6 +25,15 @@ import ScannersView from "./ScannersView.jsx";
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 const POLL_MS = 5 * 60 * 1000;
 
+// NSE cash session, Mon–Fri 09:15–15:30 IST. Exchange holidays aren't known
+// here, so a holiday weekday reads as open until the data says otherwise.
+function marketOpenNow() {
+  const ist = new Date(Date.now() + (5.5 * 60 + new Date().getTimezoneOffset()) * 60000);
+  const day = ist.getDay();
+  const mins = ist.getHours() * 60 + ist.getMinutes();
+  return day >= 1 && day <= 5 && mins >= 9 * 60 + 15 && mins <= 15 * 60 + 30;
+}
+
 export default function MarketView({ onOpenStock }) {
   const [tab, setTab] = useState(0);
   const [carryData, setCarryData] = useState(null);
@@ -115,6 +124,7 @@ export default function MarketView({ onOpenStock }) {
   ];
 
   const activeSymbols = TABS[tab]?.symbols || [];
+  const live = marketOpenNow();
 
   return (
     <Box sx={{ pb: 6 }}>
@@ -139,7 +149,7 @@ export default function MarketView({ onOpenStock }) {
         >
           <Box sx={{ maxWidth: 640 }}>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.75 }}>
-              <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: C.good }} />
+              <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: live ? C.good : C.muted }} />
               <Typography
                 sx={{
                   fontFamily: MONO,
@@ -151,6 +161,23 @@ export default function MarketView({ onOpenStock }) {
               >
                 INTRADAY &amp; EOD SCANNERS {scanData?.scan_time ? `· ${scanData.scan_time} IST` : ""}
               </Typography>
+              <Box
+                component="span"
+                sx={{
+                  px: 0.75,
+                  py: "1px",
+                  borderRadius: 0.75,
+                  fontFamily: MONO,
+                  fontSize: 9.5,
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  color: live ? C.good : C.muted,
+                  bgcolor: live ? "rgba(125,186,150,0.12)" : "rgba(238,234,227,0.05)",
+                  border: `1px solid ${live ? "rgba(125,186,150,0.32)" : "rgba(238,234,227,0.16)"}`,
+                }}
+              >
+                {live ? "LIVE" : "MARKET CLOSED"}
+              </Box>
             </Box>
             <Typography
               variant="h1"
@@ -166,6 +193,11 @@ export default function MarketView({ onOpenStock }) {
             </Typography>
             <Typography sx={{ fontSize: 13.75, color: C.muted, lineHeight: 1.6 }}>
               Upper-circuit carries with order-book fill telemetry alongside big movers, volume spikes, multi-day streaks, 52-week highs, and sector breadth.
+            </Typography>
+            <Typography sx={{ fontSize: 12.5, color: live ? C.muted : C.warn, lineHeight: 1.55, mt: 0.75 }}>
+              {live
+                ? "Live while the market is open (Mon–Fri, 9:15 AM – 3:30 PM IST), refreshing every 5 minutes."
+                : "Live only while the market is open (Mon–Fri, 9:15 AM – 3:30 PM IST). Right now you're seeing the last session's data."}
             </Typography>
           </Box>
 

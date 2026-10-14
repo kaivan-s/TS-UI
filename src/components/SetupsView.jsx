@@ -33,7 +33,7 @@ import { EVIDENCE_WINDOW, STAT_STRIPS } from "../evidence.js";
 
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 const FREE_PREVIEW = 3;
-const COL_SPAN = 14;
+const COL_SPAN = 15;
 
 const TABLE_SX = {
   "& .MuiTableCell-stickyHeader, & .MuiTableCell-head": {
@@ -538,6 +538,13 @@ export default function SetupsView({
                     <HeadCell label="" sx={{ width: 34, p: 0 }} />
                     <HeadCell label="Symbol" sort={sort} sortKey="symbol" />
                     <HeadCell label="Source" help="Which list this stock qualifies for" />
+                    <HeadCell
+                      label="Coiled"
+                      help="Sessions since this base first cleared all seven filters. Gaps of up to three sessions do not restart the count, so a base that wobbles for a day keeps its real age. 'New' means it genuinely started today."
+                      align="right"
+                      sort={sort}
+                      sortKey="episode_days"
+                    />
                     <HeadCell label="Sector" sort={sort} sortKey="sector" />
                     <HeadCell
                       label="Earnings"
@@ -716,6 +723,30 @@ function StockRow({ r, onOpenSector, onOpenStock }) {
               </Tooltip>
             )}
           </Box>
+        </TableCell>
+        <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+          {r.episode_new ? (
+            <Box
+              component="span"
+              sx={{
+                px: 0.75,
+                py: 0.15,
+                borderRadius: 1,
+                bgcolor: "rgba(142,180,196,0.15)",
+                border: "1px solid rgba(142,180,196,0.32)",
+                fontFamily: MONO,
+                fontSize: 10,
+                fontWeight: 600,
+                color: C.accent,
+              }}
+            >
+              NEW
+            </Box>
+          ) : r.episode_days != null || r.coil_days != null ? (
+            `${r.episode_days ?? r.coil_days}d`
+          ) : (
+            "—"
+          )}
         </TableCell>
         <TableCell
           onClick={() => onOpenSector?.(r.sector)}
