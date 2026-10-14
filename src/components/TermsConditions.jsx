@@ -65,23 +65,25 @@ export default function TermsConditions() {
           Important Disclaimer
         </Typography>
         <Typography sx={{ fontSize: 14, color: "rgba(238,234,227,0.8)", lineHeight: 1.7 }}>
-          Morrow Desk is NOT registered with SEBI (Securities and Exchange Board of India) as an
-          investment advisor, research analyst, or portfolio manager. This service does NOT
-          provide financial advice, investment recommendations, or stock tips. All information
-          presented is for educational and informational purposes only.
+          Morrow Desk is a descriptive screening tool. It is not registered with SEBI
+          (Securities and Exchange Board of India) as an investment adviser, research analyst,
+          or portfolio manager. It does not provide investment advice, buy/sell recommendations,
+          price targets, or stock tips. It describes what price, volume and sector data are
+          doing — it does not predict future returns. Data is end-of-day and may contain errors.
+          All information is for educational and informational purposes only.
         </Typography>
       </Box>
 
       <Section title="1. Nature of Service">
         <Para>
-          Morrow Desk is a technical screening tool that processes publicly available market
-          data to identify stocks meeting certain technical criteria. The service:
+          Morrow Desk is a descriptive screening tool that processes publicly available
+          end-of-day market data. The service:
         </Para>
         <List items={[
-          "Scans stocks based on price, volume, and technical patterns.",
-          "Identifies potential setup conditions based on historical criteria.",
-          "Provides sector-level analysis and classification.",
-          "Tracks the lifecycle of identified setups.",
+          "Scans stocks based on price, volume, delivery and technical patterns.",
+          "Describes where sector flow, price compression and volume conditions overlap.",
+          "Provides sector-level descriptive classifications.",
+          "Shows interactive charts, company fundamentals, and earnings calendars.",
         ]} />
         <Para>
           <strong style={{ color: C.text }}>

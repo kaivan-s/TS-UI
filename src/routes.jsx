@@ -181,14 +181,8 @@ export default function AppRoutes() {
           </RequireAuth>
         }
       />
-      <Route
-        path="/tracking"
-        element={
-          <RequireAuth>
-            <App />
-          </RequireAuth>
-        }
-      />
+      {/* /tracking removed — episode log replaced by watchlist */}
+      <Route path="/tracking" element={<Navigate to="/setups" replace />} />
       <Route
         path="/market"
         element={

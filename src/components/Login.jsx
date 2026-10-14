@@ -141,7 +141,7 @@ export default function Login() {
         }}
       >
         <Typography sx={{ fontSize: 11, color: "rgba(238,234,227,0.6)" }}>
-          Not SEBI registered. Not financial advice. This is a screening tool — all decisions are yours.{" "}
+          Descriptive screening tool only — not SEBI-registered, not investment advice, and not a recommendation to buy or sell.{" "}
           <Link to="/terms" style={{ color: C.accent, textDecoration: "none" }}>Terms</Link>
           {" · "}
           <Link to="/privacy" style={{ color: C.accent, textDecoration: "none" }}>Privacy</Link>

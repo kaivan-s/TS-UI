@@ -3,7 +3,6 @@ import { Box, Button, Drawer, IconButton, Tooltip, Typography, useMediaQuery, us
 import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
-import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -35,13 +34,6 @@ const NAV_SECTIONS = [
         Icon: GridViewRoundedIcon,
         label: "Sectors",
         desc: "Rotation & state heatmap",
-      },
-      {
-        id: "tracking",
-        path: "/tracking",
-        Icon: HistoryRoundedIcon,
-        label: "Tracking",
-        desc: "Persistent episode log",
       },
     ],
   },

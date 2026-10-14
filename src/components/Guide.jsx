@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Chip, Typography } from "@mui/material";
 import { C, KLASS_GROUP } from "../theme.js";
-import { BASE_RATES, EPISODE_RATES, EVIDENCE_WINDOW } from "../evidence.js";
+import { BASE_RATES, EVIDENCE_WINDOW } from "../evidence.js";
 import { TELEGRAM_BOT } from "../config.js";
 
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
@@ -178,18 +178,12 @@ const WORKFLOW_STEPS = [
   },
   {
     n: "05",
-    tag: "365D AUDIT TRAIL",
-    title: "Tracking — what happened to the last lot",
-    body: "Every other screen is tonight's snapshot, so a name that disappears leaves no trace. Tracking gives each base an identity from the session it first cleared the filters until it resolves: broke out, fell 7% below where it appeared, stopped clearing filters, or spent twenty sessions doing neither. A base survives gaps of up to three sessions so temporary drop-offs aren't miscounted.",
+    tag: "PERSONAL WATCHLIST",
+    title: "Save stocks from any screen",
+    body: "Bookmark any stock with the save icon on any table row or in the stock drawer. Your watchlist syncs across devices and enriches each saved name with live coil scores, fundamental data, and sector state — so you can track your own research without losing context.",
   },
   {
     n: "06",
-    tag: "EMPIRICAL REALITY",
-    title: "Breaking out is not the same as working",
-    body: "Across 942 resolved episodes, 57% eventually closed through their level, 22% broke down first, and 21% did neither. But of the ones that broke out, fewer than half were still above the level ten sessions later. A breakout is an event, not an outcome. Breakouts on heavy volume held 52% of the time against 41% on light volume.",
-  },
-  {
-    n: "07",
     tag: "ANY NSE SYMBOL",
     title: "Look up any name in the header",
     body: "The header search runs the exact same coil filters, sector shape, and setup checks on any symbol you type. The drawer reports the structural state of the last close, the coil filters, and the sector behind the name. Those are observations about the chart, not instructions.",
@@ -288,9 +282,6 @@ function SectionHeader({ eyebrow, title, subtitle }) {
 function MethodologyTab() {
   const setupWin = Math.round(BASE_RATES.setups.winRate * 100);
   const coilWin = Math.round(BASE_RATES.coils.winRate * 100);
-  const brokeOutPct = Math.round(EPISODE_RATES.brokeOut * 100);
-  const brokeDownPct = Math.round(EPISODE_RATES.brokeDown * 100);
-  const stalePct = Math.round(EPISODE_RATES.stale * 100);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 4.5 }}>
@@ -349,56 +340,7 @@ function MethodologyTab() {
             </Box>
           </Box>
 
-          {/* Card 2: Episode Resolution */}
-          <Box
-            sx={{
-              p: 2.75,
-              borderRadius: 2.5,
-              bgcolor: "#15161b",
-              border: `1px solid ${C.line}`,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-            }}
-          >
-            <Box>
-              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
-                <Typography sx={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.14em", color: C.accent }}>
-                  EPISODE LIFECYCLE
-                </Typography>
-                <Typography sx={{ fontFamily: MONO, fontSize: 11, color: C.muted }}>
-                  {EPISODE_RATES.n} resolved
-                </Typography>
-              </Box>
-              <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                <Typography sx={{ fontFamily: MONO, fontSize: 34, fontWeight: 600, color: C.text, lineHeight: 1 }}>
-                  {brokeOutPct}%
-                </Typography>
-                <Typography sx={{ fontFamily: MONO, fontSize: 12, color: C.muted }}>
-                  closed through trigger
-                </Typography>
-              </Box>
-              <Typography sx={{ fontSize: 13, color: C.muted, mt: 1, lineHeight: 1.55 }}>
-                {brokeDownPct}% broke down (−7% first) and {stalePct}% went stale after 20 sessions with neither outcome.
-              </Typography>
-            </Box>
-
-            {/* Stacked bar */}
-            <Box sx={{ mt: 2.5 }}>
-              <Box sx={{ display: "flex", height: 6, borderRadius: 99, overflow: "hidden", gap: "2px", mb: 1 }}>
-                <Box sx={{ width: `${brokeOutPct}%`, bgcolor: C.good }} />
-                <Box sx={{ width: `${brokeDownPct}%`, bgcolor: C.bad }} />
-                <Box sx={{ width: `${stalePct}%`, bgcolor: "rgba(238,234,227,0.18)" }} />
-              </Box>
-              <Box sx={{ display: "flex", justifyContent: "space-between", fontFamily: MONO, fontSize: 10.5, color: C.muted }}>
-                <span style={{ color: C.good }}>{brokeOutPct}% triggered (6d med)</span>
-                <span style={{ color: C.bad }}>{brokeDownPct}% failed (10d)</span>
-                <span>{stalePct}% stale</span>
-              </Box>
-            </Box>
-          </Box>
-
-          {/* Card 3: Volume Confirmation */}
+          {/* Card 2: Volume Confirmation */}
           <Box
             sx={{
               p: 2.75,
@@ -1239,7 +1181,7 @@ export default function Guide() {
         }}
       >
         <Typography sx={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
-          This is an informational screening tool, not investment advice. It tells you where to look and where to put the alert — position size, stop, and whether a breakout is worth taking are yours.
+          Morrow Desk is a descriptive screening tool. It describes what sector flow, price compression and volume are doing — it does not predict future returns or recommend any security. All decisions are yours.
         </Typography>
         <Typography sx={{ fontFamily: MONO, fontSize: 11, color: C.muted, flexShrink: 0 }}>
           NSE EOD · 20:30 IST

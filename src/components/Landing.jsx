@@ -240,34 +240,6 @@ function MiniSectors() {
   );
 }
 
-function MiniTracking() {
-  const episodes = [
-    { sym: "BEL", state: "Triggered", col: "#7dba96" },
-    { sym: "CUMMINSIND", state: "Triggered", col: "#7dba96" },
-    { sym: "ASTRAL", state: "Still basing", col: "#8eb4c4" },
-    { sym: "LAURUSLABS", state: "Broke down", col: "#c87a7a" },
-  ];
-  return (
-    <div className="overflow-hidden rounded-xl border border-white/[0.06] bg-[#141519]">
-      <div className="grid grid-cols-3 border-b border-white/[0.05] bg-white/[0.02] px-3.5 py-1.5 font-mono text-[9.5px] uppercase tracking-wider text-[#8e8a83]/60">
-        <span>Name</span>
-        <span className="col-span-2">What happened</span>
-      </div>
-      {episodes.map((e, i) => (
-        <div
-          key={e.sym}
-          className={`grid grid-cols-3 items-center px-3.5 py-2 text-xs ${
-            i < episodes.length - 1 ? "border-b border-white/[0.03]" : ""
-          }`}
-        >
-          <span className="font-mono font-medium text-[#eeeae3]">{e.sym}</span>
-          <span className="col-span-2 font-mono text-[11px]" style={{ color: e.col }}>{e.state}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function MiniTelegram() {
   const cmds = [
     { cmd: "/today", desc: "Sector momentum snapshot", tier: "Free" },
@@ -356,13 +328,13 @@ function FeatureShowcase() {
       visual: <MiniSectors />,
     },
     {
-      tag: "OUTCOME TRACKING",
-      metric: "365d",
-      metricLabel: "audit trail",
-      title: "Every flagged base stays on the record",
-      desc: "Nothing is dropped after the fact. Each base is logged as triggered, still basing, or broke down.",
+      tag: "PERSONAL WATCHLIST",
+      metric: "Synced",
+      metricLabel: "across devices",
+      title: "Save stocks and track them your way",
+      desc: "Bookmark any stock from any screen. Your watchlist syncs across devices and enriches each name with live coil and fundamental data.",
       span: "md:col-span-6",
-      visual: <MiniTracking />,
+      visual: <MiniWatchlist />,
     },
     {
       tag: "TELEGRAM BOT",
@@ -563,7 +535,7 @@ function PricingSection({ onSelect }) {
   const proFeatures = [
     "Everything in Free, unlimited",
     "Full sector-agreed setups list",
-    "Complete 365-day episode & outcome log",
+    "Synced personal watchlist with enrichment",
     "Leaders at rest & pullback screens",
     "Sector and delivery queries in Telegram",
     "Unlimited on-demand Telegram bot queries",
@@ -734,7 +706,7 @@ export default function Landing() {
       {/* ── Disclaimer banner ── */}
       <div className="relative z-20 border-b border-[rgba(196,164,106,0.15)] bg-[rgba(196,164,106,0.06)] px-4 py-1.5 text-center">
         <span className="text-[11px] text-white/50">
-          Not SEBI registered. Not financial advice. This is a screening tool — all decisions are yours.{" "}
+          Descriptive screening tool only — not SEBI-registered, not investment advice, and not a recommendation to buy or sell.{" "}
           <Link to="/terms" className="text-[#8eb4c4] no-underline hover:underline">Terms</Link>
           {" · "}
           <Link to="/privacy" className="text-[#8eb4c4] no-underline hover:underline">Privacy</Link>
@@ -1006,7 +978,7 @@ export default function Landing() {
                 </div>
                 <p className="mt-3.5 max-w-sm text-xs leading-relaxed text-[#8e8a83]">
                   A calm post-market screening desk for Indian equities. Sector rotation,
-                  coiled bases, company fundamentals, and 365-day outcome tracking.
+                  coiled bases, company fundamentals, and interactive charts.
                 </p>
               </div>
 
@@ -1112,7 +1084,7 @@ export default function Landing() {
               © {new Date().getFullYear()} Morrow Desk. Built for post-market review.
             </span>
             <span>
-              Not SEBI registered · Informational equity screening tool only, not investment advice.
+              Descriptive screening tool only — not SEBI-registered, not investment advice, and not a recommendation to buy or sell. Data is end-of-day and may contain errors; verify before acting.
             </span>
           </div>
         </div>

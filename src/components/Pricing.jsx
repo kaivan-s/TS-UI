@@ -38,7 +38,6 @@ const PRO_HIGHLIGHTS = [
   "Full sector-agreed Setups list + triggers",
   "Leaders at rest (top 20 momentum)",
   "Sector shape & constituent history",
-  "Complete 365-day episode & outcome log",
   "Sector & delivery queries in Telegram",
   "Unlimited on-demand Telegram bot views",
   "Priority EOD refresh after 20:30 IST",
@@ -62,7 +61,6 @@ const COMPARISON_GROUPS = [
       { feature: "Sector-agreed Setups list", free: "1 preview", pro: "Full list + entry levels" },
       { feature: "Leaders at rest (12M momentum cut)", free: false, pro: "Top 20 ranked" },
       { feature: "All coiled bases with scores", free: "Overview", pro: "Full pool + filters" },
-      { feature: "365-day basing episode & outcome log", free: "Summary", pro: "Full resolution log" },
       { feature: "Header stock lookup & gate check", free: "Included", pro: "Included" },
     ],
   },
@@ -91,7 +89,7 @@ const FAQS = [
   },
   {
     q: "Is Morrow Desk financial advice?",
-    a: "No. Morrow Desk is a quantitative post-market screening tool. It highlights where sector flow and price compression overlap — position sizing, stops, and execution are yours.",
+    a: "No. Morrow Desk is a descriptive screening tool — not SEBI-registered, and not investment advice. It describes what sector flow, volume and price compression are doing. It does not predict future returns or recommend any security. All decisions are yours.",
   },
 ];
 
@@ -173,7 +171,7 @@ export default function Pricing() {
         >
           <Typography sx={{ fontWeight: 600, fontSize: 15 }}>Welcome to Pro Desk!</Typography>
           <Typography sx={{ fontSize: 13.5, color: C.muted, mt: 0.25 }}>
-            Your subscription is active and all setups, leaders at rest, and episode logs are unlocked.
+            Your subscription is active and all setups, leaders at rest, and unlimited Telegram queries are unlocked.
           </Typography>
           <Typography sx={{ fontSize: 12.75, color: C.muted, mt: 1, fontFamily: MONO }}>
             Link Telegram:{" "}
@@ -302,7 +300,7 @@ export default function Pricing() {
             {isPremium
               ? subscriptionCancelled
                 ? `Your Pro subscription is set to end on ${formatDate(subscriptionExpires)}.`
-                : `You have full access to all sector-agreed setups, leaders at rest, 365-day episode logs, and unlimited Telegram bot queries.`
+                : `You have full access to all sector-agreed setups, leaders at rest, and unlimited Telegram bot queries.`
               : "The core desk — charts, fundamentals, watchlist, results calendar, and nightly sector scans — is free forever. Upgrade to Pro for the complete setups shortlist and unlimited bot queries."}
           </Typography>
         </Box>

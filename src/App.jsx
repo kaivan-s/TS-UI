@@ -13,7 +13,6 @@ import { capturePageview } from "./posthog.js";
 import Sidebar from "./components/Sidebar.jsx";
 import Header from "./components/Header.jsx";
 import SetupsView from "./components/SetupsView.jsx";
-import TrackingView from "./components/TrackingView.jsx";
 import MarketView from "./components/MarketView.jsx";
 import SectorsView from "./components/SectorsView.jsx";
 import Guide from "./components/Guide.jsx";
@@ -32,7 +31,6 @@ import { useWatchlist } from "./watchlist.jsx";
 const PATH_TO_VIEW = {
   "/setups": "setups",
   "/sectors": "sectors",
-  "/tracking": "tracking",
   "/watchlist": "watchlist",
   "/fundamentals": "fundamentals",
   "/results": "results",
@@ -157,7 +155,7 @@ export default function App() {
         }}
       >
         <Typography sx={{ fontSize: 11, color: "rgba(238,234,227,0.7)" }}>
-          Not SEBI registered. Not financial advice. This is a screening tool to help identify setups — all decisions are yours.{" "}
+          Descriptive screening tool only — not SEBI-registered, not investment advice, and not a recommendation to buy or sell. All decisions are yours.{" "}
           <Link to="/terms" style={{ color: C.accent, textDecoration: "none" }}>Terms</Link>
           {" · "}
           <Link to="/privacy" style={{ color: C.accent, textDecoration: "none" }}>Privacy</Link>
@@ -244,10 +242,6 @@ export default function App() {
               onOpenSector={openSector}
               onOpenStock={openStock}
             />
-          )}
-
-          {view === "tracking" && (
-            <TrackingView onOpenSector={openSector} onOpenStock={openStock} />
           )}
 
           {view === "watchlist" && (
