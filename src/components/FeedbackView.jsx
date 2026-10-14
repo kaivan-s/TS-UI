@@ -44,7 +44,7 @@ export default function FeedbackView() {
   };
 
   return (
-    <Box sx={{ pb: 6, maxWidth: 720 }}>
+    <Box sx={{ pb: 6 }}>
       {/* Header */}
       <Box
         sx={{
