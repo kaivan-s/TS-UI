@@ -249,7 +249,9 @@ export default function App() {
 
           {view === "market" && <MarketView onOpenStock={openStock} />}
 
-          {view === "insights" && <InsightsView onOpenStock={openStock} />}
+          {view === "insights" && (
+            <InsightsView onOpenStock={openStock} onOpenSector={openSector} />
+          )}
 
           {view === "stock" && <StockPage onOpenSector={openSector} />}
 
