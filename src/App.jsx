@@ -54,8 +54,9 @@ export default function App() {
   // Track pageviews on route change
   useEffect(() => { capturePageview(location.pathname); }, [location.pathname]);
 
-  // Derive view from URL path
-  const view = PATH_TO_VIEW[location.pathname] || "setups";
+  // Derive view from URL path (strip trailing slash)
+  const cleanPath = location.pathname.replace(/\/+$/, "") || "/";
+  const view = PATH_TO_VIEW[cleanPath] || "setups";
 
   const [status, setStatus] = useState(null);
   const [scan, setScan] = useState([]);

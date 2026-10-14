@@ -8,6 +8,17 @@ import PrivacyPolicy from "./components/PrivacyPolicy.jsx";
 import TermsConditions from "./components/TermsConditions.jsx";
 import App from "./App.jsx";
 
+function TrailingSlashRedirect() {
+  const location = useLocation();
+  const clean = location.pathname.replace(/\/+$/, "");
+  // If stripping the slash gives a known route, redirect there
+  if (clean && clean !== location.pathname) {
+    return <Navigate to={clean + location.search} replace />;
+  }
+  // Otherwise fall back to setups
+  return <Navigate to="/setups" replace />;
+}
+
 function Loading() {
   return (
     <Box
@@ -230,8 +241,8 @@ export default function AppRoutes() {
         }
       />
 
-      {/* Catch-all: redirect to setups if logged in, landing if not */}
-      <Route path="*" element={<Navigate to="/setups" replace />} />
+      {/* Strip trailing slashes — /pricing/ → /pricing */}
+      <Route path="*" element={<TrailingSlashRedirect />} />
     </Routes>
   );
 }
