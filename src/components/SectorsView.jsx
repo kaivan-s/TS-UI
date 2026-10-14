@@ -7,11 +7,15 @@ import SectorLookoutsTab from "./SectorLookoutsTab.jsx";
  * sectors from two sources and differed only in how many rows they left
  * in, so the filter now does that job on a single table.
  */
-export default function SectorsView({ scan, status, onOpenSector }) {
+export default function SectorsView({ scan, status, onOpenSector, onOpenStock }) {
   return (
-    <Box>
+    <Box sx={{ maxWidth: 1320, pb: 6 }}>
       <UpdateBanner asOf={status?.as_of} />
-      <SectorLookoutsTab liveRows={scan} onOpenSector={onOpenSector} />
+      <SectorLookoutsTab
+        liveRows={scan}
+        onOpenSector={onOpenSector}
+        onOpenStock={onOpenStock}
+      />
     </Box>
   );
 }

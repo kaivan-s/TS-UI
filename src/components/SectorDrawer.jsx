@@ -2,7 +2,6 @@ import { Fragment } from "react";
 import {
   Box,
   Button,
-  Chip,
   Drawer,
   IconButton,
   LinearProgress,
@@ -11,7 +10,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Tooltip,
   Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -28,15 +26,29 @@ import { useAuth } from "../auth.jsx";
 import { C } from "../theme.js";
 import { fmtDate, num, pct } from "../format.js";
 import { STATES } from "../glossary.js";
+import { BookmarkButton } from "../watchlist.jsx";
+
+const MONO = '"IBM Plex Mono", ui-monospace, monospace';
+
+const TABLE_SX = {
+  "& .MuiTableCell-stickyHeader, & .MuiTableCell-head": {
+    bgcolor: "#0e0f12",
+    fontFamily: MONO,
+    fontSize: 10.5,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    py: 1.25,
+  },
+};
 
 function Card({ children, highlight, sx }) {
   return (
     <Box
       sx={{
         p: 2.5,
-        borderRadius: 2,
-        bgcolor: highlight ? "rgba(125,186,150,0.06)" : C.paper,
-        border: `1px solid ${highlight ? "rgba(125,186,150,0.2)" : C.line}`,
+        borderRadius: 2.5,
+        bgcolor: highlight ? "rgba(125,186,150,0.05)" : "#15161b",
+        border: `1px solid ${highlight ? "rgba(125,186,150,0.22)" : C.line}`,
         ...sx,
       }}
     >
@@ -47,9 +59,18 @@ function Card({ children, highlight, sx }) {
 
 function SectionTitle({ icon: Icon, children }) {
   return (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-      {Icon && <Icon sx={{ fontSize: 18, color: C.accent }} />}
-      <Typography sx={{ fontSize: 13, fontWeight: 600, color: C.text, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.75 }}>
+      {Icon && <Icon sx={{ fontSize: 17, color: C.accent }} />}
+      <Typography
+        sx={{
+          fontFamily: MONO,
+          fontSize: 11,
+          fontWeight: 600,
+          color: C.text,
+          textTransform: "uppercase",
+          letterSpacing: "0.1em",
+        }}
+      >
         {children}
       </Typography>
     </Box>
@@ -57,9 +78,9 @@ function SectionTitle({ icon: Icon, children }) {
 }
 
 function Check({ ok }) {
-  if (ok === true) return <CheckCircleRoundedIcon sx={{ fontSize: 18, color: C.good }} />;
-  if (ok === false) return <CancelRoundedIcon sx={{ fontSize: 18, color: C.bad }} />;
-  return <RemoveCircleRoundedIcon sx={{ fontSize: 18, color: "rgba(238,234,227,0.4)" }} />;
+  if (ok === true) return <CheckCircleRoundedIcon sx={{ fontSize: 17, color: C.good, mt: 0.15 }} />;
+  if (ok === false) return <CancelRoundedIcon sx={{ fontSize: 17, color: C.bad, mt: 0.15 }} />;
+  return <RemoveCircleRoundedIcon sx={{ fontSize: 17, color: "rgba(238,234,227,0.4)", mt: 0.15 }} />;
 }
 
 const MARK = {
@@ -86,24 +107,30 @@ function ShapeCard({ shape }) {
   const progress = total > 0 ? (passed / total) * 100 : 0;
 
   return (
-    <Card sx={{ borderColor: `${fg}33`, bgcolor: `${fg}0a` }}>
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+    <Card sx={{ borderColor: `${fg}33`, bgcolor: "#15161b" }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.75 }}>
         <SectionTitle icon={TrendingUpRoundedIcon}>Shape Analysis</SectionTitle>
         {total > 0 && (
-          <Chip
-            size="small"
-            label={`${passed}/${total}`}
+          <Box
+            component="span"
             sx={{
-              bgcolor: passed === total ? "rgba(125,186,150,0.15)" : "rgba(238,234,227,0.08)",
-              color: passed === total ? C.good : "rgba(238,234,227,0.6)",
+              px: 1,
+              py: 0.25,
+              borderRadius: 1,
+              bgcolor: passed === total ? "rgba(125,186,150,0.14)" : "rgba(238,234,227,0.06)",
+              border: `1px solid ${passed === total ? "rgba(125,186,150,0.32)" : C.line}`,
+              color: passed === total ? C.good : C.muted,
+              fontFamily: MONO,
               fontWeight: 600,
-              fontSize: 12,
+              fontSize: 11,
             }}
-          />
+          >
+            {passed}/{total} PASSED
+          </Box>
         )}
       </Box>
-      
-      <Typography sx={{ fontWeight: 500, fontSize: 15, color: C.text, mb: 2 }}>
+
+      <Typography sx={{ fontWeight: 500, fontSize: 14.5, color: C.text, mb: 2, lineHeight: 1.5 }}>
         {shape.verdict_text}
       </Typography>
 
@@ -112,7 +139,7 @@ function ShapeCard({ shape }) {
           variant="determinate"
           value={progress}
           sx={{
-            mb: 2,
+            mb: 2.25,
             height: 4,
             borderRadius: 2,
             bgcolor: "rgba(238,234,227,0.08)",
@@ -124,11 +151,11 @@ function ShapeCard({ shape }) {
         />
       )}
 
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.1 }}>
         {checks.map((c) => (
-          <Box key={c.id} sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+          <Box key={c.id} sx={{ display: "flex", gap: 1.25, alignItems: "flex-start" }}>
             <Check ok={c.ok} />
-            <Typography sx={{ fontSize: 13, lineHeight: 1.5, color: c.ok ? C.text : "rgba(238,234,227,0.5)" }}>
+            <Typography sx={{ fontSize: 12.75, lineHeight: 1.5, color: c.ok ? C.text : C.muted }}>
               {c.text}
             </Typography>
           </Box>
@@ -138,18 +165,21 @@ function ShapeCard({ shape }) {
   );
 }
 
-function SetupsCard({ buys }) {
+function SetupsCard({ buys, onOpenStock }) {
   if (!buys?.length) return null;
   return (
-    <Card highlight>
-      <SectionTitle icon={StarRoundedIcon}>Setups in this Sector</SectionTitle>
-      <Typography sx={{ color: "rgba(238,234,227,0.6)", mb: 2.5, fontSize: 13 }}>
-        Coiled stocks inside this pullback. The breakout price is the level each one has yet to clear — none of them has confirmed at today's price.
-      </Typography>
-      <Box sx={{ overflowX: "auto", mx: -2.5, px: 2.5 }}>
-        <Table size="small" sx={{ minWidth: 600 }}>
+    <Card highlight sx={{ p: 0, overflow: "hidden" }}>
+      <Box sx={{ p: 2.5, borderBottom: `1px solid ${C.line}` }}>
+        <SectionTitle icon={StarRoundedIcon}>Setups in this Sector</SectionTitle>
+        <Typography sx={{ color: C.muted, fontSize: 12.75, lineHeight: 1.55 }}>
+          Coiled stocks inside this pullback. The breakout price is the level each one has yet to clear — none of them has confirmed at today&apos;s price.
+        </Typography>
+      </Box>
+      <Box sx={{ overflowX: "auto" }}>
+        <Table size="small" sx={{ minWidth: 620, ...TABLE_SX }}>
           <TableHead>
             <TableRow>
+              <HeadCell label="" sx={{ width: 34, p: 0 }} />
               <HeadCell label="Symbol" />
               <HeadCell k="adj" align="right" />
               <HeadCell k="coil" align="right" />
@@ -162,16 +192,37 @@ function SetupsCard({ buys }) {
           <TableBody>
             {buys.map((r) => (
               <Fragment key={r.symbol}>
-                <TableRow sx={{ "& td:first-of-type": { boxShadow: `inset 2px 0 0 ${C.good}` } }}>
-                  <TableCell sx={{ fontWeight: 600, fontSize: 13 }}>{r.symbol}</TableCell>
-                  <TableCell align="right" className="num" sx={{ fontSize: 13 }}>{num(r.adj, 2)}</TableCell>
-                  <TableCell align="right" className="num" sx={{ fontSize: 13 }}>{num(r.coil, 1)}</TableCell>
-                  <TableCell align="right" className="num" sx={{ fontSize: 13 }}>{pct(r.to_trigger, 1)}</TableCell>
-                  <TableCell align="right" className="num" sx={{ fontSize: 13 }}>{pct(r.pos_hi, 1)}</TableCell>
-                  <TableCell align="right" className="num" sx={{ fontSize: 13 }}>{num(r.rsi, 1)}</TableCell>
-                  <TableCell align="right" className="num" sx={{ fontSize: 13 }}>{num(r.vol_ratio)}</TableCell>
+                <TableRow
+                  hover
+                  sx={{
+                    "& td:first-of-type": { boxShadow: `inset 2px 0 0 ${C.good}` },
+                    "&:hover": { bgcolor: "rgba(255,255,255,0.025) !important" },
+                  }}
+                >
+                  <TableCell sx={{ py: 0, px: 0.75, width: 34 }}>
+                    <BookmarkButton symbol={r.symbol} />
+                  </TableCell>
+                  <TableCell
+                    onClick={() => onOpenStock?.(r.symbol)}
+                    sx={{
+                      fontFamily: MONO,
+                      fontWeight: 600,
+                      fontSize: 12.75,
+                      color: C.text,
+                      cursor: onOpenStock ? "pointer" : "default",
+                      "&:hover": onOpenStock ? { color: C.accent } : {},
+                    }}
+                  >
+                    {r.symbol}
+                  </TableCell>
+                  <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.25 }}>{num(r.adj, 2)}</TableCell>
+                  <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.25 }}>{num(r.coil, 1)}</TableCell>
+                  <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.25 }}>{pct(r.to_trigger, 1)}</TableCell>
+                  <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.25 }}>{pct(r.pos_hi, 1)}</TableCell>
+                  <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.25 }}>{num(r.rsi, 1)}</TableCell>
+                  <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.25 }}>{num(r.vol_ratio)}</TableCell>
                 </TableRow>
-                {r.why && <WhyRow cols={7}>{r.why}</WhyRow>}
+                {r.why && <WhyRow cols={8}>{r.why}</WhyRow>}
               </Fragment>
             ))}
           </TableBody>
@@ -181,7 +232,7 @@ function SetupsCard({ buys }) {
   );
 }
 
-export default function SectorDrawer({ open, onClose, data, loading }) {
+export default function SectorDrawer({ open, onClose, data, loading, onOpenStock }) {
   const { isPremium, upgrade, busy } = useAuth();
   const title = data?.sector || "Sector";
 
@@ -191,9 +242,10 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
       open={open}
       onClose={onClose}
       PaperProps={{
-        sx: { 
-          width: { xs: "100%", sm: 720 }, 
-          bgcolor: C.bg, 
+        sx: {
+          width: { xs: "100%", sm: 760 },
+          bgcolor: C.bg,
+          borderLeft: `1px solid ${C.line}`,
           p: 0,
         },
       }}
@@ -206,20 +258,23 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
           borderBottom: `1px solid ${C.line}`,
           position: "sticky",
           top: 0,
-          bgcolor: C.bg,
-          zIndex: 1,
+          bgcolor: "#131419",
+          zIndex: 2,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{ fontSize: 28, fontWeight: 700, color: C.text, letterSpacing: "-0.02em", mb: 1 }}>
+            <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.accent, mb: 0.5 }}>
+              SECTOR DOSSIER
+            </Typography>
+            <Typography sx={{ fontSize: 24, fontWeight: 700, color: C.text, letterSpacing: "-0.02em", mb: 1 }}>
               {title}
             </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, flexWrap: "wrap" }}>
               {data?.klass && <KlassChip klass={data.klass} />}
-              {data?.klass && (
-                <Typography sx={{ fontSize: 13, color: "rgba(238,234,227,0.6)" }}>
-                  {STATES[data.klass]?.short}
+              {data?.klass && STATES[data.klass] && (
+                <Typography sx={{ fontFamily: MONO, fontSize: 11.5, color: C.muted }}>
+                  {STATES[data.klass].label} · {STATES[data.klass].short}
                 </Typography>
               )}
             </Box>
@@ -235,7 +290,11 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
         {!isPremium && (
           <Box
             sx={{
-              py: 8,
+              py: 7,
+              px: 3,
+              borderRadius: 2.5,
+              bgcolor: "#15161b",
+              border: `1px solid ${C.line}`,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -244,23 +303,24 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
           >
             <Box
               sx={{
-                width: 64,
-                height: 64,
-                borderRadius: 3,
+                width: 56,
+                height: 56,
+                borderRadius: 2.5,
                 bgcolor: "rgba(142,180,196,0.1)",
+                border: "1px solid rgba(142,180,196,0.25)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                mb: 2.5,
+                mb: 2,
               }}
             >
-              <StarRoundedIcon sx={{ fontSize: 28, color: C.accent }} />
+              <StarRoundedIcon sx={{ fontSize: 26, color: C.accent }} />
             </Box>
             <Typography sx={{ fontSize: 18, fontWeight: 600, color: C.text, mb: 1 }}>
-              Sector Details
+              Sector Dossier
             </Typography>
-            <Typography sx={{ fontSize: 14, color: "rgba(238,234,227,0.6)", mb: 3, maxWidth: 320 }}>
-              Shape checks, history, and constituent stocks are available with a premium subscription.
+            <Typography sx={{ fontSize: 13.5, color: C.muted, mb: 3, maxWidth: 340 }}>
+              Shape checks, session history, and constituent stocks are available with a Pro Desk membership.
             </Typography>
             <Button
               variant="contained"
@@ -271,6 +331,7 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
                 bgcolor: C.accent,
                 color: C.bg,
                 fontWeight: 600,
+                textTransform: "none",
                 px: 3,
                 "&:hover": { bgcolor: "#7aa4b4" },
               }}
@@ -282,13 +343,13 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
 
         {isPremium && loading && (
           <Box sx={{ py: 8, textAlign: "center" }}>
-            <Typography sx={{ color: "rgba(238,234,227,0.6)", fontSize: 14 }}>Loading sector details…</Typography>
+            <Typography sx={{ color: C.muted, fontSize: 14 }}>Loading sector details…</Typography>
           </Box>
         )}
 
         {isPremium && data?.found === false && (
           <Box sx={{ py: 6, textAlign: "center" }}>
-            <Typography sx={{ color: "rgba(238,234,227,0.6)", fontSize: 14 }}>
+            <Typography sx={{ color: C.muted, fontSize: 14 }}>
               {data.reason || "No match."}
               {data.near?.length ? ` Did you mean: ${data.near.join(", ")}` : ""}
             </Typography>
@@ -299,28 +360,33 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
             {/* Note */}
             {data.note && (
-              <Typography sx={{ fontSize: 14, lineHeight: 1.7, color: "rgba(238,234,227,0.7)" }}>
-                {data.note}
-              </Typography>
+              <Card sx={{ py: 1.75, px: 2.25 }}>
+                <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: C.muted, mb: 0.5 }}>
+                  CLASSIFICATION NOTE
+                </Typography>
+                <Typography sx={{ fontSize: 13.5, lineHeight: 1.65, color: C.text }}>
+                  {data.note}
+                </Typography>
+              </Card>
             )}
 
             {/* Shape Analysis */}
             <ShapeCard shape={data.shape} />
 
             {/* Setups */}
-            {data.shape?.recommend && <SetupsCard buys={data.buys} />}
-            
+            {data.shape?.recommend && <SetupsCard buys={data.buys} onOpenStock={onOpenStock} />}
+
             {data.shape?.recommend && !(data.buys || []).length && (
               <Card>
-                <Typography sx={{ fontSize: 14, color: "rgba(238,234,227,0.6)" }}>
-                  The sector looks clean, but no stock inside it is coiled right now. Check the Coils tab again tomorrow.
+                <Typography sx={{ fontSize: 13.5, color: C.muted }}>
+                  The sector looks clean, but no stock inside it is coiled right now. Check the Setups tab again tomorrow.
                 </Typography>
               </Card>
             )}
 
             {data.klass === "PULLBACK" && !data.shape?.recommend && (
               <Card>
-                <Typography sx={{ fontSize: 14, color: "rgba(238,234,227,0.6)" }}>
+                <Typography sx={{ fontSize: 13.5, color: C.muted }}>
                   This is a pullback, but one of the shape checks above failed — usually the volume surge did not come out of a genuinely quiet stretch. No setup list for this sector.
                 </Typography>
               </Card>
@@ -331,17 +397,17 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
               <Card sx={{ p: 0, overflow: "hidden" }}>
                 <Box sx={{ px: 2.5, py: 2, borderBottom: `1px solid ${C.line}` }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <TimelineRoundedIcon sx={{ fontSize: 18, color: C.accent }} />
-                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: C.text, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    <TimelineRoundedIcon sx={{ fontSize: 17, color: C.accent }} />
+                    <Typography sx={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.text, textTransform: "uppercase", letterSpacing: "0.1em" }}>
                       Last {data.history.length} Sessions
                     </Typography>
                   </Box>
-                  <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.5)", mt: 0.75 }}>
+                  <Typography sx={{ fontSize: 12, color: C.muted, mt: 0.5 }}>
                     Green = volume surge · Blue = light pullback · Red = heavy down
                   </Typography>
                 </Box>
                 <Box sx={{ overflowX: "auto" }}>
-                  <Table size="small" sx={{ minWidth: 650 }}>
+                  <Table size="small" sx={{ minWidth: 650, ...TABLE_SX }}>
                     <TableHead>
                       <TableRow>
                         <HeadCell label="Date" />
@@ -360,29 +426,39 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
                         return (
                           <TableRow
                             key={r.date}
-                            sx={m ? { "& td:first-of-type": { boxShadow: `inset 2px 0 0 ${m.fg}` } } : undefined}
+                            hover
+                            sx={{
+                              ...(m ? { "& td:first-of-type": { boxShadow: `inset 2px 0 0 ${m.fg}` } } : {}),
+                              "&:hover": { bgcolor: "rgba(255,255,255,0.02) !important" },
+                            }}
                           >
-                            <TableCell sx={{ fontSize: 12, py: 1 }}>{fmtDate(r.date)}</TableCell>
+                            <TableCell sx={{ fontFamily: MONO, fontSize: 12, py: 1 }}>{fmtDate(r.date)}</TableCell>
                             <TableCell sx={{ py: 1 }}>
                               {m ? (
-                                <Chip
-                                  size="small"
-                                  label={m.label}
+                                <Box
+                                  component="span"
                                   sx={{
+                                    px: 0.85,
+                                    py: 0.2,
+                                    borderRadius: 1,
                                     color: m.fg,
-                                    bgcolor: `${m.fg}1a`,
-                                    fontSize: 10,
-                                    height: 20,
+                                    bgcolor: `${m.fg}16`,
+                                    border: `1px solid ${m.fg}33`,
+                                    fontFamily: MONO,
+                                    fontSize: 10.5,
+                                    fontWeight: 600,
                                   }}
-                                />
+                                >
+                                  {m.label}
+                                </Box>
                               ) : null}
                             </TableCell>
-                            <TableCell align="right" className="num" sx={{ fontSize: 12, py: 1 }}>{num(r.T)}</TableCell>
-                            <TableCell align="right" className="num" sx={{ fontSize: 12, py: 1 }}>{num(r.T_rel)}</TableCell>
-                            <TableCell align="right" className="num" sx={{ fontSize: 12, py: 1 }}>{num(r.B)}</TableCell>
-                            <TableCell align="right" className="num" sx={{ fontSize: 12, py: 1 }}>{num(r.cmf)}</TableCell>
-                            <TableCell align="right" className="num" sx={{ fontSize: 12, py: 1 }}>{num(r.rs, 1)}</TableCell>
-                            <TableCell align="right" className="num" sx={{ fontSize: 12, py: 1 }}>{pct(r.ret, 2)}</TableCell>
+                            <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12, py: 1 }}>{num(r.T)}</TableCell>
+                            <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12, py: 1 }}>{num(r.T_rel)}</TableCell>
+                            <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12, py: 1 }}>{num(r.B)}</TableCell>
+                            <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12, py: 1 }}>{num(r.cmf)}</TableCell>
+                            <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12, py: 1 }}>{num(r.rs, 1)}</TableCell>
+                            <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12, py: 1 }}>{pct(r.ret, 2)}</TableCell>
                           </TableRow>
                         );
                       })}
@@ -397,19 +473,20 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
               <Card sx={{ p: 0, overflow: "hidden" }}>
                 <Box sx={{ px: 2.5, py: 2, borderBottom: `1px solid ${C.line}` }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <GroupsRoundedIcon sx={{ fontSize: 18, color: C.accent }} />
-                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: C.text, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    <GroupsRoundedIcon sx={{ fontSize: 17, color: C.accent }} />
+                    <Typography sx={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.text, textTransform: "uppercase", letterSpacing: "0.1em" }}>
                       Constituents
                     </Typography>
                   </Box>
-                  <Typography sx={{ fontSize: 12, color: "rgba(238,234,227,0.5)", mt: 0.75 }}>
-                    Stocks in this sector by value traded
+                  <Typography sx={{ fontSize: 12, color: C.muted, mt: 0.5 }}>
+                    Stocks in this sector ordered by value traded
                   </Typography>
                 </Box>
                 <Box sx={{ overflowX: "auto" }}>
-                  <Table size="small" sx={{ minWidth: 500 }}>
+                  <Table size="small" sx={{ minWidth: 540, ...TABLE_SX }}>
                     <TableHead>
                       <TableRow>
+                        <HeadCell label="" sx={{ width: 34, p: 0 }} />
                         <HeadCell label="Symbol" />
                         <HeadCell k="close" align="right" />
                         <HeadCell label="Day %" align="right" />
@@ -420,13 +497,47 @@ export default function SectorDrawer({ open, onClose, data, loading }) {
                     </TableHead>
                     <TableBody>
                       {(data.constituents || []).slice(0, 15).map((r) => (
-                        <TableRow key={r.symbol} sx={{ "&:last-child td": { border: 0 } }}>
-                          <TableCell sx={{ fontWeight: 500, fontSize: 12, py: 1 }}>{r.symbol}</TableCell>
-                          <TableCell align="right" className="num" sx={{ fontSize: 12, py: 1 }}>{num(r.close, 2)}</TableCell>
-                          <TableCell align="right" className="num" sx={{ fontSize: 12, py: 1, color: r.ret > 0 ? C.good : r.ret < 0 ? C.bad : undefined }}>{pct(r.ret, 2)}</TableCell>
-                          <TableCell align="right" className="num" sx={{ fontSize: 12, py: 1 }}>{num(r.turnover, 1)}</TableCell>
-                          <TableCell align="right" className="num" sx={{ fontSize: 12, py: 1 }}>{num(r.deliv_pct, 1)}</TableCell>
-                          <TableCell align="right" className="num" sx={{ fontSize: 12, py: 1 }}>{num(r.cmf)}</TableCell>
+                        <TableRow
+                          key={r.symbol}
+                          hover
+                          sx={{
+                            "&:last-child td": { border: 0 },
+                            "&:hover": { bgcolor: "rgba(255,255,255,0.025) !important" },
+                          }}
+                        >
+                          <TableCell sx={{ py: 0, px: 0.75, width: 34 }}>
+                            <BookmarkButton symbol={r.symbol} />
+                          </TableCell>
+                          <TableCell
+                            onClick={() => onOpenStock?.(r.symbol)}
+                            sx={{
+                              fontFamily: MONO,
+                              fontWeight: 600,
+                              fontSize: 12.25,
+                              py: 1,
+                              color: C.text,
+                              cursor: onOpenStock ? "pointer" : "default",
+                              "&:hover": onOpenStock ? { color: C.accent } : {},
+                            }}
+                          >
+                            {r.symbol}
+                          </TableCell>
+                          <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12, py: 1 }}>{num(r.close, 2)}</TableCell>
+                          <TableCell
+                            align="right"
+                            className="num"
+                            sx={{
+                              fontFamily: MONO,
+                              fontSize: 12,
+                              py: 1,
+                              color: r.ret > 0 ? C.good : r.ret < 0 ? C.bad : undefined,
+                            }}
+                          >
+                            {pct(r.ret, 2)}
+                          </TableCell>
+                          <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12, py: 1 }}>{num(r.turnover, 1)}</TableCell>
+                          <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12, py: 1 }}>{num(r.deliv_pct, 1)}</TableCell>
+                          <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12, py: 1 }}>{num(r.cmf)}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

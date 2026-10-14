@@ -5,37 +5,40 @@
  *  - Cross-sectional heatmap of all sectors, filtered by state group
  *  - Expanding a row gives 20 days of that sector's history, the shape
  *    checks behind its verdict, and its constituents
- *  - Falls back to the live classification before the 7:30 PM job has run
+ *  - Falls back to the live classification before the 20:30 IST job has run
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
-  Chip,
   CircularProgress,
   IconButton,
-  Paper,
+  InputAdornment,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import SearchIcon from "@mui/icons-material/Search";
 import TimelineIcon from "@mui/icons-material/Timeline";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import KlassChip from "./KlassChip.jsx";
-import { HeadCell, Note } from "./ui.jsx";
+import { HeadCell, useTableSort } from "./ui.jsx";
 import { useAuth } from "../auth.jsx";
 import { C } from "../theme.js";
 import { num, signed } from "../format.js";
-import { FILTER_HELP, STATE_GROUP, STATE_GROUPS } from "../glossary.js";
+import { BUY_READY_HELP, FILTER_HELP, STATE_GROUP, STATE_GROUPS, STATES } from "../glossary.js";
 import { getSectorLookouts, getSectorHistory, getSectorConstituents } from "../api.js";
 
+const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 const FILTERS = ["acting", "watching", "out", "all"];
 
 /**
@@ -62,54 +65,54 @@ function fromLiveRow(r) {
   };
 }
 
-// Heatmap color scales
+// Heatmap color scales — tuned to architectural dark desk palette
 const HEATMAP_COLORS = {
   // For T_rel (turnover expansion): higher = hotter
   t_rel: (v) => {
     if (v == null) return "transparent";
-    if (v >= 2.0) return "rgba(239,83,80,0.35)";   // Very hot
-    if (v >= 1.5) return "rgba(255,167,38,0.30)";  // Hot
-    if (v >= 1.2) return "rgba(255,213,79,0.25)";  // Warm
-    if (v >= 1.0) return "rgba(255,255,255,0.05)"; // Normal
-    return "rgba(100,181,246,0.15)";               // Cool
+    if (v >= 2.0) return "rgba(200,122,122,0.28)";
+    if (v >= 1.5) return "rgba(196,164,106,0.26)";
+    if (v >= 1.3) return "rgba(196,164,106,0.16)";
+    if (v >= 1.0) return "rgba(255,255,255,0.025)";
+    return "rgba(142,180,196,0.10)";
   },
   // For breadth (B): positive = green, negative = red
   b: (v) => {
     if (v == null) return "transparent";
-    if (v >= 0.3) return "rgba(125,186,150,0.35)";   // Strong green
-    if (v >= 0.15) return "rgba(125,186,150,0.25)";  // Green
-    if (v >= 0) return "rgba(125,186,150,0.10)";     // Slight green
-    if (v >= -0.15) return "rgba(239,83,80,0.10)";   // Slight red
-    if (v >= -0.3) return "rgba(239,83,80,0.25)";    // Red
-    return "rgba(239,83,80,0.35)";                   // Strong red
+    if (v >= 0.3) return "rgba(125,186,150,0.28)";
+    if (v >= 0.15) return "rgba(125,186,150,0.18)";
+    if (v >= 0) return "rgba(125,186,150,0.07)";
+    if (v >= -0.15) return "rgba(200,122,122,0.08)";
+    if (v >= -0.3) return "rgba(200,122,122,0.18)";
+    return "rgba(200,122,122,0.28)";
   },
   // For CMF: accumulation vs distribution
   cmf: (v) => {
     if (v == null) return "transparent";
-    if (v >= 0.2) return "rgba(125,186,150,0.30)";
-    if (v >= 0.1) return "rgba(125,186,150,0.20)";
-    if (v >= 0) return "rgba(125,186,150,0.08)";
-    if (v >= -0.1) return "rgba(239,83,80,0.08)";
-    if (v >= -0.2) return "rgba(239,83,80,0.20)";
-    return "rgba(239,83,80,0.30)";
+    if (v >= 0.2) return "rgba(125,186,150,0.26)";
+    if (v >= 0.1) return "rgba(125,186,150,0.16)";
+    if (v >= 0) return "rgba(125,186,150,0.06)";
+    if (v >= -0.1) return "rgba(200,122,122,0.07)";
+    if (v >= -0.2) return "rgba(200,122,122,0.16)";
+    return "rgba(200,122,122,0.26)";
   },
   // For RS change: momentum
   rs_chg: (v) => {
     if (v == null) return "transparent";
-    if (v >= 3) return "rgba(125,186,150,0.30)";
-    if (v >= 1) return "rgba(125,186,150,0.15)";
-    if (v >= 0) return "rgba(255,255,255,0.03)";
-    if (v >= -1) return "rgba(239,83,80,0.10)";
-    if (v >= -3) return "rgba(239,83,80,0.20)";
-    return "rgba(239,83,80,0.30)";
+    if (v >= 3) return "rgba(125,186,150,0.24)";
+    if (v >= 1) return "rgba(125,186,150,0.12)";
+    if (v >= 0) return "rgba(255,255,255,0.02)";
+    if (v >= -1) return "rgba(200,122,122,0.08)";
+    if (v >= -3) return "rgba(200,122,122,0.16)";
+    return "rgba(200,122,122,0.24)";
   },
   // For delivery quality
   deliv: (v) => {
     if (v == null) return "transparent";
-    if (v >= 1.2) return "rgba(125,186,150,0.25)";
-    if (v >= 1.0) return "rgba(125,186,150,0.10)";
-    if (v >= 0.8) return "rgba(255,255,255,0.03)";
-    return "rgba(239,83,80,0.15)";
+    if (v >= 1.2) return "rgba(125,186,150,0.22)";
+    if (v >= 1.0) return "rgba(125,186,150,0.09)";
+    if (v >= 0.8) return "rgba(255,255,255,0.02)";
+    return "rgba(200,122,122,0.14)";
   },
 };
 
@@ -131,14 +134,16 @@ function ShapeMark({ mark }) {
           display: "inline-flex",
           alignItems: "center",
           justifyContent: "center",
-          width: 18,
-          height: 18,
-          borderRadius: "50%",
-          bgcolor: `${c.color}22`,
+          width: 17,
+          height: 17,
+          borderRadius: 0.75,
+          bgcolor: `${c.color}1e`,
+          border: `1px solid ${c.color}40`,
           color: c.color,
-          fontSize: 10,
+          fontFamily: MONO,
+          fontSize: 9.5,
           fontWeight: 700,
-          ml: 0.5,
+          ml: 0.75,
         }}
       >
         {c.label}
@@ -160,72 +165,104 @@ function VerdictBadge({ verdict }) {
   };
   const c = config[verdict] || { label: verdict, color: C.muted };
   return (
-    <Chip
-      size="small"
-      label={c.label}
+    <Box
+      component="span"
       sx={{
-        bgcolor: `${c.color}15`,
+        display: "inline-flex",
+        alignItems: "center",
+        px: 0.9,
+        py: 0.25,
+        borderRadius: 1,
+        bgcolor: `${c.color}14`,
+        border: `1px solid ${c.color}33`,
         color: c.color,
-        fontWeight: 500,
-        fontSize: 11,
+        fontFamily: MONO,
+        fontWeight: 600,
+        fontSize: 10.5,
       }}
-    />
+    >
+      {c.label}
+    </Box>
+  );
+}
+
+// Specific 7-state sub-badge
+function SpecificStateBadge({ klass }) {
+  const s = STATES[klass];
+  if (!s) return null;
+  return (
+    <Tooltip title={`${s.short} — ${s.help}`} placement="top" arrow enterDelay={200}>
+      <Typography
+        component="span"
+        sx={{
+          fontFamily: MONO,
+          fontSize: 10.5,
+          color: C.muted,
+          cursor: "help",
+          borderBottom: "1px dotted rgba(238,234,227,0.2)",
+        }}
+      >
+        {s.label}
+      </Typography>
+    </Tooltip>
   );
 }
 
 // Time-series row for a sector's history
-function HistoryRow({ row, onClick }) {
+function HistoryRow({ row }) {
   const date = row.scan_date?.slice(5) || ""; // MM-DD format
   const shape = row.shape_report || {};
-  const checks = shape.checks || [];
   const crossing = shape.crossing || {};
-  
-  // Determine mark for this date
+
   let mark = null;
   if (crossing.date && row.scan_date?.startsWith(crossing.date?.slice(0, 10))) {
     mark = "crossing";
   }
-  
+
   return (
     <TableRow
       hover
-      onClick={onClick}
-      sx={{ cursor: "pointer", "&:hover": { bgcolor: "rgba(255,255,255,0.02)" } }}
+      sx={{ "&:hover": { bgcolor: "rgba(255,255,255,0.02)" } }}
     >
-      <TableCell sx={{ py: 0.75, fontSize: 12 }}>
+      <TableCell sx={{ py: 0.7, fontFamily: MONO, fontSize: 11.5 }}>
         {date}
         <ShapeMark mark={mark} />
       </TableCell>
-      <TableCell sx={{ py: 0.75 }}>
-        <KlassChip klass={row.klass} small />
+      <TableCell sx={{ py: 0.7 }}>
+        <KlassChip klass={row.klass} size="small" />
       </TableCell>
       <TableCell
         align="right"
-        sx={{ py: 0.75, bgcolor: HEATMAP_COLORS.t_rel(row.t_rel) }}
+        className="num"
+        sx={{ py: 0.7, fontFamily: MONO, fontSize: 11.5, bgcolor: HEATMAP_COLORS.t_rel(row.t_rel) }}
       >
         {num(row.t_rel)}
       </TableCell>
       <TableCell
         align="right"
-        sx={{ py: 0.75, bgcolor: HEATMAP_COLORS.b(row.b) }}
+        className="num"
+        sx={{ py: 0.7, fontFamily: MONO, fontSize: 11.5, bgcolor: HEATMAP_COLORS.b(row.b) }}
       >
         {num(row.b)}
       </TableCell>
       <TableCell
         align="right"
-        sx={{ py: 0.75, bgcolor: HEATMAP_COLORS.cmf(row.cmf_rel) }}
+        className="num"
+        sx={{ py: 0.7, fontFamily: MONO, fontSize: 11.5, bgcolor: HEATMAP_COLORS.cmf(row.cmf_rel) }}
       >
         {num(row.cmf_rel)}
       </TableCell>
       <TableCell
         align="right"
-        sx={{ py: 0.75, bgcolor: HEATMAP_COLORS.rs_chg(row.rs_chg_5) }}
+        className="num"
+        sx={{ py: 0.7, fontFamily: MONO, fontSize: 11.5, bgcolor: HEATMAP_COLORS.rs_chg(row.rs_chg_5) }}
       >
         {signed(row.rs_chg_5, 1)}
       </TableCell>
       <TableCell
         align="right"
-        sx={{ py: 0.75, bgcolor: HEATMAP_COLORS.deliv(row.deliv_quality_rel) }}
+        className="num"
+        sx={{ py: 0.7, fontFamily: MONO, fontSize: 11.5, bgcolor: HEATMAP_COLORS.deliv(row.deliv_quality_rel) }}
       >
         {num(row.deliv_quality_rel)}
       </TableCell>
@@ -234,7 +271,7 @@ function HistoryRow({ row, onClick }) {
 }
 
 // Sector history panel (time-series heatmap)
-function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
+function SectorHistoryPanel({ sector, onClose, onOpenSector, onOpenStock }) {
   const [history, setHistory] = useState([]);
   const [constituents, setConstituents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -243,10 +280,10 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
   useEffect(() => {
     if (!sector) return;
     setLoading(true);
-    
+
     Promise.all([
-      getSectorHistory(sector, 30),  // Fetch 30 days
-      getSectorConstituents(sector, 15),  // Fetch 15 stocks
+      getSectorHistory(sector, 30),
+      getSectorConstituents(sector, 15),
     ])
       .then(([histRes, constRes]) => {
         setHistory(histRes.rows || []);
@@ -263,33 +300,43 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
   const hasHistory = history.length > 1;
 
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
         p: 2.5,
-        mb: 2,
-        bgcolor: "rgba(255,255,255,0.02)",
-        border: "1px solid rgba(238,234,227,0.08)",
+        mx: 2,
+        my: 1.5,
+        bgcolor: "#111216",
+        border: `1px solid ${C.line}`,
         borderRadius: 2,
       }}
     >
       {/* Header */}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2.5 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <TimelineIcon sx={{ color: C.accent, fontSize: 22 }} />
-          <Typography sx={{ fontWeight: 600, fontSize: 16 }}>{sector}</Typography>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1.5, mb: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, flexWrap: "wrap" }}>
+          <TimelineIcon sx={{ color: C.accent, fontSize: 20 }} />
+          <Typography sx={{ fontWeight: 600, fontSize: 15.5, color: C.text }}>{sector}</Typography>
           {latest.klass && <KlassChip klass={latest.klass} />}
+          {latest.klass && <SpecificStateBadge klass={latest.klass} />}
           {shape.verdict && <VerdictBadge verdict={shape.verdict} />}
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button
             size="small"
+            variant="outlined"
             onClick={() => onOpenSector?.(sector)}
-            sx={{ fontSize: 12, color: C.accent }}
+            endIcon={<OpenInNewRoundedIcon sx={{ fontSize: "14px !important" }} />}
+            sx={{
+              fontSize: 11.5,
+              color: C.accent,
+              borderColor: "rgba(142,180,196,0.28)",
+              textTransform: "none",
+              py: 0.4,
+              "&:hover": { borderColor: C.accent, bgcolor: "rgba(142,180,196,0.08)" },
+            }}
           >
-            Full Details →
+            Full Sector Dossier
           </Button>
-          <IconButton size="small" onClick={onClose}>
+          <IconButton size="small" onClick={onClose} sx={{ color: C.muted }}>
             <ExpandLessIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -297,131 +344,168 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-          <CircularProgress size={24} />
+          <CircularProgress size={22} sx={{ color: C.accent }} />
         </Box>
       ) : (
         <Box>
-          {/* Top row: Verdict + Shape Checks + History - all horizontal */}
-          <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-            {/* Verdict summary */}
-            {shape.verdict_text && (
-              <Box sx={{ flex: "0 0 auto", maxWidth: 280, p: 1.5, bgcolor: "rgba(142,180,196,0.06)", borderRadius: 1.5 }}>
-                <Typography sx={{ fontSize: 12, color: C.text, lineHeight: 1.5 }}>
-                  {shape.verdict_text}
-                </Typography>
-              </Box>
-            )}
-
-            {/* Shape checks - compact horizontal */}
-            {shape.checks?.length > 0 && (
-              <Box sx={{ flex: "0 0 auto" }}>
-                <Typography sx={{ fontSize: 11, fontWeight: 600, color: C.muted, mb: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Shape Checks
-                </Typography>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                  {shape.checks.map((c, i) => (
-                    <Box
-                      key={i}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.75,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 16,
-                          height: 16,
-                          borderRadius: "50%",
-                          bgcolor:
-                            c.ok === true
-                              ? "rgba(125,186,150,0.25)"
-                              : c.ok === false
-                              ? "rgba(239,83,80,0.25)"
-                              : "rgba(255,255,255,0.1)",
-                          color:
-                            c.ok === true ? C.good : c.ok === false ? C.bad : C.muted,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 10,
-                          fontWeight: 700,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {c.ok === true ? "✓" : c.ok === false ? "✗" : "?"}
-                      </Box>
-                      <Typography sx={{ fontSize: 11, color: C.text, lineHeight: 1.3 }}>
-                        {c.text}
-                      </Typography>
-                    </Box>
-                  ))}
+          {/* Top row: Verdict + Shape Checks + History */}
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "280px 1fr" }, gap: 2.5, mb: 2 }}>
+            {/* Left column: Verdict & Shape checks */}
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.75 }}>
+              {shape.verdict_text && (
+                <Box
+                  sx={{
+                    p: 1.75,
+                    bgcolor: "#15161b",
+                    border: `1px solid ${C.line}`,
+                    borderRadius: 1.75,
+                  }}
+                >
+                  <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: C.accent, mb: 0.5 }}>
+                    VERDICT READOUT
+                  </Typography>
+                  <Typography sx={{ fontSize: 12.5, color: C.text, lineHeight: 1.55 }}>
+                    {shape.verdict_text}
+                  </Typography>
                 </Box>
-              </Box>
-            )}
+              )}
 
-            {/* History table - takes remaining space */}
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontSize: 11, fontWeight: 600, color: C.muted, mb: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                {hasHistory ? `Last ${history.length} Sessions` : "History"}
-              </Typography>
+              {shape.checks?.length > 0 && (
+                <Box
+                  sx={{
+                    p: 1.75,
+                    bgcolor: "#15161b",
+                    border: `1px solid ${C.line}`,
+                    borderRadius: 1.75,
+                  }}
+                >
+                  <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: C.muted, mb: 1.25 }}>
+                    SHAPE CHECKS
+                  </Typography>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 0.85 }}>
+                    {shape.checks.map((c, i) => (
+                      <Box key={i} sx={{ display: "flex", alignItems: "flex-start", gap: 1 }}>
+                        <Box
+                          sx={{
+                            width: 16,
+                            height: 16,
+                            mt: 0.15,
+                            borderRadius: 0.75,
+                            bgcolor:
+                              c.ok === true
+                                ? "rgba(125,186,150,0.18)"
+                                : c.ok === false
+                                ? "rgba(200,122,122,0.18)"
+                                : "rgba(255,255,255,0.08)",
+                            border: `1px solid ${
+                              c.ok === true
+                                ? "rgba(125,186,150,0.35)"
+                                : c.ok === false
+                                ? "rgba(200,122,122,0.35)"
+                                : "rgba(255,255,255,0.15)"
+                            }`,
+                            color: c.ok === true ? C.good : c.ok === false ? C.bad : C.muted,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontFamily: MONO,
+                            fontSize: 9.5,
+                            fontWeight: 700,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {c.ok === true ? "✓" : c.ok === false ? "✗" : "?"}
+                        </Box>
+                        <Typography sx={{ fontSize: 11.75, color: C.text, lineHeight: 1.4 }}>
+                          {c.text}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+            </Box>
+
+            {/* Right column: History table */}
+            <Box
+              sx={{
+                bgcolor: "#15161b",
+                border: `1px solid ${C.line}`,
+                borderRadius: 1.75,
+                overflow: "hidden",
+              }}
+            >
+              <Box sx={{ px: 2, py: 1.25, bgcolor: "#0e0f12", borderBottom: `1px solid ${C.line}` }}>
+                <Typography sx={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.12em", color: C.muted }}>
+                  {hasHistory ? `LAST ${history.length} SESSIONS · CROSS-SECTIONAL HISTORY` : "SESSION HISTORY"}
+                </Typography>
+              </Box>
               {history.length === 0 ? (
-                <Typography sx={{ fontSize: 12, color: C.muted }}>
-                  No history yet. Builds after daily 7:30 PM scans.
+                <Typography sx={{ p: 2.5, fontSize: 12.5, color: C.muted }}>
+                  No history yet. Builds after daily 20:30 IST scans.
                 </Typography>
               ) : (
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>Date</TableCell>
-                      <TableCell sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>State</TableCell>
-                      <TableCell align="right" sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>T_rel</TableCell>
-                      <TableCell align="right" sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>B</TableCell>
-                      <TableCell align="right" sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>CMF</TableCell>
-                      <TableCell align="right" sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>RS Δ5</TableCell>
-                      <TableCell align="right" sx={{ py: 0.5, px: 1, fontSize: 10, fontWeight: 600 }}>Deliv</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {[...history].reverse().map((row) => (
-                      <HistoryRow
-                        key={row.scan_date}
-                        row={row}
-                        onClick={() => {}}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
+                <TableContainer sx={{ maxHeight: 280 }}>
+                  <Table size="small" stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ bgcolor: "#0e0f12", py: 0.75, px: 1.25, fontFamily: MONO, fontSize: 10, color: C.muted }}>Date</TableCell>
+                        <TableCell sx={{ bgcolor: "#0e0f12", py: 0.75, px: 1.25, fontFamily: MONO, fontSize: 10, color: C.muted }}>State</TableCell>
+                        <TableCell align="right" sx={{ bgcolor: "#0e0f12", py: 0.75, px: 1.25, fontFamily: MONO, fontSize: 10, color: C.muted }}>T_rel</TableCell>
+                        <TableCell align="right" sx={{ bgcolor: "#0e0f12", py: 0.75, px: 1.25, fontFamily: MONO, fontSize: 10, color: C.muted }}>Breadth</TableCell>
+                        <TableCell align="right" sx={{ bgcolor: "#0e0f12", py: 0.75, px: 1.25, fontFamily: MONO, fontSize: 10, color: C.muted }}>CMF rel</TableCell>
+                        <TableCell align="right" sx={{ bgcolor: "#0e0f12", py: 0.75, px: 1.25, fontFamily: MONO, fontSize: 10, color: C.muted }}>RS Δ5</TableCell>
+                        <TableCell align="right" sx={{ bgcolor: "#0e0f12", py: 0.75, px: 1.25, fontFamily: MONO, fontSize: 10, color: C.muted }}>Deliv</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {[...history].reverse().map((row) => (
+                        <HistoryRow key={row.scan_date} row={row} />
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
               )}
             </Box>
           </Box>
 
-          {/* Bottom: Top Stocks - full width horizontal */}
+          {/* Bottom: Top Stocks by Turnover */}
           {isPremium && constituents.length > 0 && (
-            <Box sx={{ pt: 1.5, borderTop: "1px solid rgba(238,234,227,0.06)" }}>
-              <Typography sx={{ fontSize: 11, fontWeight: 600, color: C.muted, mb: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>
-                Top Stocks by Turnover
+            <Box sx={{ pt: 1.75, borderTop: `1px solid ${C.line}` }}>
+              <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.12em", color: C.muted, mb: 1.1 }}>
+                TOP CONSTITUENTS BY TURNOVER (CLICK SYMBOL FOR CHART & DOSSIER)
               </Typography>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.85 }}>
                 {constituents.map((s) => (
                   <Box
                     key={s.symbol}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => onOpenStock?.(s.symbol)}
                     sx={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: 0.5,
-                      py: 0.35,
-                      px: 1,
-                      bgcolor: "rgba(255,255,255,0.03)",
-                      border: "1px solid rgba(238,234,227,0.06)",
-                      borderRadius: 0.75,
-                      "&:hover": { bgcolor: "rgba(255,255,255,0.05)" },
+                      gap: 0.75,
+                      py: 0.45,
+                      px: 1.1,
+                      bgcolor: "#15161b",
+                      border: `1px solid ${C.line}`,
+                      borderRadius: 1.25,
+                      cursor: onOpenStock ? "pointer" : "default",
+                      transition: "all 0.15s ease",
+                      "&:hover": {
+                        bgcolor: "rgba(255,255,255,0.04)",
+                        borderColor: "rgba(142,180,196,0.35)",
+                      },
                     }}
                   >
-                    <Typography sx={{ fontSize: 11, fontWeight: 600, color: C.text }}>{s.symbol}</Typography>
+                    <Typography sx={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 600, color: C.text }}>
+                      {s.symbol}
+                    </Typography>
                     <Typography
                       sx={{
-                        fontSize: 10,
+                        fontFamily: MONO,
+                        fontSize: 11,
                         color: s.ret > 0 ? C.good : s.ret < 0 ? C.bad : C.muted,
                         fontWeight: 600,
                       }}
@@ -435,49 +519,83 @@ function SectorHistoryPanel({ sector, onClose, onOpenSector }) {
           )}
         </Box>
       )}
-    </Paper>
+    </Box>
   );
 }
 
 // Main cross-sectional heatmap row
-function SectorRow({ row, expanded, onToggle, isPremium }) {
+function SectorRow({ row, expanded, onToggle, onOpenSector, isPremium }) {
   const shape = row.shape_report || {};
-
-  // Non-premium users can't expand rows
   const handleClick = isPremium ? onToggle : undefined;
-  
+
   return (
     <TableRow
       hover
       onClick={handleClick}
       sx={{
         cursor: isPremium ? "pointer" : "default",
-        "&:hover": { bgcolor: isPremium ? "rgba(255,255,255,0.02)" : undefined },
+        "&:hover": { bgcolor: isPremium ? "rgba(255,255,255,0.025) !important" : undefined },
         ...(expanded && { bgcolor: "rgba(142,180,196,0.05)" }),
       }}
     >
-      <TableCell sx={{ py: 1, fontWeight: 500 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-          {row.sector}
-          {isPremium && (expanded ? (
-            <ExpandLessIcon sx={{ fontSize: 16, color: C.muted }} />
-          ) : (
-            <ExpandMoreIcon sx={{ fontSize: 16, color: C.muted }} />
-          ))}
+      <TableCell sx={{ py: 1.15, fontWeight: 600, fontSize: 13.25, color: C.text }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            {row.sector}
+            {isPremium &&
+              (expanded ? (
+                <ExpandLessIcon sx={{ fontSize: 16, color: C.accent }} />
+              ) : (
+                <ExpandMoreIcon sx={{ fontSize: 16, color: C.muted }} />
+              ))}
+          </Box>
+          {isPremium && onOpenSector && (
+            <Tooltip title="Open Sector Drawer" placement="top" arrow>
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenSector(row.sector);
+                }}
+                sx={{
+                  p: 0.35,
+                  color: "rgba(238,234,227,0.35)",
+                  "&:hover": { color: C.accent, bgcolor: "rgba(142,180,196,0.12)" },
+                }}
+              >
+                <OpenInNewRoundedIcon sx={{ fontSize: 14 }} />
+              </IconButton>
+            </Tooltip>
+          )}
         </Box>
       </TableCell>
-      <TableCell sx={{ py: 1 }}>
+      <TableCell sx={{ py: 1.15 }}>
         {isPremium ? (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.85, flexWrap: "wrap" }}>
             <KlassChip klass={row.klass} />
+            <SpecificStateBadge klass={row.klass} />
             {row.buy_ready && (
-              <Chip
-                size="small"
-                label="Confirmed"
-                sx={{ bgcolor: "rgba(125,186,150,0.12)", color: C.good, fontSize: 10 }}
-              />
+              <Tooltip title={BUY_READY_HELP} placement="top" arrow enterDelay={200}>
+                <Box
+                  component="span"
+                  sx={{
+                    px: 0.85,
+                    py: 0.2,
+                    borderRadius: 1,
+                    bgcolor: "rgba(125,186,150,0.14)",
+                    border: "1px solid rgba(125,186,150,0.32)",
+                    color: C.good,
+                    fontFamily: MONO,
+                    fontSize: 10.5,
+                    fontWeight: 600,
+                    cursor: "help",
+                  }}
+                >
+                  Confirmed
+                </Box>
+              </Tooltip>
             )}
-            {shape.verdict && <VerdictBadge verdict={shape.verdict} />}
+            {shape.verdict && shape.verdict !== "orderly" && <VerdictBadge verdict={shape.verdict} />}
           </Box>
         ) : (
           <Box sx={{ filter: "blur(6px)", opacity: 0.4 }}>
@@ -487,8 +605,11 @@ function SectorRow({ row, expanded, onToggle, isPremium }) {
       </TableCell>
       <TableCell
         align="right"
+        className="num"
         sx={{
-          py: 1,
+          py: 1.15,
+          fontFamily: MONO,
+          fontSize: 12.5,
           bgcolor: HEATMAP_COLORS.t_rel(row.t_rel),
           ...(isPremium ? {} : { filter: "blur(4px)", opacity: 0.5 }),
         }}
@@ -497,8 +618,11 @@ function SectorRow({ row, expanded, onToggle, isPremium }) {
       </TableCell>
       <TableCell
         align="right"
+        className="num"
         sx={{
-          py: 1,
+          py: 1.15,
+          fontFamily: MONO,
+          fontSize: 12.5,
           bgcolor: HEATMAP_COLORS.b(row.b),
           ...(isPremium ? {} : { filter: "blur(4px)", opacity: 0.5 }),
         }}
@@ -507,8 +631,11 @@ function SectorRow({ row, expanded, onToggle, isPremium }) {
       </TableCell>
       <TableCell
         align="right"
+        className="num"
         sx={{
-          py: 1,
+          py: 1.15,
+          fontFamily: MONO,
+          fontSize: 12.5,
           bgcolor: HEATMAP_COLORS.cmf(row.cmf_rel),
           ...(isPremium ? {} : { filter: "blur(4px)", opacity: 0.5 }),
         }}
@@ -517,8 +644,11 @@ function SectorRow({ row, expanded, onToggle, isPremium }) {
       </TableCell>
       <TableCell
         align="right"
+        className="num"
         sx={{
-          py: 1,
+          py: 1.15,
+          fontFamily: MONO,
+          fontSize: 12.5,
           bgcolor: HEATMAP_COLORS.rs_chg(row.rs_chg_5),
           ...(isPremium ? {} : { filter: "blur(4px)", opacity: 0.5 }),
         }}
@@ -527,15 +657,22 @@ function SectorRow({ row, expanded, onToggle, isPremium }) {
       </TableCell>
       <TableCell
         align="right"
+        className="num"
         sx={{
-          py: 1,
+          py: 1.15,
+          fontFamily: MONO,
+          fontSize: 12.5,
           bgcolor: HEATMAP_COLORS.deliv(row.deliv_quality_rel),
           ...(isPremium ? {} : { filter: "blur(4px)", opacity: 0.5 }),
         }}
       >
         {num(row.deliv_quality_rel)}
       </TableCell>
-      <TableCell align="right" sx={{ py: 1, fontSize: 12 }}>
+      <TableCell
+        align="right"
+        className="num"
+        sx={{ py: 1.15, fontFamily: MONO, fontSize: 12, color: C.muted }}
+      >
         {row.n_adv ?? "—"}/{row.n_stocks ?? "—"}
       </TableCell>
     </TableRow>
@@ -543,24 +680,26 @@ function SectorRow({ row, expanded, onToggle, isPremium }) {
 }
 
 // Main component
-export default function SectorLookoutsTab({ onOpenSector, liveRows }) {
+export default function SectorLookoutsTab({ onOpenSector, onOpenStock, liveRows }) {
   const [data, setData] = useState({ rows: [], scan_date: null });
   const [loading, setLoading] = useState(true);
   const [expandedSector, setExpandedSector] = useState(null);
   const [filter, setFilter] = useState("acting");
+  const [q, setQ] = useState("");
   const { isPremium } = useAuth();
+
+  const sort = useTableSort({
+    dirFor: (k) => (k === "sector" || k === "klass" ? "asc" : "desc"),
+  });
 
   const fetchData = useCallback(() => {
     setLoading(true);
-
     getSectorLookouts()
       .then((res) => {
-        // Ensure rows is always an array
-        const safeData = {
+        setData({
           rows: res?.rows || [],
           scan_date: res?.scan_date || null,
-        };
-        setData(safeData);
+        });
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -570,9 +709,7 @@ export default function SectorLookoutsTab({ onOpenSector, liveRows }) {
     fetchData();
   }, [fetchData]);
 
-  // The saved scan is richer (it carries shape reports and history), but it
-  // only exists once the post-market job has run, so fall back to the live
-  // classification rather than showing an empty page.
+  // Fall back to live classification if saved post-market rows are not available yet.
   const rows = useMemo(() => {
     if ((data.rows || []).length) return data.rows;
     return (liveRows || []).map(fromLiveRow);
@@ -581,80 +718,347 @@ export default function SectorLookoutsTab({ onOpenSector, liveRows }) {
   const usingLive = (data.rows || []).length === 0 && rows.length > 0;
 
   const counts = useMemo(() => {
-    const c = { all: rows.length, acting: 0, watching: 0, out: 0 };
-    for (const r of rows) c[STATE_GROUP[r.klass] || "out"] += 1;
+    const c = { all: rows.length, acting: 0, watching: 0, out: 0, confirmed: 0 };
+    for (const r of rows) {
+      c[STATE_GROUP[r.klass] || "out"] += 1;
+      if (r.buy_ready) c.confirmed += 1;
+    }
     return c;
   }, [rows]);
 
-  // Acting first, then by turnover expansion within a group.
   const sorted = useMemo(() => {
-    const order = { CROSSING: 0, PULLBACK: 1, CROSSING_UNVERIFIED: 2, BASE: 3, NEGLECT: 4, DISQUALIFIED: 5, NONE: 6 };
-    return rows
-      .filter((r) => filter === "all" || (STATE_GROUP[r.klass] || "out") === filter)
-      .sort((a, b) => {
-        const oa = order[a.klass] ?? 99;
-        const ob = order[b.klass] ?? 99;
-        if (oa !== ob) return oa - ob;
-        return (b.t_rel || 0) - (a.t_rel || 0);
-      });
-  }, [rows, filter]);
+    const order = {
+      CROSSING: 0,
+      PULLBACK: 1,
+      CROSSING_UNVERIFIED: 2,
+      BASE: 3,
+      NEGLECT: 4,
+      DISQUALIFIED: 5,
+      NONE: 6,
+    };
+    const query = q.trim().toLowerCase();
+    const filtered = rows.filter((r) => {
+      if (filter !== "all" && (STATE_GROUP[r.klass] || "out") !== filter) return false;
+      if (query && !(r.sector || "").toLowerCase().includes(query)) return false;
+      return true;
+    });
+
+    if (sort.key) {
+      return sort.apply(filtered);
+    }
+
+    return filtered.sort((a, b) => {
+      const oa = order[a.klass] ?? 99;
+      const ob = order[b.klass] ?? 99;
+      if (oa !== ob) return oa - ob;
+      return (b.t_rel || 0) - (a.t_rel || 0);
+    });
+  }, [rows, filter, q, sort.key, sort.dir]);
 
   return (
     <Box>
-      <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", alignItems: "center", mb: 2 }}>
-        {FILTERS.map((f) => {
-          const on = filter === f;
-          const label = f === "all" ? "All" : STATE_GROUPS[f].label;
-          return (
-            <Tooltip key={f} title={FILTER_HELP[f]} placement="top" arrow enterDelay={300}>
-              <Chip
-                label={`${label}  ${counts[f] || 0}`}
-                onClick={() => setFilter(f)}
-                variant={on ? "filled" : "outlined"}
+      {/* Architectural Header Card */}
+      <Box
+        sx={{
+          bgcolor: "#15161b",
+          border: `1px solid ${C.line}`,
+          borderRadius: 3,
+          p: { xs: 2.5, sm: 3.5 },
+          mb: 3,
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            alignItems: { xs: "flex-start", md: "center" },
+            justifyContent: "space-between",
+            gap: 2,
+            mb: 2.5,
+          }}
+        >
+          <Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mb: 0.75 }}>
+              <Typography
                 sx={{
-                  borderColor: on ? "transparent" : "rgba(238,234,227,0.10)",
-                  bgcolor: on ? C.text : "transparent",
-                  color: on ? C.bg : C.muted,
-                  "&:hover": { bgcolor: on ? "#d8d4cd" : "rgba(238,234,227,0.04)" },
+                  fontFamily: MONO,
+                  fontSize: 10.5,
+                  letterSpacing: "0.18em",
+                  color: C.accent,
+                  textTransform: "uppercase",
                 }}
-              />
-            </Tooltip>
-          );
-        })}
-        <Typography sx={{ fontSize: 12, color: C.muted, ml: "auto", display: { xs: "none", sm: "block" } }}>
-          {usingLive ? "live scan" : data.scan_date}
-        </Typography>
-      </Box>
+              >
+                CROSS-SECTIONAL ROTATION ENGINE
+              </Typography>
+              {(usingLive || data.scan_date) && (
+                <Box
+                  component="span"
+                  sx={{
+                    px: 1,
+                    py: 0.2,
+                    borderRadius: 1,
+                    bgcolor: "rgba(255,255,255,0.04)",
+                    border: `1px solid ${C.line}`,
+                    fontFamily: MONO,
+                    fontSize: 10.5,
+                    color: C.muted,
+                  }}
+                >
+                  {usingLive ? "Live classification" : `Scan · ${data.scan_date}`}
+                </Box>
+              )}
+            </Box>
+            <Typography
+              sx={{
+                fontSize: { xs: 22, sm: 26 },
+                fontWeight: 600,
+                letterSpacing: "-0.025em",
+                color: C.text,
+                lineHeight: 1.2,
+              }}
+            >
+              Sector Heatmap & State Classification
+            </Typography>
+            <Typography sx={{ fontSize: 13.75, color: C.muted, mt: 0.6, maxWidth: 680 }}>
+              Every industry scored against cross-sectional peers that session so{" "}
+              <Box component="span" sx={{ fontFamily: MONO, color: C.text }}>1.0</Box> always reads as normal.
+              Click any row to inspect 30-day history, shape checks, and top constituents. Only{" "}
+              <Box component="span" sx={{ color: C.good, fontWeight: 500 }}>Acting</Box> sectors feed Setups.
+            </Typography>
+          </Box>
 
-      <Note>
-        Every sector, scored against the other sectors that day rather than against itself,
-        so 1.0 always reads as normal. Colour marks intensity. Click a sector for its 20-day
-        history and shape checks. Only <b>Acting</b> sectors feed Setups.
-      </Note>
+          {/* Search input */}
+          <TextField
+            size="small"
+            placeholder="Filter sector…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            sx={{
+              width: { xs: "100%", md: 220 },
+              "& .MuiOutlinedInput-root": {
+                bgcolor: "#0e0f12",
+                borderRadius: 1.5,
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" sx={{ color: C.muted }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+
+        {/* Live 4-Metric Telemetry Strip */}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" },
+            gap: 1.5,
+            mb: 2.5,
+          }}
+        >
+          {[
+            { label: "UNIVERSE SECTORS", value: counts.all, color: C.text, sub: "Tracked industries" },
+            { label: "ACTING (CROSSING / PULLBACK)", value: counts.acting, color: C.good, sub: "Feeding Setups" },
+            { label: "CONFIRMED SHAPE", value: counts.confirmed, color: C.good, sub: "All shape checks passed" },
+            { label: "WATCHING (BASE / UNVERIFIED)", value: counts.watching, color: C.accent, sub: "Early accumulation" },
+          ].map((m) => (
+            <Box
+              key={m.label}
+              sx={{
+                p: 1.75,
+                borderRadius: 2,
+                bgcolor: "#111216",
+                border: `1px solid ${C.line}`,
+              }}
+            >
+              <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", color: C.muted }}>
+                {m.label}
+              </Typography>
+              <Typography sx={{ fontFamily: MONO, fontSize: 22, fontWeight: 600, color: m.color, mt: 0.4 }}>
+                {m.value}
+              </Typography>
+              <Typography sx={{ fontSize: 11.5, color: C.muted, mt: 0.2 }}>
+                {m.sub}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+
+        {/* Segmented Filter Bar + Heatmap Legend */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 1.5,
+          }}
+        >
+          <Box
+            sx={{
+              display: "inline-flex",
+              flexWrap: "wrap",
+              gap: 0.75,
+              p: 0.6,
+              borderRadius: 2,
+              bgcolor: "#0c0d10",
+              border: `1px solid ${C.line}`,
+            }}
+          >
+            {FILTERS.map((f) => {
+              const active = filter === f;
+              const label = f === "all" ? "All Sectors" : STATE_GROUPS[f].label;
+              return (
+                <Tooltip key={f} title={FILTER_HELP[f]} placement="top" arrow enterDelay={300}>
+                  <Box
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setFilter(f)}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      px: 1.75,
+                      py: 0.75,
+                      borderRadius: 1.5,
+                      cursor: "pointer",
+                      bgcolor: active ? "#1b1d24" : "transparent",
+                      border: active ? "1px solid rgba(238,234,227,0.14)" : "1px solid transparent",
+                      transition: "all 0.15s ease",
+                      "&:hover": {
+                        bgcolor: active ? "#1b1d24" : "rgba(255,255,255,0.03)",
+                      },
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontSize: 12.75,
+                        fontWeight: active ? 600 : 400,
+                        color: active ? C.text : C.muted,
+                      }}
+                    >
+                      {label}
+                    </Typography>
+                    <Box
+                      component="span"
+                      sx={{
+                        px: 0.75,
+                        py: 0.1,
+                        borderRadius: 1,
+                        bgcolor: active ? "rgba(142,180,196,0.16)" : "rgba(255,255,255,0.04)",
+                        fontFamily: MONO,
+                        fontSize: 10.5,
+                        color: active ? C.accent : C.muted,
+                      }}
+                    >
+                      {counts[f] || 0}
+                    </Box>
+                  </Box>
+                </Tooltip>
+              );
+            })}
+          </Box>
+
+          {/* Compact Heatmap Legend */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+            <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, letterSpacing: "0.06em" }}>
+              INTENSITY:
+            </Typography>
+            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.6 }}>
+              <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: "rgba(125,186,150,0.28)", border: "1px solid rgba(125,186,150,0.5)" }} />
+              <Typography sx={{ fontSize: 11.5, color: C.muted }}>Accumulation / Strong</Typography>
+            </Box>
+            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.6 }}>
+              <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: "rgba(196,164,106,0.26)", border: "1px solid rgba(196,164,106,0.5)" }} />
+              <Typography sx={{ fontSize: 11.5, color: C.muted }}>Volume Surge (≥1.3×)</Typography>
+            </Box>
+            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.6 }}>
+              <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: "rgba(200,122,122,0.28)", border: "1px solid rgba(200,122,122,0.5)" }} />
+              <Typography sx={{ fontSize: 11.5, color: C.muted }}>Distribution / Weak</Typography>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-          <CircularProgress size={28} />
+          <CircularProgress size={28} sx={{ color: C.accent }} />
         </Box>
       ) : rows.length === 0 ? (
-        <Note>
-          No sector data yet. The post-market job writes it at 7:30 PM IST on trading days.
-        </Note>
+        <Box
+          sx={{
+            p: 4.5,
+            borderRadius: 2.5,
+            bgcolor: "#15161b",
+            border: `1px solid ${C.line}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography sx={{ fontSize: 14, color: C.muted }}>
+            No sector data yet. The post-market job writes it at 20:30 IST on trading days.
+          </Typography>
+        </Box>
       ) : (
-        <>
-          {/* Cross-sectional heatmap table */}
+        <Box
+          sx={{
+            bgcolor: "#15161b",
+            border: `1px solid ${C.line}`,
+            borderRadius: 2.5,
+            overflow: "hidden",
+          }}
+        >
           <TableContainer sx={{ overflowX: "auto" }}>
-            <Table stickyHeader size="small" sx={{ minWidth: 700 }}>
+            <Table
+              stickyHeader
+              size="small"
+              sx={{
+                minWidth: 780,
+                "& .MuiTableCell-stickyHeader, & .MuiTableCell-head": {
+                  bgcolor: "#0e0f12",
+                  fontFamily: MONO,
+                  fontSize: 11,
+                  letterSpacing: "0.06em",
+                  textTransform: "uppercase",
+                  py: 1.4,
+                },
+              }}
+            >
               <TableHead>
                 <TableRow>
-                  <HeadCell label="Sector" />
-                  <HeadCell label="State" help="Acting, watching, or ruled out. Hover any chip for the specific state and the grounds for it." />
-                  <HeadCell k="T_rel" align="right" />
-                  <HeadCell k="B" align="right" />
-                  <HeadCell label="CMF rel" align="right" help="Chaikin Money Flow vs cross-sectional median" />
-                  <HeadCell k="rs_chg_5" align="right" />
-                  <HeadCell label="Deliv" align="right" help="Delivery quality vs peers" />
-                  <HeadCell label="Adv" align="right" help="Advancing stocks / Total" />
+                  <HeadCell label="Sector" sort={sort} sortKey="sector" />
+                  <HeadCell
+                    label="State & Verdict"
+                    help="Acting, watching, or ruled out, alongside the specific 7-state classification and pullback shape check verdict."
+                    sort={sort}
+                    sortKey="klass"
+                  />
+                  <HeadCell k="T_rel" align="right" sort={sort} sortKey="t_rel" />
+                  <HeadCell k="B" align="right" sort={sort} sortKey="b" />
+                  <HeadCell
+                    label="CMF rel"
+                    align="right"
+                    help="Chaikin Money Flow vs cross-sectional median"
+                    sort={sort}
+                    sortKey="cmf_rel"
+                  />
+                  <HeadCell k="rs_chg_5" align="right" sort={sort} sortKey="rs_chg_5" />
+                  <HeadCell
+                    label="Deliv"
+                    align="right"
+                    help="Delivery quality vs peers"
+                    sort={sort}
+                    sortKey="deliv_quality_rel"
+                  />
+                  <HeadCell
+                    label="Adv"
+                    align="right"
+                    help="Advancing stocks / Total"
+                    sort={sort}
+                    sortKey="n_adv"
+                  />
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -666,16 +1070,17 @@ export default function SectorLookoutsTab({ onOpenSector, liveRows }) {
                       onToggle={() =>
                         setExpandedSector(expandedSector === row.sector ? null : row.sector)
                       }
+                      onOpenSector={onOpenSector}
                       isPremium={isPremium}
                     />
-                    {/* Inline expanded panel below the row */}
                     {expandedSector === row.sector && (
                       <TableRow>
-                        <TableCell colSpan={8} sx={{ p: 0, border: 0 }}>
+                        <TableCell colSpan={8} sx={{ p: 0, borderBottom: `1px solid ${C.line}` }}>
                           <SectorHistoryPanel
                             sector={row.sector}
                             onClose={() => setExpandedSector(null)}
                             onOpenSector={onOpenSector}
+                            onOpenStock={onOpenStock}
                           />
                         </TableCell>
                       </TableRow>
@@ -684,17 +1089,17 @@ export default function SectorLookoutsTab({ onOpenSector, liveRows }) {
                 ))}
                 {sorted.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} sx={{ color: C.muted, py: 4, textAlign: "center" }}>
-                      {filter === "acting"
+                    <TableCell colSpan={8} sx={{ color: C.muted, py: 5, textAlign: "center", fontSize: 13.5 }}>
+                      {filter === "acting" && !q
                         ? "No sector woke up or pulled back today. An empty list is the scan working — markets do not rotate every session."
-                        : "Nothing in this filter."}
+                        : "No sectors match the current filter."}
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
           </TableContainer>
-        </>
+        </Box>
       )}
     </Box>
   );

@@ -241,6 +241,7 @@ export default function App() {
               scan={scan}
               status={status}
               onOpenSector={openSector}
+              onOpenStock={openStock}
             />
           )}
 
@@ -279,6 +280,7 @@ export default function App() {
         onClose={() => setSectorName(null)}
         data={sector}
         loading={sectorLoading}
+        onOpenStock={openStock}
       />
       <StockDrawer
         open={Boolean(stockQuery)}

@@ -2,6 +2,8 @@ import { Box, Tooltip, Typography } from "@mui/material";
 import { C } from "../theme.js";
 import { EVIDENCE_WINDOW, STAT_STRIPS } from "../evidence.js";
 
+const MONO = '"IBM Plex Mono", ui-monospace, monospace';
+
 /**
  * What a list has historically been worth, stated up front.
  *
@@ -19,38 +21,56 @@ export default function BaseRate({ metric }) {
       <Box
         sx={{
           display: "flex",
-          alignItems: "baseline",
+          alignItems: "center",
+          justifyContent: "space-between",
           flexWrap: "wrap",
           gap: { xs: 2, sm: 3.5 },
           mb: 2.5,
-          px: 2,
-          py: 1.5,
-          borderRadius: 2,
+          px: 2.5,
+          py: 1.75,
+          borderRadius: 2.5,
           cursor: "help",
-          bgcolor: "rgba(142,180,196,0.05)",
-          border: "1px solid rgba(142,180,196,0.12)",
+          bgcolor: "#15161b",
+          border: `1px solid ${C.line}`,
         }}
       >
-        {strip.stats.map((s) => (
-          <Box key={s.label} sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
-            <Typography
-              component="span"
-              sx={{ fontSize: 17, fontWeight: 600, color: C.text, lineHeight: 1 }}
-              className="num"
-            >
-              {s.value}
-            </Typography>
-            <Typography component="span" sx={{ fontSize: 12, color: C.muted }}>
-              {s.label}
-            </Typography>
-          </Box>
-        ))}
-        <Typography
+        <Box sx={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: { xs: 2.5, sm: 4 } }}>
+          {strip.stats.map((s) => (
+            <Box key={s.label} sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+              <Typography
+                component="span"
+                sx={{
+                  fontFamily: MONO,
+                  fontSize: 18,
+                  fontWeight: 600,
+                  color: C.good,
+                  lineHeight: 1,
+                }}
+                className="num"
+              >
+                {s.value}
+              </Typography>
+              <Typography component="span" sx={{ fontSize: 12.5, color: C.muted }}>
+                {s.label}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+        <Box
           component="span"
-          sx={{ fontSize: 11.5, color: C.muted, ml: "auto", opacity: 0.8 }}
+          sx={{
+            px: 1.1,
+            py: 0.35,
+            borderRadius: 1,
+            bgcolor: "#0e0f12",
+            border: `1px solid ${C.line}`,
+            fontFamily: MONO,
+            fontSize: 10.5,
+            color: C.muted,
+          }}
         >
-          backtest, {strip.window || EVIDENCE_WINDOW}
-        </Typography>
+          EMPIRICAL BASE RATE · {strip.window || EVIDENCE_WINDOW}
+        </Box>
       </Box>
     </Tooltip>
   );
