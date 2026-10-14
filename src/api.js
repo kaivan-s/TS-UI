@@ -16,7 +16,10 @@ async function json(path, opts) {
     throw new Error(data.error || "Session expired. Sign in again.");
   }
   if (!res.ok && res.status !== 202 && res.status !== 409) {
-    throw new Error(data.error || `HTTP ${res.status}`);
+    const err = new Error(data.error || `HTTP ${res.status}`);
+    err.status = res.status;
+    err.data = data;
+    throw err;
   }
   return data;
 }

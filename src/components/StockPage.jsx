@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Box,
-  Drawer,
+  Button,
   IconButton,
   LinearProgress,
   Table,
@@ -11,7 +13,8 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
@@ -26,6 +29,7 @@ import { BookmarkButton } from "../watchlist.jsx";
 import { C } from "../theme.js";
 import { fmtDate, num, pct } from "../format.js";
 import { M } from "../glossary.js";
+import { getStock } from "../api.js";
 
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
@@ -182,54 +186,130 @@ function SectionTitle({ icon: Icon, children }) {
   );
 }
 
-export default function StockDrawer({
-  open,
-  onClose,
-  data,
-  loading,
-  onOpenSector,
-  onLookup,
-}) {
+function LimitCard({ denial }) {
+  const used = denial?.used || [];
+  const limit = denial?.limit ?? 1;
+  return (
+    <Card sx={{ textAlign: "center", py: 5, px: 3 }}>
+      <LockRoundedIcon sx={{ fontSize: 30, color: C.accent, mb: 1.5 }} />
+      <Typography sx={{ fontSize: 17, fontWeight: 600, color: C.text, mb: 1 }}>
+        You&apos;ve used today&apos;s free stock lookup
+      </Typography>
+      <Typography sx={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6, maxWidth: 460, mx: "auto", mb: 2.5 }}>
+        Free accounts can open {limit === 1 ? "one stock" : `${limit} stocks`} a day, and reopening it
+        is free. The count resets at midnight IST. Pro has no limit.
+      </Typography>
+      <Box sx={{ display: "flex", gap: 1.5, justifyContent: "center", flexWrap: "wrap" }}>
+        <Button component={Link} to="/pricing" variant="contained" disableElevation>
+          See Pro
+        </Button>
+        {used.map((s) => (
+          <Button key={s} component={Link} to={`/stock/${encodeURIComponent(s)}`} variant="outlined">
+            Open {s} again
+          </Button>
+        ))}
+      </Box>
+    </Card>
+  );
+}
+
+export default function StockPage({ onOpenSector }) {
+  const { symbol: param = "" } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const query = param.trim();
+  const entry = new URLSearchParams(location.search).get("entry");
+
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [warming, setWarming] = useState(false);
+  const [error, setError] = useState("");
+  const [denial, setDenial] = useState(null);
+
+  useEffect(() => {
+    // Already showing this symbol: we just swapped a typed name for the
+    // canonical symbol in the URL, so there is nothing new to fetch.
+    if (data?.symbol && data.symbol === query) return undefined;
+    if (!query) return undefined;
+    let stop = false;
+    let timer = null;
+    setLoading(true);
+    setError("");
+    setDenial(null);
+    setData(null);
+    const load = () => {
+      getStock(query, entry)
+        .then((d) => {
+          if (stop) return;
+          // A cold server answers 202 with its loading status, not a stock.
+          if (d.found === undefined && d.status && d.status !== "ready") {
+            setWarming(true);
+            timer = setTimeout(load, 4000);
+            return;
+          }
+          setWarming(false);
+          setData(d);
+          setLoading(false);
+          if (d.found && d.symbol && d.symbol !== query) {
+            navigate(`/stock/${encodeURIComponent(d.symbol)}${location.search}`, { replace: true });
+          }
+        })
+        .catch((e) => {
+          if (stop) return;
+          if (e.data?.limit_reached) setDenial(e.data);
+          else setError(e.message);
+          setWarming(false);
+          setLoading(false);
+        });
+    };
+    load();
+    return () => { stop = true; clearTimeout(timer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, entry]);
+
+  useEffect(() => {
+    const prev = document.title;
+    document.title = `${data?.symbol || query} · Morrow Desk`;
+    return () => { document.title = prev; };
+  }, [data?.symbol, query]);
+
+  const goBack = () => {
+    if (location.key !== "default") navigate(-1);
+    else navigate("/setups");
+  };
+  const onLookup = (sym) => navigate(`/stock/${encodeURIComponent(sym)}`);
+
   const m = data?.metrics || {};
   const filters = data?.filters || [];
   const passedFilters = filters.filter((f) => f.ok).length;
   const totalFilters = filters.length;
   const coilProgress = totalFilters > 0 ? (passedFilters / totalFilters) * 100 : 0;
+  const lookups = data?.lookups;
 
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
-      PaperProps={{
-        sx: {
-          width: { xs: "100%", sm: 760 },
-          bgcolor: C.bg,
-          borderLeft: `1px solid ${C.line}`,
-          p: 0,
-        },
-      }}
-    >
+    <Box sx={{ maxWidth: 980, mx: "auto" }}>
       {/* Header */}
       <Box
         sx={{
           px: 3,
           py: 2.5,
-          borderBottom: `1px solid ${C.line}`,
-          position: "sticky",
-          top: 0,
+          mb: 2.5,
+          borderRadius: 2.5,
+          border: `1px solid ${C.line}`,
           bgcolor: "#131419",
-          zIndex: 2,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+          <IconButton onClick={goBack} size="small" sx={{ color: C.muted, mt: 0.25 }} aria-label="Back">
+            <ArrowBackRoundedIcon />
+          </IconButton>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: C.accent, mb: 0.5 }}>
               EQUITY DOSSIER
             </Typography>
             <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, mb: 1 }}>
               <Typography sx={{ fontFamily: MONO, fontSize: 26, fontWeight: 700, color: C.text, letterSpacing: "-0.02em" }}>
-                {data?.symbol || data?.query || "Stock"}
+                {data?.symbol || query.toUpperCase()}
               </Typography>
               {m.adj && (
                 <Typography sx={{ fontFamily: MONO, fontSize: 18, fontWeight: 500, color: C.muted }}>
@@ -274,16 +354,31 @@ export default function StockDrawer({
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.5 }}>
             {data?.symbol && <BookmarkButton symbol={data.symbol} size="medium" />}
-            <IconButton onClick={onClose} size="small" sx={{ color: C.muted }}>
-              <CloseIcon />
-            </IconButton>
           </Box>
         </Box>
       </Box>
 
-      <Box sx={{ px: 3, py: 3, overflowY: "auto" }}>
+      <Box>
         {loading && (
-          <Typography color="text.secondary">Reading the name…</Typography>
+          <Typography color="text.secondary">
+            {warming ? "The server is still loading market data — this page will fill in shortly…" : "Reading the name…"}
+          </Typography>
+        )}
+
+        {!loading && denial && <LimitCard denial={denial} />}
+
+        {!loading && error && (
+          <Card>
+            <Typography sx={{ fontSize: 14, color: C.bad }}>{error}</Typography>
+          </Card>
+        )}
+
+        {!loading && lookups && !lookups.unlimited && (
+          <Typography sx={{ fontFamily: MONO, fontSize: 11.5, color: C.muted, mb: 2 }}>
+            Free plan: {lookups.used.length} of {lookups.limit} stock lookup{lookups.limit === 1 ? "" : "s"} used today.
+            Reopening {data.symbol} today won&apos;t count again.{" "}
+            <Link to="/pricing" style={{ color: C.accent, textDecoration: "none" }}>Pro is unlimited</Link>
+          </Typography>
         )}
 
         {!loading && data?.found === false && (
@@ -617,6 +712,6 @@ export default function StockDrawer({
           </Box>
         )}
       </Box>
-    </Drawer>
+    </Box>
   );
 }

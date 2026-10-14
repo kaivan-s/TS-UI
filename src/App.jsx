@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -23,8 +23,8 @@ import ResultsCalendarView from "./components/ResultsCalendarView.jsx";
 import PrivacyPolicy from "./components/PrivacyPolicy.jsx";
 import TermsConditions from "./components/TermsConditions.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
-import StockDrawer from "./components/StockDrawer.jsx";
-import { getDashboard, getSector, getStock, getSymbols } from "./api.js";
+import StockPage from "./components/StockPage.jsx";
+import { getDashboard, getSector, getSymbols } from "./api.js";
 import { useWatchlist } from "./watchlist.jsx";
 
 // Map URL paths to view names
@@ -46,6 +46,8 @@ const PATH_TO_VIEW = {
 export default function App() {
   const theme = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
+  const navType = useNavigationType();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -54,7 +56,22 @@ export default function App() {
 
   // Derive view from URL path (strip trailing slash)
   const cleanPath = location.pathname.replace(/\/+$/, "") || "/";
-  const view = PATH_TO_VIEW[cleanPath] || "setups";
+  const view = cleanPath.startsWith("/stock/")
+    ? "stock"
+    : PATH_TO_VIEW[cleanPath] || "setups";
+
+  // Coming back from a stock page should land where the list was left.
+  const scrollByKey = useRef({});
+  useEffect(() => {
+    const key = location.key;
+    const onScroll = () => { scrollByKey.current[key] = window.scrollY; };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [location.key]);
+  useLayoutEffect(() => {
+    const y = navType === "POP" ? scrollByKey.current[location.key] : 0;
+    window.scrollTo(0, y || 0);
+  }, [location.key, navType]);
 
   const [status, setStatus] = useState(null);
   const [scan, setScan] = useState([]);
@@ -65,9 +82,6 @@ export default function App() {
   const [sector, setSector] = useState(null);
   const [sectorLoading, setSectorLoading] = useState(false);
   const [symbols, setSymbols] = useState([]);
-  const [stockQuery, setStockQuery] = useState(null);
-  const [stock, setStock] = useState(null);
-  const [stockLoading, setStockLoading] = useState(false);
 
   const [loading, setLoading] = useState(true);
 
@@ -104,7 +118,6 @@ export default function App() {
   }, []);
 
   const openSector = async (name) => {
-    setStockQuery(null);
     setSectorName(name);
     setSector(null);
     setSectorLoading(true);
@@ -117,21 +130,12 @@ export default function App() {
     }
   };
 
-  const openStock = async (q, entry) => {
+  const openStock = (q, entry) => {
     const name = (q || "").trim();
     if (!name) return;
     setSectorName(null);
-    setStockQuery(name);
-    if (entry == null) setStock(null);
-    setStockLoading(true);
-    try {
-      setStock(await getStock(name, entry));
-    } catch (e) {
-      setError(e.message);
-      if (entry == null) setStockQuery(null);
-    } finally {
-      setStockLoading(false);
-    }
+    const qs = entry != null && entry !== "" ? `?entry=${encodeURIComponent(entry)}` : "";
+    navigate(`/stock/${encodeURIComponent(name)}${qs}`);
   };
 
   // Counts for sidebar badges
@@ -258,6 +262,8 @@ export default function App() {
 
           {view === "market" && <MarketView onOpenStock={openStock} />}
 
+          {view === "stock" && <StockPage onOpenSector={openSector} />}
+
           {view === "guide" && <Guide />}
 
           {view === "pricing" && <Pricing />}
@@ -276,14 +282,6 @@ export default function App() {
         data={sector}
         loading={sectorLoading}
         onOpenStock={openStock}
-      />
-      <StockDrawer
-        open={Boolean(stockQuery)}
-        onClose={() => { setStockQuery(null); setStock(null); }}
-        data={stock}
-        loading={stockLoading}
-        onOpenSector={openSector}
-        onLookup={openStock}
       />
     </Box>
   );

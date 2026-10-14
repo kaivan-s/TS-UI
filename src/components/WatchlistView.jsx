@@ -2,7 +2,7 @@
  * Watchlist — user's saved stocks with enriched data.
  *
  * Shows fundamentals + coil data for bookmarked stocks.
- * Coiled stocks are highlighted. Click to open StockDrawer.
+ * Coiled stocks are highlighted. Click to open the stock page.
  */
 
 import { useEffect, useMemo, useState } from "react";
