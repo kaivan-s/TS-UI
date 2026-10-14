@@ -28,6 +28,7 @@ import StockPage from "./components/StockPage.jsx";
 import InsightsView from "./components/InsightsView.jsx";
 import { getDashboard, getSector, getSymbols } from "./api.js";
 import { useWatchlist } from "./watchlist.jsx";
+import { useAuth } from "./auth.jsx";
 
 // Map URL paths to view names
 const PATH_TO_VIEW = {
@@ -51,6 +52,7 @@ export default function App() {
   const theme = useTheme();
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { trial, trialDaysLeft } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Track pageviews on route change
@@ -193,6 +195,62 @@ export default function App() {
               "& .MuiLinearProgress-bar": { bgcolor: C.accent },
             }}
           />
+        )}
+
+        {/* Trial banner */}
+        {trial && (
+          <Box
+            sx={{
+              px: { xs: 2, sm: 3 },
+              pt: 1.5,
+              pb: 0,
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+            }}
+          >
+            <Box
+              sx={{
+                flex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
+                px: 2,
+                py: 1,
+                borderRadius: 1.5,
+                bgcolor: "rgba(142,180,196,0.08)",
+                border: "1px solid rgba(142,180,196,0.2)",
+              }}
+            >
+              <Typography sx={{ fontSize: 12.5, color: C.text }}>
+                <Box component="span" sx={{ fontWeight: 600, color: C.accent }}>
+                  Free trial
+                </Box>
+                {" · "}
+                {trialDaysLeft > 1
+                  ? `${trialDaysLeft} days remaining`
+                  : trialDaysLeft === 1
+                    ? "Last day"
+                    : "Expires today"}{" "}
+                — full access to all features
+              </Typography>
+              <Typography
+                component={Link}
+                to="/pricing"
+                sx={{
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  color: C.accent,
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                  "&:hover": { textDecoration: "underline" },
+                }}
+              >
+                View plans →
+              </Typography>
+            </Box>
+          </Box>
         )}
 
         {/* Content area */}
