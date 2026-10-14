@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Box,
@@ -22,6 +22,8 @@ import ShowChartRoundedIcon from "@mui/icons-material/ShowChartRounded";
 import BarChartRoundedIcon from "@mui/icons-material/BarChartRounded";
 import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import InsightsRoundedIcon from "@mui/icons-material/InsightsRounded";
+import TimelineRoundedIcon from "@mui/icons-material/TimelineRounded";
 import KlassChip from "./KlassChip.jsx";
 import TvChart from "./TvChart.jsx";
 import { HeadCell } from "./ui.jsx";
@@ -186,6 +188,250 @@ function SectionTitle({ icon: Icon, children }) {
   );
 }
 
+const TONE = {
+  good: { fg: C.good, bg: "rgba(125,186,150,0.12)", border: "rgba(125,186,150,0.3)" },
+  bad: { fg: C.bad, bg: "rgba(200,122,122,0.12)", border: "rgba(200,122,122,0.3)" },
+  warn: { fg: C.warn, bg: "rgba(196,164,106,0.12)", border: "rgba(196,164,106,0.3)" },
+  muted: { fg: C.muted, bg: "rgba(238,234,227,0.05)", border: C.line },
+};
+
+function fp(v, nd = 1, sign = true) {
+  if (v == null || Number.isNaN(Number(v))) return "—";
+  const n = Number(v) * 100;
+  return `${sign && n > 0 ? "+" : ""}${n.toFixed(nd)}%`;
+}
+
+function rupee(v) {
+  if (v == null) return "—";
+  return `₹${Number(v).toLocaleString("en-IN", { maximumFractionDigits: v < 1000 ? 2 : 0 })}`;
+}
+
+function signColor(v) {
+  if (v == null) return undefined;
+  return v > 0 ? C.good : v < 0 ? C.bad : undefined;
+}
+
+function TonePill({ tone = "muted", children }) {
+  const t = TONE[tone] || TONE.muted;
+  return (
+    <Box
+      component="span"
+      sx={{
+        px: 1,
+        py: 0.25,
+        borderRadius: 1,
+        bgcolor: t.bg,
+        border: `1px solid ${t.border}`,
+        color: t.fg,
+        fontFamily: MONO,
+        fontWeight: 600,
+        fontSize: 11,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+function Bullets({ items, color = C.text }) {
+  return (
+    <Box component="ul" sx={{ m: 0, pl: 2.25, display: "flex", flexDirection: "column", gap: 0.9 }}>
+      {items.map((s, i) => (
+        <Typography component="li" key={i} sx={{ fontSize: 13.5, lineHeight: 1.6, color }}>
+          {s}
+        </Typography>
+      ))}
+    </Box>
+  );
+}
+
+function RangeBar({ levels }) {
+  const pos = Math.min(1, Math.max(0, levels.range_pos ?? 0));
+  return (
+    <Box>
+      <Box sx={{ position: "relative", height: 8, borderRadius: 4, bgcolor: "rgba(238,234,227,0.08)", my: 1.25 }}>
+        <Box
+          sx={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: `${pos * 100}%`,
+            borderRadius: 4,
+            background: "linear-gradient(90deg, rgba(200,122,122,0.5), rgba(196,164,106,0.5), rgba(125,186,150,0.6))",
+          }}
+        />
+        <Box
+          sx={{
+            position: "absolute",
+            left: `calc(${pos * 100}% - 6px)`,
+            top: -3,
+            width: 12,
+            height: 14,
+            borderRadius: 1,
+            bgcolor: C.text,
+          }}
+        />
+      </Box>
+      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+        <Typography sx={{ fontFamily: MONO, fontSize: 11.5, color: C.muted }}>
+          Low {rupee(levels.low_52w)} · {fmtDate(levels.low_52w_date)}
+        </Typography>
+        <Typography sx={{ fontFamily: MONO, fontSize: 11.5, color: C.muted }}>
+          High {rupee(levels.high_52w)} · {fmtDate(levels.high_52w_date)}
+        </Typography>
+      </Box>
+    </Box>
+  );
+}
+
+function LevelList({ title, rows, color }) {
+  return (
+    <Box sx={{ flex: 1, minWidth: 180 }}>
+      <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em", color: C.muted, mb: 0.75, textTransform: "uppercase" }}>
+        {title}
+      </Typography>
+      {rows.length === 0 && (
+        <Typography sx={{ fontSize: 12.5, color: C.muted }}>None in the last year</Typography>
+      )}
+      {rows.map((r) => (
+        <Box key={`${r.price}-${r.date}`} sx={{ display: "flex", justifyContent: "space-between", gap: 1, py: 0.4 }}>
+          <Typography sx={{ fontFamily: MONO, fontSize: 13, color }}>{rupee(r.price)}</Typography>
+          <Typography sx={{ fontFamily: MONO, fontSize: 11.5, color: C.muted }}>
+            {fp(r.pct)} · {fmtDate(r.date)}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+function TechnicalCard({ t }) {
+  const a = t.activity || {};
+  const r = t.returns || {};
+  const tone = TONE[t.trend.tone] || TONE.muted;
+  return (
+    <Card>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.75, gap: 1 }}>
+        <SectionTitle icon={InsightsRoundedIcon}>Technical Analysis</SectionTitle>
+        <TonePill tone={t.trend.tone}>{t.trend.label}</TonePill>
+      </Box>
+
+      <Typography sx={{ fontSize: 13.25, color: C.muted, lineHeight: 1.6, mb: 1.5 }}>{t.trend.text}</Typography>
+      {t.trend.checks?.length > 0 && (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.8, mb: 2.5 }}>
+          {t.trend.checks.map((c) => (
+            <Box key={c.label} sx={{ display: "flex", gap: 1.25, alignItems: "flex-start" }}>
+              <Check ok={c.ok} />
+              <Typography sx={{ fontSize: 12.75, lineHeight: 1.5, color: c.ok ? C.text : C.muted, flex: 1 }}>
+                {c.label}
+              </Typography>
+              {c.value != null && (
+                <Typography sx={{ fontFamily: MONO, fontSize: 12, color: signColor(c.value) || tone.fg }}>
+                  {fp(c.value)}
+                </Typography>
+              )}
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em", color: C.muted, textTransform: "uppercase" }}>
+        52-week range · {fp(t.levels.from_high)} from high
+      </Typography>
+      <RangeBar levels={t.levels} />
+
+      <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mt: 2.25, mb: 2.5 }}>
+        <LevelList title="Prior swing highs above" rows={t.levels.resistance || []} color={C.bad} />
+        <LevelList title="Prior swing lows below" rows={t.levels.support || []} color={C.good} />
+      </Box>
+
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 1, mb: 1.5 }}>
+        {[["1W", r["1w"]], ["1M", r["1m"]], ["3M", r["3m"]], ["6M", r["6m"]], ["1Y", r["1y"]]].map(([k, v]) => (
+          <Metric key={k} label={k} value={fp(v)} color={signColor(v)} />
+        ))}
+      </Box>
+
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)" }, gap: 1.5 }}>
+        <Metric
+          label="Volume 20d / 50d"
+          value={a.vol_20_vs_50 != null ? `${num(a.vol_20_vs_50, 2)}×` : "—"}
+          hint="Average volume over the last 20 sessions compared with the last 50."
+        />
+        <Metric
+          label="Up / down volume"
+          value={a.up_down_volume != null ? `${num(a.up_down_volume, 2)}×` : "—"}
+          color={a.up_down_volume > 1.2 ? C.good : a.up_down_volume < 0.8 ? C.bad : undefined}
+          hint="Volume traded on up days divided by volume on down days, last 20 sessions."
+        />
+        <Metric
+          label="Delivery 20d vs 60d"
+          value={a.deliv_20 != null ? `${num(a.deliv_20, 0)}% / ${num(a.deliv_60, 0)}%` : "—"}
+          hint="Average delivery percentage over the last 20 sessions vs the last 60."
+        />
+        <Metric
+          label="Daily range (ATR)"
+          value={a.atr_pct != null ? fp(a.atr_pct, 1, false) : "—"}
+          hint="Average true range as a share of price — how much it typically moves in a day."
+        />
+        <Metric
+          label="Volatility"
+          value={a.volatility_state || "—"}
+          hint="Today's average daily range compared with its own one-year median."
+        />
+        <Metric label="RSI (14)" value={a.rsi != null ? num(a.rsi, 1) : "—"} hint={a.rsi_text || undefined} />
+      </Box>
+    </Card>
+  );
+}
+
+function ChartReadCard({ t }) {
+  const events = t.events || [];
+  return (
+    <Card>
+      <SectionTitle icon={TimelineRoundedIcon}>What the chart shows</SectionTitle>
+      {t.story?.length > 0 && <Bullets items={t.story} />}
+      {events.length > 0 && (
+        <>
+          <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.08em", color: C.muted, mt: 2.25, mb: 1, textTransform: "uppercase" }}>
+            Notable sessions · numbered on the chart
+          </Typography>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
+            {[...events].reverse().map((e) => (
+              <Box key={e.time} sx={{ display: "flex", gap: 1.25, alignItems: "baseline" }}>
+                <Box
+                  component="span"
+                  sx={{
+                    minWidth: 20,
+                    textAlign: "center",
+                    fontFamily: MONO,
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    color: e.up ? C.good : C.bad,
+                    border: `1px solid ${e.up ? "rgba(125,186,150,0.4)" : "rgba(200,122,122,0.4)"}`,
+                    borderRadius: 0.75,
+                    px: 0.5,
+                  }}
+                >
+                  {e.n}
+                </Box>
+                <Typography sx={{ fontFamily: MONO, fontSize: 11.5, color: C.muted, minWidth: 92 }}>
+                  {fmtDate(e.time)}
+                </Typography>
+                <Typography sx={{ fontSize: 12.75, color: C.text, lineHeight: 1.5 }}>{e.text}</Typography>
+              </Box>
+            ))}
+          </Box>
+        </>
+      )}
+      <Typography sx={{ fontSize: 11.5, color: C.muted, mt: 2, lineHeight: 1.55 }}>
+        Describes past price and volume only. Swing highs and lows are prior turning points, not forecasts.
+      </Typography>
+    </Card>
+  );
+}
+
 function LimitCard({ denial }) {
   const used = denial?.used || [];
   const limit = denial?.limit ?? 1;
@@ -286,8 +532,37 @@ export default function StockPage({ onOpenSector }) {
   const coilProgress = totalFilters > 0 ? (passedFilters / totalFilters) * 100 : 0;
   const lookups = data?.lookups;
 
+  const tech = useMemo(() => {
+    const t = data?.technicals;
+    if (!t) return null;
+    return { ...t, events: (t.events || []).map((e, i) => ({ ...e, n: i + 1 })) };
+  }, [data?.technicals]);
+
+  const chartMarkers = useMemo(
+    () => (tech?.events || []).map((e) => ({
+      time: e.time,
+      position: e.up ? "belowBar" : "aboveBar",
+      color: e.up ? "#7dba96" : "#e57373",
+      shape: e.up ? "arrowUp" : "arrowDown",
+      text: String(e.n),
+    })),
+    [tech],
+  );
+
+  const chartLevels = useMemo(() => {
+    const lv = tech?.levels;
+    if (!lv) return [];
+    const out = [
+      { price: lv.high_52w, label: "52W high", color: "rgba(238,234,227,0.35)" },
+      { price: lv.low_52w, label: "52W low", color: "rgba(238,234,227,0.35)" },
+    ];
+    if (lv.resistance?.[0]) out.push({ price: lv.resistance[0].price, label: "Swing high", color: "rgba(229,115,115,0.6)" });
+    if (lv.support?.[0]) out.push({ price: lv.support[0].price, label: "Swing low", color: "rgba(125,186,150,0.6)" });
+    return out;
+  }, [tech]);
+
   return (
-    <Box sx={{ maxWidth: 980, mx: "auto" }}>
+    <Box>
       {/* Header */}
       <Box
         sx={{
@@ -423,8 +698,43 @@ export default function StockPage({ onOpenSector }) {
               </Card>
             )}
 
-            {/* TradingView chart */}
-            <TvChart symbol={data.symbol} height={420} />
+            {tech?.summary?.length > 0 && (
+              <Card>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5, gap: 1 }}>
+                  <SectionTitle icon={InsightsRoundedIcon}>Technical snapshot</SectionTitle>
+                  <TonePill tone={tech.trend.tone}>{tech.trend.label}</TonePill>
+                </Box>
+                <Bullets items={tech.summary} />
+              </Card>
+            )}
+
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", lg: tech ? "minmax(0, 2fr) minmax(0, 1fr)" : "1fr" },
+                gap: 2.5,
+                alignItems: "start",
+              }}
+            >
+              <TvChart
+                symbol={data.symbol}
+                height={520}
+                markers={chartMarkers}
+                levels={chartLevels}
+                showLegend
+              />
+              {tech && <ChartReadCard t={tech} />}
+            </Box>
+
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" },
+                gap: 2.5,
+                alignItems: "start",
+              }}
+            >
+            {tech && <TechnicalCard t={tech} />}
 
             {/* Fundamentals Card */}
             {data.fundamentals && data.fundamentals.market_cap_cr != null && (() => {
@@ -548,7 +858,16 @@ export default function StockPage({ onOpenSector }) {
                 </Card>
               );
             })()}
+            </Box>
 
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", lg: "repeat(2, minmax(0, 1fr))" },
+                gap: 2.5,
+                alignItems: "start",
+              }}
+            >
             {/* Coil Status Card */}
             {filters.length > 0 && (
               <Card>
@@ -608,7 +927,7 @@ export default function StockPage({ onOpenSector }) {
 
             {/* Key Metrics */}
             <Card>
-              <SectionTitle icon={ShowChartRoundedIcon}>Price & Position</SectionTitle>
+              <SectionTitle icon={ShowChartRoundedIcon}>Scan metrics · Price & Position</SectionTitle>
               <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)" }, gap: 1.5, mb: 2.75 }}>
                 <Metric k="adj" value={num(m.adj, 2)} />
                 <Metric k="trigger" value={num(m.trigger, 2)} />
@@ -628,6 +947,7 @@ export default function StockPage({ onOpenSector }) {
                 <Metric k="rsi" value={num(m.rsi, 1)} color={m.rsi >= 45 && m.rsi <= 68 ? C.good : undefined} />
               </Box>
             </Card>
+            </Box>
 
             {/* Sector info */}
             {data.shape?.verdict_text && (

@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useNavigationType } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   Alert,
   Box,
@@ -46,8 +46,6 @@ const PATH_TO_VIEW = {
 export default function App() {
   const theme = useTheme();
   const location = useLocation();
-  const navigate = useNavigate();
-  const navType = useNavigationType();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -59,19 +57,6 @@ export default function App() {
   const view = cleanPath.startsWith("/stock/")
     ? "stock"
     : PATH_TO_VIEW[cleanPath] || "setups";
-
-  // Coming back from a stock page should land where the list was left.
-  const scrollByKey = useRef({});
-  useEffect(() => {
-    const key = location.key;
-    const onScroll = () => { scrollByKey.current[key] = window.scrollY; };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [location.key]);
-  useLayoutEffect(() => {
-    const y = navType === "POP" ? scrollByKey.current[location.key] : 0;
-    window.scrollTo(0, y || 0);
-  }, [location.key, navType]);
 
   const [status, setStatus] = useState(null);
   const [scan, setScan] = useState([]);
@@ -135,7 +120,7 @@ export default function App() {
     if (!name) return;
     setSectorName(null);
     const qs = entry != null && entry !== "" ? `?entry=${encodeURIComponent(entry)}` : "";
-    navigate(`/stock/${encodeURIComponent(name)}${qs}`);
+    window.open(`/stock/${encodeURIComponent(name)}${qs}`, "_blank", "noopener");
   };
 
   // Counts for sidebar badges

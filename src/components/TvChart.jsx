@@ -5,7 +5,15 @@
  * @see https://tradingview.github.io/lightweight-charts/tutorials/react/simple
  */
 
-import { createChart, ColorType, CandlestickSeries, HistogramSeries } from "lightweight-charts";
+import {
+  createChart,
+  createSeriesMarkers,
+  ColorType,
+  CandlestickSeries,
+  HistogramSeries,
+  LineSeries,
+  LineStyle,
+} from "lightweight-charts";
 import React, { useEffect, useRef, useState } from "react";
 import { Box, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { C } from "../theme.js";
@@ -18,7 +26,32 @@ const PERIODS = [
   { value: "5y", label: "5Y" },
 ];
 
-function ChartComponent({ data, volumeData, height }) {
+const EMA_LINES = [
+  { span: 50, color: "rgba(142,180,196,0.85)", label: "50-day avg" },
+  { span: 200, color: "rgba(196,164,106,0.85)", label: "200-day avg" },
+];
+
+function emaSeries(candles, span) {
+  const k = 2 / (span + 1);
+  const out = [];
+  let ema = null;
+  let sum = 0;
+  candles.forEach((c, i) => {
+    if (i < span) {
+      sum += c.close;
+      if (i === span - 1) {
+        ema = sum / span;
+        out.push({ time: c.time, value: ema });
+      }
+      return;
+    }
+    ema = c.close * k + ema * (1 - k);
+    out.push({ time: c.time, value: ema });
+  });
+  return out;
+}
+
+function ChartComponent({ data, volumeData, height, markers, levels }) {
   const chartContainerRef = useRef();
 
   useEffect(() => {
@@ -66,6 +99,38 @@ function ChartComponent({ data, volumeData, height }) {
 
     candleSeries.setData(data);
 
+    EMA_LINES.forEach(({ span, color }) => {
+      if (data.length <= span) return;
+      const line = chart.addSeries(LineSeries, {
+        color,
+        lineWidth: 1,
+        priceLineVisible: false,
+        lastValueVisible: false,
+        crosshairMarkerVisible: false,
+      });
+      line.setData(emaSeries(data, span));
+    });
+
+    (levels || []).forEach((lv) => {
+      if (lv?.price == null) return;
+      candleSeries.createPriceLine({
+        price: lv.price,
+        color: lv.color,
+        lineWidth: 1,
+        lineStyle: LineStyle.Dashed,
+        axisLabelVisible: true,
+        title: lv.label,
+      });
+    });
+
+    if (markers?.length) {
+      const times = new Set(data.map((d) => d.time));
+      const visible = markers
+        .filter((mk) => times.has(mk.time))
+        .sort((a, b) => (a.time < b.time ? -1 : 1));
+      if (visible.length) createSeriesMarkers(candleSeries, visible);
+    }
+
     if (volumeData && volumeData.length > 0) {
       const volumeSeries = chart.addSeries(HistogramSeries, {
         priceFormat: { type: "volume" },
@@ -83,12 +148,12 @@ function ChartComponent({ data, volumeData, height }) {
       window.removeEventListener("resize", handleResize);
       chart.remove();
     };
-  }, [data, volumeData, height]);
+  }, [data, volumeData, height, markers, levels]);
 
   return <div ref={chartContainerRef} />;
 }
 
-export default function TvChart({ symbol, height = 400 }) {
+export default function TvChart({ symbol, height = 400, markers, levels, showLegend = false }) {
   const [period, setPeriod] = useState("1y");
   const [chartData, setChartData] = useState(null);
   const [volumeData, setVolumeData] = useState(null);
@@ -150,9 +215,17 @@ export default function TvChart({ symbol, height = 400 }) {
           pb: 0.5,
         }}
       >
-        <Typography sx={{ fontSize: 11, color: C.muted }}>
-          NSE:{symbol}
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.75, flexWrap: "wrap" }}>
+          <Typography sx={{ fontSize: 11, color: C.muted }}>
+            NSE:{symbol}
+          </Typography>
+          {showLegend && EMA_LINES.map((l) => (
+            <Box key={l.span} sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
+              <Box sx={{ width: 14, height: 2, bgcolor: l.color, borderRadius: 1 }} />
+              <Typography sx={{ fontSize: 10.5, color: C.muted }}>{l.label}</Typography>
+            </Box>
+          ))}
+        </Box>
         <ToggleButtonGroup
           size="small"
           exclusive
@@ -188,7 +261,13 @@ export default function TvChart({ symbol, height = 400 }) {
       )}
 
       {chartData && !loading && !error && (
-        <ChartComponent data={chartData} volumeData={volumeData} height={chartHeight} />
+        <ChartComponent
+          data={chartData}
+          volumeData={volumeData}
+          height={chartHeight}
+          markers={markers}
+          levels={levels}
+        />
       )}
     </Box>
   );
