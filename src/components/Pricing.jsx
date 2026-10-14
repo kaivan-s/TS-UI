@@ -155,7 +155,7 @@ export default function Pricing() {
   const yearlyActive = isPremium && currentPlan === "yearly" && !subscriptionCancelled;
 
   return (
-    <Box sx={{ pb: 8, maxWidth: 1080, mx: "auto" }}>
+    <Box sx={{ pb: 8 }}>
       {/* Alerts */}
       {showSuccess && (
         <Alert
@@ -346,6 +346,12 @@ export default function Pricing() {
                   ? `Pro Desk · ${currentPlan === "yearly" ? "Yearly" : "Monthly"}`
                   : "Free Desk · ₹0"}
               </Typography>
+              {isPremium && subscriptionExpires && (
+                <Typography sx={{ fontFamily: MONO, fontSize: 11, color: subscriptionCancelled ? C.warn : C.muted, mt: 0.25 }}>
+                  {subscriptionCancelled ? "Access until" : "Renews"}{" "}
+                  {formatDate(subscriptionExpires)}
+                </Typography>
+              )}
             </Box>
           </Box>
 
@@ -470,17 +476,24 @@ export default function Pricing() {
                 PRO · MONTHLY
               </Typography>
               {isPremium && currentPlan === "monthly" ? (
-                <Chip
-                  size="small"
-                  label={subscriptionCancelled ? "Cancelling" : "Active plan"}
-                  sx={{
-                    fontFamily: MONO,
-                    fontSize: 10.5,
-                    fontWeight: 600,
-                    bgcolor: subscriptionCancelled ? "rgba(196,164,106,0.16)" : "rgba(125,186,150,0.16)",
-                    color: subscriptionCancelled ? C.warn : C.good,
-                  }}
-                />
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0.35 }}>
+                  <Chip
+                    size="small"
+                    label={subscriptionCancelled ? "Cancelling" : "Active plan"}
+                    sx={{
+                      fontFamily: MONO,
+                      fontSize: 10.5,
+                      fontWeight: 600,
+                      bgcolor: subscriptionCancelled ? "rgba(196,164,106,0.16)" : "rgba(125,186,150,0.16)",
+                      color: subscriptionCancelled ? C.warn : C.good,
+                    }}
+                  />
+                  {subscriptionExpires && (
+                    <Typography sx={{ fontFamily: MONO, fontSize: 10, color: subscriptionCancelled ? C.warn : C.muted }}>
+                      {subscriptionCancelled ? "Until" : "Renews"} {formatDate(subscriptionExpires)}
+                    </Typography>
+                  )}
+                </Box>
               ) : (
                 <Typography sx={{ fontFamily: MONO, fontSize: 11, color: C.muted }}>
                   Flexible
@@ -586,29 +599,36 @@ export default function Pricing() {
                   PRO · YEARLY
                 </Typography>
               </Box>
-              <Chip
-                size="small"
-                label={
-                  isPremium && currentPlan === "yearly"
-                    ? subscriptionCancelled
-                      ? "Cancelling"
-                      : "Active plan"
-                    : "Save 33% · ₹1,989 off"
-                }
-                sx={{
-                  fontFamily: MONO,
-                  fontSize: 10.5,
-                  fontWeight: 600,
-                  bgcolor:
-                    isPremium && currentPlan === "yearly" && subscriptionCancelled
-                      ? "rgba(196,164,106,0.16)"
-                      : "rgba(125,186,150,0.16)",
-                  color:
-                    isPremium && currentPlan === "yearly" && subscriptionCancelled
-                      ? C.warn
-                      : C.good,
-                }}
-              />
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0.35 }}>
+                <Chip
+                  size="small"
+                  label={
+                    isPremium && currentPlan === "yearly"
+                      ? subscriptionCancelled
+                        ? "Cancelling"
+                        : "Active plan"
+                      : "Save 33% · ₹1,989 off"
+                  }
+                  sx={{
+                    fontFamily: MONO,
+                    fontSize: 10.5,
+                    fontWeight: 600,
+                    bgcolor:
+                      isPremium && currentPlan === "yearly" && subscriptionCancelled
+                        ? "rgba(196,164,106,0.16)"
+                        : "rgba(125,186,150,0.16)",
+                    color:
+                      isPremium && currentPlan === "yearly" && subscriptionCancelled
+                        ? C.warn
+                        : C.good,
+                  }}
+                />
+                {isPremium && currentPlan === "yearly" && subscriptionExpires && (
+                  <Typography sx={{ fontFamily: MONO, fontSize: 10, color: subscriptionCancelled ? C.warn : C.muted }}>
+                    {subscriptionCancelled ? "Until" : "Renews"} {formatDate(subscriptionExpires)}
+                  </Typography>
+                )}
+              </Box>
             </Box>
 
             <Box sx={{ display: "flex", alignItems: "baseline", gap: 1, mb: 0.75 }}>

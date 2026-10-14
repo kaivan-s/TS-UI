@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Box, Button, Drawer, IconButton, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, Drawer, IconButton, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
 import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
@@ -16,69 +16,92 @@ import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
 import logoIcon from "../Images/favicon.svg";
 
-const NAV_ITEMS = [
+const MONO = '"IBM Plex Mono", ui-monospace, monospace';
+
+const NAV_SECTIONS = [
   {
-    id: "setups",
-    path: "/setups",
-    Icon: PlaylistAddCheckRoundedIcon,
-    label: "Setups",
-    desc: "Quiet bases, sector-filtered or all",
+    title: "POST-MARKET ENGINE",
+    items: [
+      {
+        id: "setups",
+        path: "/setups",
+        Icon: PlaylistAddCheckRoundedIcon,
+        label: "Setups",
+        desc: "Coiled bases & leaders",
+      },
+      {
+        id: "sectors",
+        path: "/sectors",
+        Icon: GridViewRoundedIcon,
+        label: "Sectors",
+        desc: "Rotation & state heatmap",
+      },
+      {
+        id: "tracking",
+        path: "/tracking",
+        Icon: HistoryRoundedIcon,
+        label: "Tracking",
+        desc: "Persistent episode log",
+      },
+    ],
   },
   {
-    id: "sectors",
-    path: "/sectors",
-    Icon: GridViewRoundedIcon,
-    label: "Sectors",
-    desc: "Where setups come from",
+    title: "DESK & RESEARCH",
+    items: [
+      {
+        id: "watchlist",
+        path: "/watchlist",
+        Icon: BookmarkRoundedIcon,
+        label: "Watchlist",
+        desc: "Saved equities",
+      },
+      {
+        id: "fundamentals",
+        path: "/fundamentals",
+        Icon: AccountBalanceRoundedIcon,
+        label: "Fundamentals",
+        desc: "P/E, OPM, growth & cap",
+      },
+      {
+        id: "results",
+        path: "/results",
+        Icon: CalendarMonthRoundedIcon,
+        label: "Results",
+        desc: "Quarterly earnings dates",
+      },
+    ],
   },
   {
-    id: "tracking",
-    path: "/tracking",
-    Icon: HistoryRoundedIcon,
-    label: "Tracking",
-    desc: "What happened to past bases",
+    title: "MARKET PULSE",
+    items: [
+      {
+        id: "market",
+        path: "/market",
+        Icon: BoltRoundedIcon,
+        paths: ["/market", "/carry", "/scanners"],
+        label: "Markets",
+        desc: "Carry, movers & streaks",
+      },
+    ],
   },
   {
-    id: "watchlist",
-    path: "/watchlist",
-    Icon: BookmarkRoundedIcon,
-    label: "Watchlist",
-    desc: "Your saved stocks",
-  },
-  {
-    id: "fundamentals",
-    path: "/fundamentals",
-    Icon: AccountBalanceRoundedIcon,
-    label: "Fundamentals",
-    desc: "PE, earnings, promoter, growth",
-  },
-  {
-    id: "results",
-    path: "/results",
-    Icon: CalendarMonthRoundedIcon,
-    label: "Results",
-    desc: "Upcoming quarterly earnings dates",
-  },
-  {
-    id: "market",
-    path: "/market",
-    Icon: BoltRoundedIcon,
-    label: "Market",
-    desc: "Circuits, movers, volume, streaks",
-  },
-  {
-    id: "guide",
-    path: "/guide",
-    Icon: MenuBookRoundedIcon,
-    label: "Guide",
-    desc: "How it works",
-  },
-  {
-    id: "pricing",
-    path: "/pricing",
-    Icon: PaymentsRoundedIcon,
-    label: "Pricing",
-    desc: "Plans and features",
+    title: "REFERENCE & PLAN",
+    items: [
+      {
+        id: "guide",
+        path: "/guide",
+        Icon: MenuBookRoundedIcon,
+        label: "Guide",
+        desc: "Methodology & glossary",
+      },
+      {
+        id: "pricing",
+        path: "/pricing",
+        Icon: PaymentsRoundedIcon,
+        label: "Pricing",
+        desc: "Membership & Telegram",
+      },
+    ],
   },
 ];
 
@@ -93,55 +116,58 @@ function SidebarContent({ onClose, showClose, counts }) {
       sx={{
         width: DRAWER_WIDTH,
         minWidth: DRAWER_WIDTH,
-        bgcolor: C.bg,
+        bgcolor: "#0f1014",
         height: "100%",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
       }}
     >
-      {/* Logo / Brand */}
+      {/* Logo / Brand Header */}
       <Box
         sx={{
-          px: 2.5,
-          pt: 2.5,
-          pb: 3,
+          px: 2,
+          py: 2,
+          borderBottom: `1px solid ${C.line}`,
           display: "flex",
-          alignItems: "flex-start",
+          alignItems: "center",
           justifyContent: "space-between",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
           <Box
             component="img"
             src={logoIcon}
             alt="Morrow Desk"
             sx={{
-              width: 32,
-              height: 32,
+              width: 30,
+              height: 30,
               borderRadius: 1.5,
             }}
           />
           <Box>
             <Typography
               sx={{
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: 600,
                 color: C.text,
                 letterSpacing: "-0.02em",
-                lineHeight: 1.2,
+                lineHeight: 1.15,
               }}
             >
               Morrow Desk
             </Typography>
             <Typography
               sx={{
-                fontSize: 11,
-                color: C.muted,
-                letterSpacing: "0.02em",
+                fontFamily: MONO,
+                fontSize: 9.5,
+                color: C.accent,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                mt: 0.25,
               }}
             >
-              NSE scanner
+              NSE EOD TERMINAL
             </Typography>
           </Box>
         </Box>
@@ -149,208 +175,282 @@ function SidebarContent({ onClose, showClose, counts }) {
           <IconButton
             onClick={onClose}
             size="small"
-            sx={{ color: C.muted, mt: -0.5, mr: -0.5 }}
+            sx={{ color: C.muted, mr: -0.5 }}
           >
             <CloseIcon fontSize="small" />
           </IconButton>
         )}
       </Box>
 
-      {/* Navigation */}
-      <Box sx={{ px: 1.5 }}>
-        {NAV_ITEMS.map((item) => {
-          const isActive = location.pathname === item.path;
-          const count = counts?.[item.id];
-          const Icon = item.Icon;
-
-          return (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              onClick={onClose}
-              style={{ textDecoration: "none" }}
+      {/* Compartmentalized Navigation */}
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: "auto",
+          px: 1.25,
+          py: 1.5,
+          display: "flex",
+          flexDirection: "column",
+          gap: 1.75,
+        }}
+      >
+        {NAV_SECTIONS.map((section, idx) => (
+          <Box
+            key={section.title}
+            sx={{
+              pt: idx === 0 ? 0 : 1.25,
+              borderTop: idx === 0 ? "none" : "1px solid rgba(238,234,227,0.05)",
+            }}
+          >
+            <Typography
+              sx={{
+                px: 1.25,
+                mb: 0.65,
+                fontFamily: MONO,
+                fontSize: 9.5,
+                fontWeight: 600,
+                letterSpacing: "0.14em",
+                color: "rgba(238,234,227,0.38)",
+                textTransform: "uppercase",
+              }}
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: 1.5,
-                  px: 1.5,
-                  py: 1.25,
-                  mb: 0.5,
-                  cursor: "pointer",
-                  borderRadius: 2,
-                  bgcolor: isActive ? "rgba(142,180,196,0.12)" : "transparent",
-                  "&:hover": {
-                    bgcolor: isActive
-                      ? "rgba(142,180,196,0.12)"
-                      : "rgba(238,234,227,0.04)",
-                  },
-                  transition: "all 0.15s ease",
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: 1.5,
-                    bgcolor: isActive
-                      ? "rgba(142,180,196,0.15)"
-                      : "rgba(238,234,227,0.04)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  <Icon
-                    sx={{
-                      fontSize: 20,
-                      color: isActive ? C.accent : C.muted,
-                      transition: "color 0.15s ease",
-                    }}
-                  />
-                </Box>
+              {section.title}
+            </Typography>
 
-                <Box sx={{ flex: 1, minWidth: 0, pt: 0.25 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                    }}
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.35 }}>
+              {section.items.map((item) => {
+                const matchPaths = item.paths || [item.path];
+                const isActive = matchPaths.includes(location.pathname);
+                const count = counts?.[item.id];
+                const Icon = item.Icon;
+
+                return (
+                  <NavLink
+                    key={item.id}
+                    to={item.path}
+                    onClick={onClose}
+                    style={{ textDecoration: "none" }}
                   >
-                    <Typography
+                    <Box
                       sx={{
-                        fontSize: 13.5,
-                        fontWeight: isActive ? 600 : 500,
-                        color: isActive ? C.text : C.muted,
-                        lineHeight: 1.3,
-                        transition: "color 0.15s ease",
+                        position: "relative",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.25,
+                        px: 1.25,
+                        py: 0.85,
+                        cursor: "pointer",
+                        borderRadius: 1.75,
+                        bgcolor: isActive ? "#171920" : "transparent",
+                        border: isActive
+                          ? "1px solid rgba(142,180,196,0.22)"
+                          : "1px solid transparent",
+                        "&:hover": {
+                          bgcolor: isActive
+                            ? "#171920"
+                            : "rgba(255,255,255,0.03)",
+                        },
+                        transition: "all 0.14s ease",
                       }}
                     >
-                      {item.label}
-                    </Typography>
-                    {count > 0 && (
+                      {isActive && (
+                        <Box
+                          sx={{
+                            position: "absolute",
+                            left: 0,
+                            top: 8,
+                            bottom: 8,
+                            width: 2.5,
+                            borderRadius: 1,
+                            bgcolor: C.accent,
+                          }}
+                        />
+                      )}
+
                       <Box
                         sx={{
-                          minWidth: 18,
-                          height: 18,
-                          px: 0.6,
-                          borderRadius: 0.75,
-                          bgcolor: isActive ? C.accent : "rgba(238,234,227,0.12)",
-                          color: isActive ? C.bg : C.muted,
-                          fontSize: 11,
-                          fontWeight: 600,
+                          width: 28,
+                          height: 28,
+                          borderRadius: 1.25,
+                          bgcolor: isActive
+                            ? "rgba(142,180,196,0.14)"
+                            : "rgba(255,255,255,0.03)",
+                          border: isActive
+                            ? "1px solid rgba(142,180,196,0.28)"
+                            : "1px solid rgba(238,234,227,0.05)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
+                          flexShrink: 0,
+                          transition: "all 0.14s ease",
                         }}
                       >
-                        {count}
+                        <Icon
+                          sx={{
+                            fontSize: 16.5,
+                            color: isActive ? C.accent : C.muted,
+                            transition: "color 0.14s ease",
+                          }}
+                        />
                       </Box>
-                    )}
-                  </Box>
-                  <Typography
-                    sx={{
-                      fontSize: 11.5,
-                      color: C.muted,
-                      opacity: isActive ? 0.9 : 0.65,
-                      lineHeight: 1.4,
-                      mt: 0.25,
-                    }}
-                  >
-                    {item.desc}
-                  </Typography>
-                </Box>
-              </Box>
-            </NavLink>
-          );
-        })}
+
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            gap: 0.75,
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              fontSize: 13,
+                              fontWeight: isActive ? 600 : 500,
+                              color: isActive ? C.text : "rgba(238,234,227,0.78)",
+                              lineHeight: 1.2,
+                              transition: "color 0.14s ease",
+                            }}
+                          >
+                            {item.label}
+                          </Typography>
+                          {count > 0 && (
+                            <Box
+                              sx={{
+                                minWidth: 18,
+                                height: 17,
+                                px: 0.6,
+                                borderRadius: 0.85,
+                                bgcolor: isActive
+                                  ? "rgba(142,180,196,0.18)"
+                                  : "rgba(255,255,255,0.05)",
+                                border: isActive
+                                  ? "1px solid rgba(142,180,196,0.35)"
+                                  : `1px solid ${C.line}`,
+                                color: isActive ? C.accent : C.muted,
+                                fontFamily: MONO,
+                                fontSize: 10,
+                                fontWeight: 600,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              {count}
+                            </Box>
+                          )}
+                        </Box>
+                        <Typography
+                          sx={{
+                            fontSize: 10.75,
+                            color: C.muted,
+                            opacity: isActive ? 0.85 : 0.6,
+                            lineHeight: 1.25,
+                            mt: 0.2,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {item.desc}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </NavLink>
+                );
+              })}
+            </Box>
+          </Box>
+        ))}
       </Box>
 
-      {/* Spacer */}
-      <Box sx={{ flex: 1 }} />
-
-      {/* Upgrade / Premium badge */}
-      {email && !isPremium && (
-        <Box sx={{ mx: 1.5, mb: 1.5 }}>
+      {/* Bottom Account & Plan Compartment */}
+      <Box
+        sx={{
+          p: 1.25,
+          borderTop: `1px solid ${C.line}`,
+          bgcolor: "#0c0d10",
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+        }}
+      >
+        {email && !isPremium && (
           <Button
             variant="contained"
             fullWidth
             onClick={() => upgrade("monthly")}
             disabled={busy}
-            startIcon={<StarRoundedIcon sx={{ fontSize: 16 }} />}
+            startIcon={<StarRoundedIcon sx={{ fontSize: 15 }} />}
             sx={{
               bgcolor: C.accent,
               color: C.bg,
               fontWeight: 600,
-              fontSize: 13,
-              py: 1,
+              fontSize: 12,
+              textTransform: "none",
+              py: 0.75,
+              borderRadius: 1.5,
               "&:hover": { bgcolor: "#7aa4b4" },
             }}
           >
             {busy ? "Loading…" : "Upgrade · ₹499/mo"}
           </Button>
-        </Box>
-      )}
+        )}
 
-      {email && isPremium && (
-        <Box
-          sx={{
-            mx: 1.5,
-            mb: 1.5,
-            p: 1.25,
-            borderRadius: 2,
-            bgcolor: "rgba(125,186,150,0.08)",
-            border: "1px solid rgba(125,186,150,0.15)",
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-          }}
-        >
-          <StarRoundedIcon sx={{ fontSize: 16, color: C.good }} />
-          <Typography sx={{ fontSize: 12, fontWeight: 600, color: C.good }}>
-            {plan === "yearly" ? "Pro (Yearly)" : "Premium"}
-          </Typography>
-        </Box>
-      )}
-
-      {/* User / Sign out */}
-      {email && (
-        <Box
-          sx={{
-            mx: 1.5,
-            mb: 1.5,
-            p: 1.5,
-            borderRadius: 2,
-            bgcolor: "rgba(238,234,227,0.03)",
-            border: `1px solid ${C.line}`,
-          }}
-        >
+        {email && isPremium && (
           <Box
             sx={{
+              px: 1.25,
+              py: 0.75,
+              borderRadius: 1.5,
+              bgcolor: "rgba(125,186,150,0.08)",
+              border: "1px solid rgba(125,186,150,0.22)",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+              <StarRoundedIcon sx={{ fontSize: 15, color: C.good }} />
+              <Typography sx={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.good }}>
+                {plan === "yearly" ? "PRO DESK · YEARLY" : "PRO DESK · MONTHLY"}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+
+        {email && (
+          <Box
+            sx={{
+              px: 1.25,
+              py: 0.85,
+              borderRadius: 1.5,
+              bgcolor: "#14151a",
+              border: `1px solid ${C.line}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1,
             }}
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography
                 sx={{
                   fontSize: 12,
-                  fontWeight: 500,
+                  fontWeight: 600,
                   color: C.text,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
+                  lineHeight: 1.2,
                 }}
               >
                 {email.split("@")[0]}
               </Typography>
               <Typography
                 sx={{
-                  fontSize: 10.5,
+                  fontFamily: MONO,
+                  fontSize: 10,
                   color: C.muted,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -360,22 +460,25 @@ function SidebarContent({ onClose, showClose, counts }) {
                 {email.includes("@") ? `@${email.split("@")[1]}` : ""}
               </Typography>
             </Box>
-            <IconButton
-              onClick={signOut}
-              size="small"
-              sx={{
-                color: C.muted,
-                "&:hover": {
-                  color: C.bad,
-                  bgcolor: "rgba(200,122,122,0.1)",
-                },
-              }}
-            >
-              <LogoutRoundedIcon sx={{ fontSize: 18 }} />
-            </IconButton>
+            <Tooltip title="Sign out" placement="top" arrow>
+              <IconButton
+                onClick={signOut}
+                size="small"
+                sx={{
+                  p: 0.5,
+                  color: C.muted,
+                  "&:hover": {
+                    color: C.bad,
+                    bgcolor: "rgba(200,122,122,0.1)",
+                  },
+                }}
+              >
+                <LogoutRoundedIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
     </Box>
   );
 }
@@ -394,7 +497,7 @@ export default function Sidebar({ counts, mobileOpen, onMobileClose }) {
         ModalProps={{ keepMounted: true }}
         PaperProps={{
           sx: {
-            bgcolor: C.bg,
+            bgcolor: "#0f1014",
             borderRight: `1px solid ${C.line}`,
           },
         }}
@@ -415,7 +518,7 @@ export default function Sidebar({ counts, mobileOpen, onMobileClose }) {
         width: DRAWER_WIDTH,
         minWidth: DRAWER_WIDTH,
         borderRight: `1px solid ${C.line}`,
-        bgcolor: C.bg,
+        bgcolor: "#0f1014",
         height: "100vh",
         position: "fixed",
         top: 0,

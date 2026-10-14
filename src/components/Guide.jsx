@@ -1112,7 +1112,7 @@ export default function Guide() {
   const [tab, setTab] = useState("methodology");
 
   return (
-    <Box sx={{ pb: 8, maxWidth: 1080, mx: "auto" }}>
+    <Box sx={{ pb: 8 }}>
       {/* Top Hero Header Card */}
       <Box
         sx={{
