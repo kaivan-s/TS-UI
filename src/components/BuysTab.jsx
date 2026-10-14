@@ -108,9 +108,15 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
   // Split on the sector's own state so each heading matches its rows.
   const resting = rows.filter((r) => r.sector_klass === "PULLBACK").sort(byConfidence);
   const waking = rows.filter((r) => r.sector_klass === "CROSSING").sort(byConfidence);
+  const emerging = rows.filter((r) => r.sector_klass === "CROSSING_UNVERIFIED").sort(byConfidence);
   const other = rows.filter(
-    (r) => r.sector_klass !== "PULLBACK" && r.sector_klass !== "CROSSING",
+    (r) =>
+      r.sector_klass !== "PULLBACK" &&
+      r.sector_klass !== "CROSSING" &&
+      r.sector_klass !== "CROSSING_UNVERIFIED",
   );
+
+  const fullSetups = resting.length + waking.length;
 
   return (
     <Box>
@@ -125,7 +131,7 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
           }}
         >
           <Typography sx={{ fontSize: 13.75, color: C.muted, lineHeight: 1.6, maxWidth: 560, mx: "auto" }}>
-            Nothing qualifies today — either no sector is moving, or the ones that are have no stock coiled inside them. Most sessions produce no setups, so an empty list is the filter working.
+            Nothing qualifies today — no sector is expanding, and no coiled stocks sit in sectors that are. Most sessions produce no setups, so an empty list is the filter working.
           </Typography>
         </Box>
       ) : (
@@ -166,6 +172,51 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
                 onOpenStock={onOpenStock}
                 color={C.warn}
                 label="Early"
+              />
+            </Box>
+          )}
+
+          {emerging.length > 0 && (
+            <Box sx={{ mb: 2.5 }}>
+              <SectionHead
+                eyebrow="EMERGING"
+                color="#7b8ab8"
+                title="Sector expanding, not yet fully verified"
+                count={emerging.length}
+              >
+                Turnover and breadth expanded but delivery width or participation
+                is narrow — watch, don't act
+              </SectionHead>
+              {fullSetups === 0 && (
+                <Box
+                  sx={{
+                    px: 2.25,
+                    py: 1,
+                    bgcolor: "#15161b",
+                    borderLeft: `1px solid ${C.line}`,
+                    borderRight: `1px solid ${C.line}`,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: 12,
+                      color: C.muted,
+                      fontStyle: "italic",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    No fully verified setups tonight. The names below are in
+                    sectors that expanded but failed the breadth or delivery
+                    check — treat them as a watchlist, not a buy list.
+                  </Typography>
+                </Box>
+              )}
+              <SetupTable
+                rows={emerging}
+                onOpenSector={onOpenSector}
+                onOpenStock={onOpenStock}
+                color="#7b8ab8"
+                label="Emerging"
               />
             </Box>
           )}
