@@ -1,46 +1,154 @@
 /**
- * Setups — one scrollable page showing both cuts of the coil pool.
+ * Setups — one unified table showing the full coil watchlist.
  *
- * 1. "Sector agrees" at the top: coiled stocks whose sector is also moving.
- * 2. "Leaders at rest" below: proven momentum leaders that are quietly coiling,
- *    regardless of sector state.
+ * Sector-agrees stocks sit at the top, leaders-at-rest below, separated by a
+ * visual divider row. Stocks appearing in both lists show both tags. The whole
+ * page is one scrollable watchlist.
  */
 
-import { useMemo } from "react";
-import { Box, Tooltip, Typography } from "@mui/material";
+import { useMemo, useState, Fragment } from "react";
+import {
+  Box,
+  Button,
+  InputAdornment,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import { PremiumOverlay } from "./Premium.jsx";
 import { useAuth } from "../auth.jsx";
 import UpdateBanner from "./UpdateBanner.jsx";
-import BuysTab from "./BuysTab.jsx";
-import LeadersAtRestTab from "./LeadersAtRestTab.jsx";
-import { TvCopyButton } from "./ui.jsx";
+import { CoilBar, HeadCell, MultiSelect, TvCopyButton, WhyRow, useTableSort } from "./ui.jsx";
+import { BookmarkButton } from "../watchlist.jsx";
 import { C } from "../theme.js";
+import { num, pct } from "../format.js";
 import { EVIDENCE_WINDOW, STAT_STRIPS } from "../evidence.js";
 
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
-const FREE_PREVIEW_SETUPS = 1;
-const FREE_PREVIEW_LEADERS = 2;
+const FREE_PREVIEW = 3;
+const COL_SPAN = 14;
 
-function SectionDivider({ label, sublabel, count, color, children }) {
+const TABLE_SX = {
+  "& .MuiTableCell-stickyHeader, & .MuiTableCell-head": {
+    bgcolor: "#0e0f12",
+    fontFamily: MONO,
+    fontSize: 11,
+    letterSpacing: "0.06em",
+    textTransform: "uppercase",
+    py: 1.4,
+  },
+};
+
+const TREND_STYLE = {
+  "↑↑": { color: C.good, label: "Accelerating" },
+  "↑": { color: C.good, label: "Growing" },
+  "→": { color: "#c4a46a", label: "Flat" },
+  "↓": { color: C.bad, label: "Declining" },
+  "?": { color: C.muted, label: "No data" },
+};
+
+const TAG = {
+  agree: {
+    label: "Sector agrees",
+    color: C.good,
+    tip: "This stock's sector is also waking up or resting after a volume surge — the backtested setup.",
+  },
+  emerging: {
+    label: "Emerging",
+    color: "#7b8ab8",
+    tip: "This stock's sector expanded but breadth or delivery is narrow — watch, don't act.",
+  },
+  leader: {
+    label: "Leader",
+    color: C.accent,
+    tip: "Top 30% on twelve-month momentum, coiled and quietly basing. Sector-agnostic.",
+  },
+};
+
+function SourceTag({ type }) {
+  const t = TAG[type];
+  if (!t) return null;
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        flexWrap: "wrap",
-        gap: 1.5,
-        mb: 1.5,
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: 1 }}>
-        <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
-          <Box sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: color }} />
+    <Tooltip title={t.tip} placement="top" arrow>
+      <Box
+        component="span"
+        sx={{
+          px: 0.7,
+          py: 0.12,
+          borderRadius: 1,
+          bgcolor: `${t.color}14`,
+          border: `1px solid ${t.color}33`,
+          color: t.color,
+          fontFamily: MONO,
+          fontSize: 9.5,
+          fontWeight: 600,
+          cursor: "help",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {t.label}
+      </Box>
+    </Tooltip>
+  );
+}
+
+function EarningsCell({ trend }) {
+  const t = trend || "?";
+  const s = TREND_STYLE[t] || TREND_STYLE["?"];
+  return (
+    <Tooltip title={s.label} placement="top" arrow>
+      <Box
+        component="span"
+        sx={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minWidth: 26,
+          px: 0.65,
+          py: 0.15,
+          borderRadius: 1,
+          bgcolor: `${s.color}14`,
+          border: `1px solid ${s.color}33`,
+          fontFamily: MONO,
+          fontSize: 12,
+          color: s.color,
+          fontWeight: 600,
+          cursor: "help",
+        }}
+      >
+        {t}
+      </Box>
+    </Tooltip>
+  );
+}
+
+function DividerRow({ label, count, color }) {
+  return (
+    <TableRow>
+      <TableCell
+        colSpan={COL_SPAN}
+        sx={{
+          py: 0.75,
+          px: 2,
+          bgcolor: "#0c0d10",
+          borderBottom: `1px solid ${C.line}`,
+          borderTop: `1px solid ${C.line}`,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+          <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: color }} />
           <Typography
             sx={{
               fontFamily: MONO,
-              fontSize: 11,
-              letterSpacing: "0.1em",
+              fontSize: 10,
+              letterSpacing: "0.12em",
               fontWeight: 700,
               color,
               textTransform: "uppercase",
@@ -48,31 +156,25 @@ function SectionDivider({ label, sublabel, count, color, children }) {
           >
             {label}
           </Typography>
-        </Box>
-        {sublabel && (
-          <Typography sx={{ fontSize: 12.5, color: C.muted }}>{sublabel}</Typography>
-        )}
-        {count != null && (
           <Box
             component="span"
             sx={{
-              px: 0.75,
-              py: 0.15,
-              borderRadius: 1,
+              px: 0.6,
+              py: 0.1,
+              borderRadius: 0.75,
               bgcolor: `${color}14`,
               border: `1px solid ${color}30`,
               fontFamily: MONO,
-              fontSize: 10,
+              fontSize: 9.5,
               fontWeight: 600,
               color,
             }}
           >
             {count}
           </Box>
-        )}
-      </Box>
-      {children}
-    </Box>
+        </Box>
+      </TableCell>
+    </TableRow>
   );
 }
 
@@ -84,30 +186,107 @@ export default function SetupsView({
   onOpenStock,
 }) {
   const { isPremium } = useAuth();
+  const [q, setQ] = useState("");
+  const [sectorPick, setSectorPick] = useState([]);
 
-  const previewBuys = isPremium ? buys : buys.slice(0, FREE_PREVIEW_SETUPS);
-  const previewRest = isPremium ? rest : rest.slice(0, FREE_PREVIEW_LEADERS);
+  const sort = useTableSort({
+    key: null,
+    dir: "asc",
+    dirFor: (k) =>
+      k === "symbol" || k === "sector" ? "asc" : "desc",
+  });
 
-  const setupsStale = (status?.stale || []).includes("setups");
+  // Build a unified list: tag each row with its source(s)
+  const { merged, nAgree, nLeader, nEmerging } = useMemo(() => {
+    const agreeSet = new Set(buys.map((r) => r.symbol));
+    const leaderSet = new Set(rest.map((r) => r.symbol));
 
-  const telemetry = useMemo(() => {
-    const nConfirmed = buys.filter((r) => r.shape_confirmed).length;
+    const bySymbol = new Map();
+
+    // Sector-agrees rows first
+    for (const r of buys) {
+      const isEmerging = r.sector_klass === "CROSSING_UNVERIFIED";
+      bySymbol.set(r.symbol, {
+        ...r,
+        _agree: !isEmerging,
+        _emerging: isEmerging,
+        _leader: leaderSet.has(r.symbol),
+        _section: isEmerging ? "emerging" : "agree",
+      });
+    }
+
+    // Leaders-at-rest rows (only add if not already in buys)
+    for (const r of rest) {
+      if (bySymbol.has(r.symbol)) {
+        // Already present from buys — just tag as leader too
+        const existing = bySymbol.get(r.symbol);
+        existing._leader = true;
+        // Merge momentum data from leader row
+        if (r.mom12_1 != null) existing.mom12_1 = r.mom12_1;
+        if (r.episode_days != null) existing.episode_days = r.episode_days;
+        if (r.episode_new != null) existing.episode_new = r.episode_new;
+      } else {
+        bySymbol.set(r.symbol, {
+          ...r,
+          _agree: false,
+          _emerging: false,
+          _leader: true,
+          _section: "leader",
+        });
+      }
+    }
+
+    const all = Array.from(bySymbol.values());
     return {
-      nConfirmed,
-      nCoil: status?.n_coil ?? (buys.length + rest.length),
-      session: status?.as_of || status?.session || "Latest EOD",
+      merged: all,
+      nAgree: all.filter((r) => r._agree).length,
+      nEmerging: all.filter((r) => r._emerging).length,
+      nLeader: all.filter((r) => r._leader && !r._agree && !r._emerging).length,
     };
-  }, [buys, rest, status]);
+  }, [buys, rest]);
 
-  const allSymbols = useMemo(
-    () =>
-      [...previewBuys, ...previewRest]
-        .map((r) => r.symbol)
-        .filter((s, i, a) => s && a.indexOf(s) === i),
-    [previewBuys, previewRest],
+  // Filter
+  const shown = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    const filtered = merged.filter((r) => {
+      if (sectorPick.length && !sectorPick.includes(r.sector)) return false;
+      if (!query) return true;
+      return (
+        (r.symbol || "").toLowerCase().includes(query) ||
+        (r.sector || "").toLowerCase().includes(query)
+      );
+    });
+
+    // When sorting is active, sort flat; otherwise keep section grouping
+    if (sort.key) return sort.apply(filtered);
+
+    // Default order: agree → emerging → leader-only
+    const order = { agree: 0, emerging: 1, leader: 2 };
+    return filtered.sort(
+      (a, b) =>
+        (order[a._section] ?? 9) - (order[b._section] ?? 9) ||
+        (b.coil ?? 0) - (a.coil ?? 0),
+    );
+  }, [merged, q, sectorPick, sort.key, sort.dir]);
+
+  const sectorOptions = useMemo(
+    () => [...new Set(merged.map((r) => r.sector).filter(Boolean))].sort(),
+    [merged],
   );
 
+  const previewRows = isPremium ? shown : shown.slice(0, FREE_PREVIEW);
+  const filtering = q.trim() || sectorPick.length;
+
+  const setupsStale = (status?.stale || []).includes("setups");
+  const session = status?.as_of || status?.session || "Latest EOD";
+
   const baseStrip = STAT_STRIPS.setups;
+
+  // Split shown rows into sections for divider rows (only when not custom-sorted)
+  const agreeRows = previewRows.filter((r) => r._section === "agree");
+  const emergingRows = previewRows.filter((r) => r._section === "emerging");
+  const leaderRows = previewRows.filter((r) => r._section === "leader");
+  const useSections = !sort.key;
 
   return (
     <Box sx={{ pb: 6 }}>
@@ -120,7 +299,7 @@ export default function SetupsView({
           border: `1px solid ${C.line}`,
           borderRadius: 2.5,
           p: { xs: 2, sm: 2.5 },
-          mb: 2.5,
+          mb: 2,
         }}
       >
         <Box
@@ -144,7 +323,7 @@ export default function SetupsView({
                   textTransform: "uppercase",
                 }}
               >
-                POST-MARKET COIL SHORTLIST · {telemetry.session} (20:30 IST)
+                POST-MARKET COIL SHORTLIST · {session} (20:30 IST)
               </Typography>
             </Box>
             <Typography
@@ -157,17 +336,19 @@ export default function SetupsView({
                 lineHeight: 1.2,
               }}
             >
-              Setups &amp; Coiled Leaders
+              Coil Watchlist
             </Typography>
             <Typography sx={{ fontSize: 13, color: C.muted, mt: 0.35, maxWidth: 680 }}>
-              Two views of the same coil pool: stocks whose sector is also
-              moving (backtested), and proven momentum leaders that are
-              quietly basing (sector-agnostic).
+              Stocks passing all seven coil filters, split by conviction.
+              Sector-agrees names are backtested; leaders are proven
+              momentum stocks quietly basing.
             </Typography>
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, flexShrink: 0 }}>
-            {allSymbols.length > 0 && <TvCopyButton symbols={allSymbols} />}
+            {previewRows.length > 0 && (
+              <TvCopyButton symbols={previewRows.map((r) => r.symbol)} />
+            )}
           </Box>
         </Box>
 
@@ -184,32 +365,29 @@ export default function SetupsView({
             gap: 2,
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: { xs: 2, sm: 3 } }}>
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
-              <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>SECTOR AGREES:</Typography>
-              <Typography sx={{ fontFamily: MONO, fontSize: 13.5, fontWeight: 600, color: buys.length > 0 ? C.good : C.muted }}>
-                {buys.length}
-              </Typography>
-              {telemetry.nConfirmed > 0 && (
-                <Typography sx={{ fontSize: 11.5, color: C.muted }}>
-                  ({telemetry.nConfirmed} shape confirmed)
-                </Typography>
-              )}
-            </Box>
-
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
-              <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>LEADERS AT REST:</Typography>
-              <Typography sx={{ fontFamily: MONO, fontSize: 13.5, fontWeight: 600, color: rest.length > 0 ? C.accent : C.muted }}>
-                {rest.length}
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
-              <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>COIL POOL:</Typography>
-              <Typography sx={{ fontFamily: MONO, fontSize: 13.5, fontWeight: 600, color: C.text }}>
-                {telemetry.nCoil}
-              </Typography>
-            </Box>
+          <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: { xs: 1.5, sm: 3 } }}>
+            <TelemetryItem
+              label="Sector agrees"
+              value={nAgree}
+              color={nAgree > 0 ? C.good : C.muted}
+            />
+            {nEmerging > 0 && (
+              <TelemetryItem
+                label="Emerging"
+                value={nEmerging}
+                color="#7b8ab8"
+              />
+            )}
+            <TelemetryItem
+              label="Leaders at rest"
+              value={rest.length}
+              color={rest.length > 0 ? C.accent : C.muted}
+            />
+            <TelemetryItem
+              label="Coil pool"
+              value={status?.n_coil ?? merged.length}
+              color={C.text}
+            />
           </Box>
 
           {baseStrip && (
@@ -244,21 +422,7 @@ export default function SetupsView({
         </Box>
       </Box>
 
-      {/* ─── Section 1: Sector Agrees ─── */}
-      <SectionDivider
-        label="Sector Agrees"
-        sublabel="Coiled stocks whose sector is waking up or resting after a surge"
-        count={buys.length}
-        color={C.good}
-      >
-        {previewBuys.length > 0 && (
-          <TvCopyButton
-            symbols={previewBuys.map((r) => r.symbol)}
-            size="small"
-          />
-        )}
-      </SectionDivider>
-
+      {/* Stale banner */}
       {setupsStale && buys.length > 0 && (
         <Box
           sx={{
@@ -271,80 +435,358 @@ export default function SetupsView({
           }}
         >
           <Typography sx={{ fontSize: 12, color: C.muted }}>
-            No sector agreed in the latest session — showing last qualifying
-            list from{" "}
+            No sector agreed in the latest session — sector-agrees rows are from{" "}
             <Box component="span" sx={{ fontFamily: MONO, color: C.text }}>
               {status?.dates?.setups}
             </Box>{" "}
-            (historical reference).
+            (historical reference). Leaders at rest is current.
           </Typography>
         </Box>
       )}
 
-      <PremiumOverlay
-        previewCount={FREE_PREVIEW_SETUPS}
-        totalCount={buys.length}
-        feature="Full setups list"
-      >
-        <BuysTab
-          rows={previewBuys}
-          onOpenSector={onOpenSector}
-          onOpenStock={onOpenStock}
-        />
-      </PremiumOverlay>
-
-      {/* ─── Separator ─── */}
+      {/* ─── Filter bar ─── */}
       <Box
         sx={{
-          my: 3.5,
           display: "flex",
           alignItems: "center",
-          gap: 2,
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 1.5,
+          mb: 1.5,
         }}
       >
-        <Box sx={{ flex: 1, height: "1px", bgcolor: C.line }} />
-        <Typography
-          sx={{
-            fontFamily: MONO,
-            fontSize: 10,
-            letterSpacing: "0.14em",
-            color: C.muted,
-            textTransform: "uppercase",
-            flexShrink: 0,
-          }}
-        >
-          sector-agnostic
-        </Typography>
-        <Box sx={{ flex: 1, height: "1px", bgcolor: C.line }} />
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
+          <MultiSelect
+            label="Sector"
+            options={sectorOptions}
+            selected={sectorPick}
+            onChange={setSectorPick}
+            width={260}
+          />
+          <TextField
+            size="small"
+            placeholder="Symbol or sector…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            sx={{
+              width: { xs: "100%", sm: 200 },
+              "& .MuiOutlinedInput-root": {
+                bgcolor: "#0e0f12",
+                borderRadius: 1.5,
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" sx={{ color: C.muted }} />
+                </InputAdornment>
+              ),
+            }}
+          />
+          {filtering && (
+            <>
+              <Typography sx={{ fontFamily: MONO, fontSize: 12, color: C.muted }}>
+                {shown.length} of {merged.length}
+              </Typography>
+              <Button
+                size="small"
+                onClick={() => { setQ(""); setSectorPick([]); }}
+                sx={{ textTransform: "none", color: C.accent, fontWeight: 500, fontSize: 12 }}
+              >
+                Clear
+              </Button>
+            </>
+          )}
+        </Box>
       </Box>
 
-      {/* ─── Section 2: Leaders at Rest ─── */}
-      <SectionDivider
-        label="Leaders at Rest"
-        sublabel="Top 30% momentum leaders that are quietly coiling (top 20)"
-        count={rest.length}
-        color={C.accent}
-      >
-        {previewRest.length > 0 && (
-          <TvCopyButton
-            symbols={previewRest.map((r) => r.symbol)}
-            size="small"
-          />
-        )}
-      </SectionDivider>
-
+      {/* ─── Unified table ─── */}
       <PremiumOverlay
-        previewCount={FREE_PREVIEW_LEADERS}
-        totalCount={rest.length}
-        feature="Leaders at rest"
+        previewCount={FREE_PREVIEW}
+        totalCount={merged.length}
+        feature="Full coil watchlist"
       >
-        <LeadersAtRestTab
-          rows={previewRest}
-          coilReady={rest.length > 0 || status?.coil_ready !== false}
-          onOpenSector={onOpenSector}
-          onOpenStock={onOpenStock}
-        />
+        {merged.length === 0 ? (
+          <Box
+            sx={{
+              p: 4,
+              borderRadius: 2.5,
+              bgcolor: "#15161b",
+              border: `1px solid ${C.line}`,
+              textAlign: "center",
+            }}
+          >
+            <Typography sx={{ fontSize: 13.75, color: C.muted, lineHeight: 1.6, maxWidth: 560, mx: "auto" }}>
+              No stocks are coiling today — the seven filters found nothing
+              that is near its highs, on dry volume, in a tight range, with
+              money quietly coming in.
+            </Typography>
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              bgcolor: "#15161b",
+              border: `1px solid ${C.line}`,
+              borderRadius: 2.5,
+              overflow: "hidden",
+            }}
+          >
+            <TableContainer sx={{ overflowX: "auto" }}>
+              <Table stickyHeader sx={{ minWidth: 1020, ...TABLE_SX }}>
+                <TableHead>
+                  <TableRow>
+                    <HeadCell label="" sx={{ width: 34, p: 0 }} />
+                    <HeadCell label="Symbol" sort={sort} sortKey="symbol" />
+                    <HeadCell label="Source" help="Which list this stock qualifies for" />
+                    <HeadCell label="Sector" sort={sort} sortKey="sector" />
+                    <HeadCell
+                      label="Earnings"
+                      help="Trajectory of year-on-year profit growth across recent quarters."
+                      align="center"
+                      sort={sort}
+                      sortKey="earnings_trend"
+                    />
+                    <HeadCell k="adj" align="right" sort={sort} />
+                    <HeadCell k="coil" sx={{ minWidth: 120 }} sort={sort} />
+                    <HeadCell k="pos_hi" align="right" sort={sort} />
+                    <HeadCell k="to_trigger" align="right" sort={sort} />
+                    <HeadCell k="rsi" align="right" sort={sort} />
+                    <HeadCell k="vol_ratio" align="right" sort={sort} />
+                    <HeadCell k="range20" align="right" sort={sort} />
+                    <HeadCell k="cmf" align="right" sort={sort} />
+                    <HeadCell
+                      label="12m mom"
+                      help="Return over twelve months ending one month ago. Shown for leaders at rest."
+                      align="right"
+                      sort={sort}
+                      sortKey="mom12_1"
+                    />
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {useSections ? (
+                    <>
+                      {agreeRows.length > 0 && (
+                        <>
+                          <DividerRow
+                            label="Sector agrees"
+                            count={nAgree}
+                            color={C.good}
+                          />
+                          {agreeRows.map((r) => (
+                            <StockRow
+                              key={r.symbol}
+                              r={r}
+                              onOpenSector={onOpenSector}
+                              onOpenStock={onOpenStock}
+                            />
+                          ))}
+                        </>
+                      )}
+                      {emergingRows.length > 0 && (
+                        <>
+                          <DividerRow
+                            label="Emerging"
+                            count={nEmerging}
+                            color="#7b8ab8"
+                          />
+                          {emergingRows.map((r) => (
+                            <StockRow
+                              key={r.symbol}
+                              r={r}
+                              onOpenSector={onOpenSector}
+                              onOpenStock={onOpenStock}
+                            />
+                          ))}
+                        </>
+                      )}
+                      {leaderRows.length > 0 && (
+                        <>
+                          <DividerRow
+                            label="Leaders at rest"
+                            count={rest.length}
+                            color={C.accent}
+                          />
+                          {leaderRows.map((r) => (
+                            <StockRow
+                              key={r.symbol}
+                              r={r}
+                              onOpenSector={onOpenSector}
+                              onOpenStock={onOpenStock}
+                            />
+                          ))}
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    previewRows.map((r) => (
+                      <StockRow
+                        key={r.symbol}
+                        r={r}
+                        onOpenSector={onOpenSector}
+                        onOpenStock={onOpenStock}
+                      />
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        )}
       </PremiumOverlay>
     </Box>
+  );
+}
+
+function TelemetryItem({ label, value, color }) {
+  return (
+    <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
+      <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>
+        {label.toUpperCase()}:
+      </Typography>
+      <Typography
+        sx={{ fontFamily: MONO, fontSize: 13.5, fontWeight: 600, color }}
+      >
+        {value}
+      </Typography>
+    </Box>
+  );
+}
+
+function StockRow({ r, onOpenSector, onOpenStock }) {
+  const accentColor = r._agree
+    ? C.good
+    : r._emerging
+      ? "#7b8ab8"
+      : C.accent;
+
+  return (
+    <Fragment>
+      <TableRow
+        hover
+        sx={{
+          "& td:first-of-type": { boxShadow: `inset 2px 0 0 ${accentColor}` },
+          "&:hover": { bgcolor: "rgba(255,255,255,0.025) !important" },
+        }}
+      >
+        <TableCell sx={{ py: 0, px: 0.5, width: 34 }}>
+          <BookmarkButton symbol={r.symbol} />
+        </TableCell>
+        <TableCell
+          onClick={() => onOpenStock?.(r.symbol)}
+          sx={{
+            fontFamily: MONO,
+            fontSize: 13,
+            fontWeight: 600,
+            color: C.text,
+            cursor: onOpenStock ? "pointer" : "default",
+            "&:hover": onOpenStock ? { color: C.accent } : {},
+          }}
+        >
+          {r.symbol}
+        </TableCell>
+        <TableCell sx={{ py: 0.75 }}>
+          <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+            {r._agree && <SourceTag type="agree" />}
+            {r._emerging && <SourceTag type="emerging" />}
+            {r._leader && <SourceTag type="leader" />}
+            {r.shape_confirmed && (
+              <Tooltip
+                title="Every shape check passed on this sector: the crossing came from quiet and the red days traded lighter."
+                placement="top"
+                arrow
+              >
+                <Box
+                  component="span"
+                  sx={{
+                    px: 0.6,
+                    py: 0.1,
+                    borderRadius: 1,
+                    bgcolor: "rgba(125,186,150,0.14)",
+                    border: "1px solid rgba(125,186,150,0.32)",
+                    color: C.good,
+                    fontFamily: MONO,
+                    fontSize: 9,
+                    fontWeight: 600,
+                    cursor: "help",
+                  }}
+                >
+                  Shape ✓
+                </Box>
+              </Tooltip>
+            )}
+          </Box>
+        </TableCell>
+        <TableCell
+          onClick={() => onOpenSector?.(r.sector)}
+          sx={{
+            maxWidth: 200,
+            fontSize: 12.5,
+            color: C.muted,
+            cursor: onOpenSector ? "pointer" : "default",
+            "&:hover": onOpenSector ? { color: C.accent } : {},
+          }}
+        >
+          {r.sector}
+        </TableCell>
+        <TableCell align="center">
+          <EarningsCell trend={r.earnings_trend} />
+        </TableCell>
+        <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+          {num(r.adj, 2)}
+        </TableCell>
+        <TableCell>
+          <CoilBar value={r.coil} />
+        </TableCell>
+        <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+          {pct(r.pos_hi, 1)}
+        </TableCell>
+        <TableCell
+          align="right"
+          className="num"
+          sx={{
+            fontFamily: MONO,
+            fontSize: 12.5,
+            color: r.to_trigger <= 3 ? C.good : C.text,
+            fontWeight: r.to_trigger <= 3 ? 600 : 400,
+          }}
+        >
+          {pct(r.to_trigger, 1)}
+        </TableCell>
+        <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+          {num(r.rsi, 1)}
+        </TableCell>
+        <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+          {num(r.vol_ratio)}
+        </TableCell>
+        <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+          {pct(r.range20, 1)}
+        </TableCell>
+        <TableCell
+          align="right"
+          className="num"
+          sx={{
+            fontFamily: MONO,
+            fontSize: 12.5,
+            color: r.cmf > 0 ? C.good : r.cmf < 0 ? C.bad : C.muted,
+          }}
+        >
+          {num(r.cmf)}
+        </TableCell>
+        <TableCell
+          align="right"
+          className="num"
+          sx={{
+            fontFamily: MONO,
+            fontSize: 12.5,
+            color: r.mom12_1 != null ? C.good : C.muted,
+            fontWeight: r.mom12_1 != null ? 600 : 400,
+          }}
+        >
+          {r.mom12_1 != null ? pct(r.mom12_1, 0) : "—"}
+        </TableCell>
+      </TableRow>
+      {r.why && <WhyRow cols={COL_SPAN}>{r.why}</WhyRow>}
+    </Fragment>
   );
 }
