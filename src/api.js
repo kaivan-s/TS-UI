@@ -113,3 +113,10 @@ export const removeFromWatchlist = (symbol) =>
     method: "DELETE",
     body: JSON.stringify({ symbol }),
   });
+
+// Feedback
+export const submitFeedback = (message, category = "general", rating = null) =>
+  json("/api/feedback", {
+    method: "POST",
+    body: JSON.stringify({ message, category, rating }),
+  });

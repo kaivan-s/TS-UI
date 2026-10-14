@@ -250,6 +250,14 @@ export default function AppRoutes() {
           </RequireAuth>
         }
       />
+      <Route
+        path="/feedback"
+        element={
+          <RequireAuth>
+            <App />
+          </RequireAuth>
+        }
+      />
 
       {/* Strip trailing slashes — /pricing/ → /pricing */}
       <Route path="*" element={<TrailingSlashRedirect />} />

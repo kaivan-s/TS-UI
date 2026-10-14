@@ -7,6 +7,7 @@ import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
+import FeedbackRoundedIcon from "@mui/icons-material/FeedbackRounded";
 import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
@@ -100,6 +101,13 @@ const NAV_SECTIONS = [
         Icon: PaymentsRoundedIcon,
         label: "Pricing",
         desc: "Membership & Telegram",
+      },
+      {
+        id: "feedback",
+        path: "/feedback",
+        Icon: FeedbackRoundedIcon,
+        label: "Feedback",
+        desc: "Share ideas or report bugs",
       },
     ],
   },

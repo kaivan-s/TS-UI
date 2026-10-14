@@ -22,6 +22,7 @@ import FundamentalsView from "./components/FundamentalsView.jsx";
 import ResultsCalendarView from "./components/ResultsCalendarView.jsx";
 import PrivacyPolicy from "./components/PrivacyPolicy.jsx";
 import TermsConditions from "./components/TermsConditions.jsx";
+import FeedbackView from "./components/FeedbackView.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
 import StockPage from "./components/StockPage.jsx";
 import InsightsView from "./components/InsightsView.jsx";
@@ -41,6 +42,7 @@ const PATH_TO_VIEW = {
   "/scanners": "market",
   "/guide": "guide",
   "/pricing": "pricing",
+  "/feedback": "feedback",
   "/privacy": "privacy",
   "/terms": "terms",
 };
@@ -258,6 +260,8 @@ export default function App() {
           {view === "guide" && <Guide />}
 
           {view === "pricing" && <Pricing />}
+
+          {view === "feedback" && <FeedbackView />}
 
           {view === "privacy" && <PrivacyPolicy />}
 
