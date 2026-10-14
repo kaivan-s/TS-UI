@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, Link } from "react-router-dom";
+import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import { C } from "./theme.js";
 import { useAuth } from "./auth.jsx";
@@ -76,6 +76,7 @@ function PublicPage({ children }) {
 
 function RequireAuth({ children }) {
   const { session, configured, loading, denied } = useAuth();
+  const location = useLocation();
 
   if (loading) return <Loading />;
 
@@ -85,20 +86,30 @@ function RequireAuth({ children }) {
   // Denied — show login with denial message
   if (denied) return <Navigate to="/login" replace />;
 
-  // Not logged in — redirect to landing
-  if (!session) return <Navigate to="/" replace />;
+  // Not logged in — redirect to landing, but remember where they were
+  // so PublicOnly can send them back after login instead of always
+  // landing on /setups.
+  if (!session) {
+    const next = location.pathname === "/setups" ? "" : location.pathname;
+    return <Navigate to={next ? `/?next=${encodeURIComponent(next)}` : "/"} replace />;
+  }
 
   return children;
 }
 
 function PublicOnly({ children }) {
   const { session, configured, loading, denied } = useAuth();
+  const location = useLocation();
 
   if (loading) return <Loading />;
 
-  // If logged in and not denied, redirect to app
+  // If logged in and not denied, redirect to app.
+  // Honour ?next= so a page refresh returns to the same page.
   if (configured && session && !denied) {
-    return <Navigate to="/setups" replace />;
+    const params = new URLSearchParams(location.search);
+    const next = params.get("next");
+    const dest = next && next.startsWith("/") ? next : "/setups";
+    return <Navigate to={dest} replace />;
   }
 
   return children;
