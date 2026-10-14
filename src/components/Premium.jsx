@@ -15,8 +15,8 @@ import { useAuth } from "../auth.jsx";
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
 function TrialCTA({ inline = false }) {
-  const { trial, startTrial, busy } = useAuth();
-  if (trial) return null;
+  const { trial, trialUsed, startTrial, busy } = useAuth();
+  if (trial || trialUsed) return null;
   return (
     <Button
       onClick={startTrial}

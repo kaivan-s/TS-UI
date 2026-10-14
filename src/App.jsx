@@ -55,16 +55,16 @@ export default function App() {
   const theme = useTheme();
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const { isPremium, trial, trialDaysLeft, startTrial, busy } = useAuth();
+  const { isPremium, trial, trialDaysLeft, trialUsed, startTrial, busy } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [trialDialogOpen, setTrialDialogOpen] = useState(false);
 
-  // Show trial dialog once per session for eligible (non-premium, no active trial) users
+  // Show trial dialog once per session for eligible users (not premium, no active/used trial)
   useEffect(() => {
-    if (isPremium || trial) return;
+    if (isPremium || trial || trialUsed) return;
     const dismissed = sessionStorage.getItem("trial_dialog_dismissed");
     if (!dismissed) setTrialDialogOpen(true);
-  }, [isPremium, trial]);
+  }, [isPremium, trial, trialUsed]);
 
   const dismissTrialDialog = () => {
     setTrialDialogOpen(false);

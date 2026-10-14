@@ -28,6 +28,7 @@ export function AuthProvider({ children }) {
   const [subscriptionCancelled, setSubscriptionCancelled] = useState(false);
   const [trial, setTrial] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
+  const [trialUsed, setTrialUsed] = useState(false);
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [telegramLinkCode, setTelegramLinkCode] = useState(null);
 
@@ -74,6 +75,7 @@ export function AuthProvider({ children }) {
       setSubscriptionCancelled(false);
       setTrial(false);
       setTrialDaysLeft(0);
+      setTrialUsed(false);
       resetUser();
       return;
     }
@@ -93,6 +95,7 @@ export function AuthProvider({ children }) {
           setSubscriptionCancelled(false);
           setTrial(false);
           setTrialDaysLeft(0);
+          setTrialUsed(false);
         } else {
           setDenied(false);
           const data = await r.json();
@@ -103,6 +106,7 @@ export function AuthProvider({ children }) {
           setSubscriptionCancelled(data.subscription_cancelled || false);
           setTrial(data.trial || false);
           setTrialDaysLeft(data.trial_days_left || 0);
+          setTrialUsed(data.trial_used || false);
           setTelegramLinked(data.telegram_linked || false);
           setTelegramLinkCode(data.telegram_link_code || null);
           setUserProperties({
@@ -120,6 +124,7 @@ export function AuthProvider({ children }) {
         setSubscriptionCancelled(false);
         setTrial(false);
         setTrialDaysLeft(0);
+        setTrialUsed(false);
       });
     return () => {
       stop = true;
@@ -145,6 +150,7 @@ export function AuthProvider({ children }) {
       plan,
       trial,
       trialDaysLeft,
+      trialUsed,
       subscriptionId,
       subscriptionExpires,
       subscriptionCancelled,
@@ -210,6 +216,7 @@ export function AuthProvider({ children }) {
         setPlan(null);
         setTrial(false);
         setTrialDaysLeft(0);
+        setTrialUsed(false);
         await startSignOut();
         setSession(null);
       },
@@ -255,6 +262,7 @@ export function AuthProvider({ children }) {
             setSubscriptionCancelled(data.subscription_cancelled || false);
             setTrial(data.trial || false);
             setTrialDaysLeft(data.trial_days_left || 0);
+            setTrialUsed(data.trial_used || false);
           }
         } catch {
           // ignore
@@ -325,7 +333,7 @@ export function AuthProvider({ children }) {
       },
       getAccessToken,
     };
-  }, [session, configured, loading, denied, error, notice, busy, isPremium, plan, trial, trialDaysLeft, subscriptionId, subscriptionExpires, subscriptionCancelled, telegramLinked, telegramLinkCode]);
+  }, [session, configured, loading, denied, error, notice, busy, isPremium, plan, trial, trialDaysLeft, trialUsed, subscriptionId, subscriptionExpires, subscriptionCancelled, telegramLinked, telegramLinkCode]);
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }

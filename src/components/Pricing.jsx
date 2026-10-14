@@ -115,6 +115,7 @@ export default function Pricing() {
     startTrial,
     trial,
     trialDaysLeft,
+    trialUsed,
     subscriptionExpires,
     subscriptionCancelled,
     telegramLinked,
@@ -376,7 +377,7 @@ export default function Pricing() {
       </Box>
 
       {/* Trial CTA — show only to free users who haven't used a trial */}
-      {!isPremium && (
+      {!isPremium && !trialUsed && (
         <Box
           sx={{
             mb: 3.5,
