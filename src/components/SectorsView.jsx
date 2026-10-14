@@ -9,7 +9,7 @@ import SectorLookoutsTab from "./SectorLookoutsTab.jsx";
  */
 export default function SectorsView({ scan, status, onOpenSector, onOpenStock }) {
   return (
-    <Box sx={{ maxWidth: 1320, pb: 6 }}>
+    <Box sx={{ pb: 6 }}>
       <UpdateBanner asOf={status?.as_of} />
       <SectorLookoutsTab
         liveRows={scan}

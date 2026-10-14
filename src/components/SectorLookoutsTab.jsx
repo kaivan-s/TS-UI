@@ -762,204 +762,183 @@ export default function SectorLookoutsTab({ onOpenSector, onOpenStock, liveRows 
         sx={{
           bgcolor: "#15161b",
           border: `1px solid ${C.line}`,
-          borderRadius: 3,
-          p: { xs: 2.5, sm: 3.5 },
-          mb: 3,
+          borderRadius: 2.5,
+          p: { xs: 2, sm: 2.5 },
+          mb: 2,
         }}
       >
         <Box
           sx={{
             display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            alignItems: { xs: "flex-start", md: "center" },
+            flexDirection: { xs: "column", lg: "row" },
+            alignItems: { xs: "flex-start", lg: "center" },
             justifyContent: "space-between",
             gap: 2,
-            mb: 2.5,
           }}
         >
-          <Box>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mb: 0.75 }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.4 }}>
+              <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: C.accent }} />
               <Typography
                 sx={{
                   fontFamily: MONO,
-                  fontSize: 10.5,
-                  letterSpacing: "0.18em",
+                  fontSize: 10,
+                  letterSpacing: "0.16em",
                   color: C.accent,
                   textTransform: "uppercase",
                 }}
               >
-                CROSS-SECTIONAL ROTATION ENGINE
+                CROSS-SECTIONAL ROTATION ENGINE{" "}
+                {(usingLive || data.scan_date) ? `· ${usingLive ? "LIVE CLASSIFICATION" : data.scan_date}` : ""}
               </Typography>
-              {(usingLive || data.scan_date) && (
-                <Box
-                  component="span"
-                  sx={{
-                    px: 1,
-                    py: 0.2,
-                    borderRadius: 1,
-                    bgcolor: "rgba(255,255,255,0.04)",
-                    border: `1px solid ${C.line}`,
-                    fontFamily: MONO,
-                    fontSize: 10.5,
-                    color: C.muted,
-                  }}
-                >
-                  {usingLive ? "Live classification" : `Scan · ${data.scan_date}`}
-                </Box>
-              )}
             </Box>
             <Typography
+              variant="h1"
               sx={{
-                fontSize: { xs: 22, sm: 26 },
+                fontSize: { xs: 20, sm: 23 },
                 fontWeight: 600,
                 letterSpacing: "-0.025em",
                 color: C.text,
                 lineHeight: 1.2,
               }}
             >
-              Sector Heatmap & State Classification
+              Sector Heatmap &amp; State Classification
             </Typography>
-            <Typography sx={{ fontSize: 13.75, color: C.muted, mt: 0.6, maxWidth: 680 }}>
-              Every industry scored against cross-sectional peers that session so{" "}
-              <Box component="span" sx={{ fontFamily: MONO, color: C.text }}>1.0</Box> always reads as normal.
-              Click any row to inspect 30-day history, shape checks, and top constituents. Only{" "}
+            <Typography sx={{ fontSize: 13, color: C.muted, mt: 0.35 }}>
+              Every industry scored against cross-sectional peers so{" "}
+              <Box component="span" sx={{ fontFamily: MONO, color: C.text }}>1.0</Box> reads as normal.
+              Click any row for 30-day history &amp; shape checks. Only{" "}
               <Box component="span" sx={{ color: C.good, fontWeight: 500 }}>Acting</Box> sectors feed Setups.
             </Typography>
           </Box>
 
-          {/* Search input */}
-          <TextField
-            size="small"
-            placeholder="Filter sector…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            sx={{
-              width: { xs: "100%", md: 220 },
-              "& .MuiOutlinedInput-root": {
-                bgcolor: "#0e0f12",
-                borderRadius: 1.5,
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" sx={{ color: C.muted }} />
-                </InputAdornment>
-              ),
-            }}
-          />
-        </Box>
-
-        {/* Live 4-Metric Telemetry Strip */}
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" },
-            gap: 1.5,
-            mb: 2.5,
-          }}
-        >
-          {[
-            { label: "UNIVERSE SECTORS", value: counts.all, color: C.text, sub: "Tracked industries" },
-            { label: "ACTING (CROSSING / PULLBACK)", value: counts.acting, color: C.good, sub: "Feeding Setups" },
-            { label: "CONFIRMED SHAPE", value: counts.confirmed, color: C.good, sub: "All shape checks passed" },
-            { label: "WATCHING (BASE / UNVERIFIED)", value: counts.watching, color: C.accent, sub: "Early accumulation" },
-          ].map((m) => (
+          {/* Segmented Filter Bar + Search */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, flexWrap: "wrap", flexShrink: 0 }}>
             <Box
-              key={m.label}
               sx={{
-                p: 1.75,
-                borderRadius: 2,
-                bgcolor: "#111216",
+                display: "inline-flex",
+                flexWrap: "wrap",
+                gap: 0.5,
+                p: 0.5,
+                borderRadius: 1.75,
+                bgcolor: "#0c0d10",
                 border: `1px solid ${C.line}`,
               }}
             >
-              <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.1em", color: C.muted }}>
-                {m.label}
-              </Typography>
-              <Typography sx={{ fontFamily: MONO, fontSize: 22, fontWeight: 600, color: m.color, mt: 0.4 }}>
-                {m.value}
-              </Typography>
-              <Typography sx={{ fontSize: 11.5, color: C.muted, mt: 0.2 }}>
-                {m.sub}
-              </Typography>
+              {FILTERS.map((f) => {
+                const active = filter === f;
+                const label = f === "all" ? "All" : STATE_GROUPS[f].label;
+                return (
+                  <Tooltip key={f} title={FILTER_HELP[f]} placement="top" arrow enterDelay={300}>
+                    <Box
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setFilter(f)}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.85,
+                        px: 1.4,
+                        py: 0.6,
+                        borderRadius: 1.25,
+                        cursor: "pointer",
+                        bgcolor: active ? "#1b1d24" : "transparent",
+                        border: active ? "1px solid rgba(238,234,227,0.14)" : "1px solid transparent",
+                        transition: "all 0.15s ease",
+                        "&:hover": {
+                          bgcolor: active ? "#1b1d24" : "rgba(255,255,255,0.03)",
+                        },
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: 12.5,
+                          fontWeight: active ? 600 : 400,
+                          color: active ? C.text : C.muted,
+                        }}
+                      >
+                        {label}
+                      </Typography>
+                      <Box
+                        component="span"
+                        sx={{
+                          px: 0.65,
+                          py: 0.1,
+                          borderRadius: 0.85,
+                          bgcolor: active ? "rgba(142,180,196,0.16)" : "rgba(255,255,255,0.04)",
+                          fontFamily: MONO,
+                          fontSize: 10.5,
+                          color: active ? C.accent : C.muted,
+                        }}
+                      >
+                        {counts[f] || 0}
+                      </Box>
+                    </Box>
+                  </Tooltip>
+                );
+              })}
             </Box>
-          ))}
+
+            <TextField
+              size="small"
+              placeholder="Filter sector…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              sx={{
+                width: { xs: "100%", sm: 190 },
+                "& .MuiOutlinedInput-root": {
+                  bgcolor: "#0e0f12",
+                  borderRadius: 1.5,
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" sx={{ color: C.muted }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
         </Box>
 
-        {/* Segmented Filter Bar + Heatmap Legend */}
+        {/* Compact Single-Line Telemetry & Heatmap Legend Bar */}
         <Box
           sx={{
+            mt: 1.75,
+            pt: 1.5,
+            borderTop: `1px solid ${C.line}`,
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             flexWrap: "wrap",
-            gap: 1.5,
+            gap: 2,
           }}
         >
-          <Box
-            sx={{
-              display: "inline-flex",
-              flexWrap: "wrap",
-              gap: 0.75,
-              p: 0.6,
-              borderRadius: 2,
-              bgcolor: "#0c0d10",
-              border: `1px solid ${C.line}`,
-            }}
-          >
-            {FILTERS.map((f) => {
-              const active = filter === f;
-              const label = f === "all" ? "All Sectors" : STATE_GROUPS[f].label;
-              return (
-                <Tooltip key={f} title={FILTER_HELP[f]} placement="top" arrow enterDelay={300}>
-                  <Box
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setFilter(f)}
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 1,
-                      px: 1.75,
-                      py: 0.75,
-                      borderRadius: 1.5,
-                      cursor: "pointer",
-                      bgcolor: active ? "#1b1d24" : "transparent",
-                      border: active ? "1px solid rgba(238,234,227,0.14)" : "1px solid transparent",
-                      transition: "all 0.15s ease",
-                      "&:hover": {
-                        bgcolor: active ? "#1b1d24" : "rgba(255,255,255,0.03)",
-                      },
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        fontSize: 12.75,
-                        fontWeight: active ? 600 : 400,
-                        color: active ? C.text : C.muted,
-                      }}
-                    >
-                      {label}
-                    </Typography>
-                    <Box
-                      component="span"
-                      sx={{
-                        px: 0.75,
-                        py: 0.1,
-                        borderRadius: 1,
-                        bgcolor: active ? "rgba(142,180,196,0.16)" : "rgba(255,255,255,0.04)",
-                        fontFamily: MONO,
-                        fontSize: 10.5,
-                        color: active ? C.accent : C.muted,
-                      }}
-                    >
-                      {counts[f] || 0}
-                    </Box>
-                  </Box>
-                </Tooltip>
-              );
-            })}
+          <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: { xs: 2, sm: 3 } }}>
+            <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
+              <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>ACTING:</Typography>
+              <Typography sx={{ fontFamily: MONO, fontSize: 13.5, fontWeight: 600, color: counts.acting > 0 ? C.good : C.muted }}>
+                {counts.acting}
+              </Typography>
+              <Typography sx={{ fontSize: 11.5, color: C.muted }}>
+                ({counts.confirmed} shape confirmed)
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
+              <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>WATCHING:</Typography>
+              <Typography sx={{ fontFamily: MONO, fontSize: 13.5, fontWeight: 600, color: C.accent }}>
+                {counts.watching}
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.75 }}>
+              <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>UNIVERSE:</Typography>
+              <Typography sx={{ fontFamily: MONO, fontSize: 13.5, fontWeight: 600, color: C.text }}>
+                {counts.all}
+              </Typography>
+            </Box>
           </Box>
 
           {/* Compact Heatmap Legend */}
@@ -967,17 +946,17 @@ export default function SectorLookoutsTab({ onOpenSector, onOpenStock, liveRows 
             <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, letterSpacing: "0.06em" }}>
               INTENSITY:
             </Typography>
-            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.6 }}>
-              <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: "rgba(125,186,150,0.28)", border: "1px solid rgba(125,186,150,0.5)" }} />
-              <Typography sx={{ fontSize: 11.5, color: C.muted }}>Accumulation / Strong</Typography>
+            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+              <Box sx={{ width: 9, height: 9, borderRadius: 0.5, bgcolor: "rgba(125,186,150,0.28)", border: "1px solid rgba(125,186,150,0.5)" }} />
+              <Typography sx={{ fontSize: 11, color: C.muted }}>Accumulation</Typography>
             </Box>
-            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.6 }}>
-              <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: "rgba(196,164,106,0.26)", border: "1px solid rgba(196,164,106,0.5)" }} />
-              <Typography sx={{ fontSize: 11.5, color: C.muted }}>Volume Surge (≥1.3×)</Typography>
+            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+              <Box sx={{ width: 9, height: 9, borderRadius: 0.5, bgcolor: "rgba(196,164,106,0.26)", border: "1px solid rgba(196,164,106,0.5)" }} />
+              <Typography sx={{ fontSize: 11, color: C.muted }}>Surge (≥1.3×)</Typography>
             </Box>
-            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.6 }}>
-              <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: "rgba(200,122,122,0.28)", border: "1px solid rgba(200,122,122,0.5)" }} />
-              <Typography sx={{ fontSize: 11.5, color: C.muted }}>Distribution / Weak</Typography>
+            <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
+              <Box sx={{ width: 9, height: 9, borderRadius: 0.5, bgcolor: "rgba(200,122,122,0.28)", border: "1px solid rgba(200,122,122,0.5)" }} />
+              <Typography sx={{ fontSize: 11, color: C.muted }}>Distribution</Typography>
             </Box>
           </Box>
         </Box>

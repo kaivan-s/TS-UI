@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import { AccentRow, CoilBar, HeadCell, WhyRow } from "./ui.jsx";
-import BaseRate from "./BaseRate.jsx";
 import { BookmarkButton } from "../watchlist.jsx";
 import { C } from "../theme.js";
 import { num, pct } from "../format.js";
@@ -26,7 +25,7 @@ const TABLE_SX = {
     fontSize: 11,
     letterSpacing: "0.06em",
     textTransform: "uppercase",
-    py: 1.4,
+    py: 1.25,
   },
 };
 
@@ -42,27 +41,28 @@ function SectionHead({ eyebrow, color, title, count, children }) {
   return (
     <Box
       sx={{
-        px: 2.5,
-        py: 2,
+        px: 2.25,
+        py: 1.25,
         bgcolor: "#15161b",
         border: `1px solid ${C.line}`,
         borderBottom: "none",
         borderTopLeftRadius: 10,
         borderTopRightRadius: 10,
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "space-between",
-        gap: 2,
+        flexWrap: "wrap",
+        gap: 1.5,
       }}
     >
-      <Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.35 }}>
-          <Box sx={{ width: 7, height: 7, borderRadius: "50%", bgcolor: color }} />
+      <Box sx={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: 1.25 }}>
+        <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+          <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: color }} />
           <Typography
             sx={{
               fontFamily: MONO,
               fontSize: 10.5,
-              letterSpacing: "0.14em",
+              letterSpacing: "0.12em",
               color,
               fontWeight: 600,
               textTransform: "uppercase",
@@ -71,24 +71,24 @@ function SectionHead({ eyebrow, color, title, count, children }) {
             {eyebrow}
           </Typography>
         </Box>
-        <Typography sx={{ fontSize: 15, fontWeight: 600, color: C.text }}>
+        <Typography sx={{ fontSize: 13.75, fontWeight: 600, color: C.text }}>
           {title}
         </Typography>
-        <Typography sx={{ mt: 0.35, fontSize: 12.75, color: C.muted, lineHeight: 1.55, maxWidth: 740 }}>
-          {children}
+        <Typography sx={{ fontSize: 12.25, color: C.muted }}>
+          — {children}
         </Typography>
       </Box>
       {count != null && (
         <Box
           component="span"
           sx={{
-            px: 1.1,
-            py: 0.3,
+            px: 0.9,
+            py: 0.2,
             borderRadius: 1,
             bgcolor: `${color}14`,
             border: `1px solid ${color}33`,
             fontFamily: MONO,
-            fontSize: 11,
+            fontSize: 10.5,
             fontWeight: 600,
             color,
             flexShrink: 0,
@@ -112,78 +112,33 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
     (r) => r.sector_klass !== "PULLBACK" && r.sector_klass !== "CROSSING",
   );
 
-  // Across the backtest window a single sector was half or more of the list
-  // on 85% of the sessions that produced setups. State the concentration.
-  const bySector = rows.reduce((acc, r) => {
-    acc[r.sector] = (acc[r.sector] || 0) + 1;
-    return acc;
-  }, {});
-  const sectors = Object.keys(bySector).sort((a, b) => bySector[b] - bySector[a]);
-  const top = sectors[0];
-
   return (
     <Box>
-      <BaseRate metric="setups" />
-
-      {rows.length > 1 && (
-        <Box
-          sx={{
-            mb: 2.5,
-            px: 2.5,
-            py: 1.75,
-            borderRadius: 2.5,
-            bgcolor: "#15161b",
-            border: `1px solid ${C.line}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 1.5,
-          }}
-        >
-          <Box>
-            <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.accent, mb: 0.35 }}>
-              SECTOR CONCENTRATION READOUT
-            </Typography>
-            <Typography sx={{ fontSize: 13.25, color: C.muted, lineHeight: 1.55 }}>
-              <Box component="span" sx={{ fontFamily: MONO, color: C.text, fontWeight: 600 }}>{rows.length}</Box> names across{" "}
-              <Box component="span" sx={{ fontFamily: MONO, color: C.text, fontWeight: 600 }}>{sectors.length}</Box>{" "}
-              {sectors.length === 1 ? "sector" : "sectors"} —{" "}
-              <Box component="span" sx={{ color: C.text, fontWeight: 500 }}>{top}</Box> accounts for{" "}
-              <Box component="span" sx={{ fontFamily: MONO, color: C.good, fontWeight: 600 }}>
-                {bySector[top]} of {rows.length} ({Math.round((bySector[top] / rows.length) * 100)}%)
-              </Box>
-              . Names inside one sector tend to resolve together, so treat the sector as the position rather than each row independently.
-            </Typography>
-          </Box>
-        </Box>
-      )}
-
       {rows.length === 0 ? (
         <Box
           sx={{
-            p: 4.5,
+            p: 4,
             borderRadius: 2.5,
             bgcolor: "#15161b",
             border: `1px solid ${C.line}`,
             textAlign: "center",
           }}
         >
-          <Typography sx={{ fontSize: 14, color: C.muted, lineHeight: 1.6, maxWidth: 560, mx: "auto" }}>
+          <Typography sx={{ fontSize: 13.75, color: C.muted, lineHeight: 1.6, maxWidth: 560, mx: "auto" }}>
             Nothing qualifies today — either no sector is moving, or the ones that are have no stock coiled inside them. Most sessions produce no setups, so an empty list is the filter working.
           </Typography>
         </Box>
       ) : (
         <>
           {resting.length > 0 && (
-            <Box sx={{ mb: 3.5 }}>
+            <Box sx={{ mb: 2.5 }}>
               <SectionHead
-                eyebrow="PULLBACK REGIME · PRIMARY COHORT"
+                eyebrow="PULLBACK REGIME"
                 color={C.good}
                 title="Sector is resting after a volume surge"
                 count={resting.length}
               >
-                The stronger case. The sector already surged on heavy volume, sellers never took over, and it is now easing back quietly.
+                Volume surged earlier, sellers never took over, easing back quietly
               </SectionHead>
               <SetupTable
                 rows={resting}
@@ -196,14 +151,14 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
           )}
 
           {waking.length > 0 && (
-            <Box sx={{ mb: 3.5 }}>
+            <Box sx={{ mb: 2.5 }}>
               <SectionHead
-                eyebrow="CROSSING REGIME · EARLY COHORT"
+                eyebrow="CROSSING REGIME"
                 color={C.warn}
                 title="Sector surged today — early"
                 count={waking.length}
               >
-                The volume surge is happening right now, so the pullback shape has not formed yet. These may turn into the group above in a few sessions, or fail.
+                Volume surge happening today; pullback shape has not formed yet
               </SectionHead>
               <SetupTable
                 rows={waking}
@@ -216,14 +171,14 @@ export default function BuysTab({ rows, onOpenSector, onOpenStock }) {
           )}
 
           {other.length > 0 && (
-            <Box sx={{ mb: 3.5 }}>
+            <Box sx={{ mb: 2.5 }}>
               <SectionHead
-                eyebrow="UNCLASSIFIED SECTOR"
+                eyebrow="UNCLASSIFIED"
                 color={C.muted}
                 title="Sector state unknown"
                 count={other.length}
               >
-                The stock is coiled but its sector could not be classified, usually because too few names in it are liquid enough to measure.
+                Coiled stock inside a sector with too few liquid names to classify
               </SectionHead>
               <SetupTable
                 rows={other}
@@ -264,7 +219,7 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
       }}
     >
       <TableContainer sx={{ overflowX: "auto" }}>
-        <Table sx={{ minWidth: 780, ...TABLE_SX }}>
+        <Table size="small" sx={{ minWidth: 780, ...TABLE_SX }}>
           <TableHead>
             <TableRow>
               <HeadCell label="" sx={{ width: 36, p: 0 }} />
@@ -290,7 +245,7 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                   <TableCell
                     colSpan={10}
                     sx={{
-                      py: 1,
+                      py: 0.75,
                       px: 2,
                       bgcolor: "#111216",
                       borderBottom: `1px solid ${C.line}`,
@@ -311,7 +266,7 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                       >
                         <Typography
                           className="sector-title"
-                          sx={{ fontSize: 13, fontWeight: 600, color: C.text, transition: "color 0.15s ease" }}
+                          sx={{ fontSize: 12.75, fontWeight: 600, color: C.text, transition: "color 0.15s ease" }}
                         >
                           {g.sector}
                         </Typography>
@@ -320,13 +275,13 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                       <Box
                         component="span"
                         sx={{
-                          px: 0.85,
-                          py: 0.15,
+                          px: 0.75,
+                          py: 0.1,
                           borderRadius: 1,
                           bgcolor: "rgba(255,255,255,0.04)",
                           border: `1px solid ${C.line}`,
                           fontFamily: MONO,
-                          fontSize: 10.5,
+                          fontSize: 10,
                           color: C.muted,
                         }}
                       >
@@ -347,6 +302,7 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                       <TableCell
                         onClick={() => onOpenStock?.(r.symbol)}
                         sx={{
+                          py: 1,
                           fontFamily: MONO,
                           fontSize: 13,
                           fontWeight: 600,
@@ -400,10 +356,10 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                           )}
                         </Box>
                       </TableCell>
-                      <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+                      <TableCell align="right" className="num" sx={{ py: 1, fontFamily: MONO, fontSize: 12.5 }}>
                         {num(r.adj, 2)}
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell align="center" sx={{ py: 1 }}>
                         {(() => {
                           const t = r.earnings_trend || "?";
                           const s = TREND_STYLE[t] || TREND_STYLE["?"];
@@ -434,16 +390,17 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                           );
                         })()}
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ py: 1 }}>
                         <CoilBar value={r.coil} />
                       </TableCell>
-                      <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+                      <TableCell align="right" className="num" sx={{ py: 1, fontFamily: MONO, fontSize: 12.5 }}>
                         {pct(r.pos_hi, 1)}
                       </TableCell>
                       <TableCell
                         align="right"
                         className="num"
                         sx={{
+                          py: 1,
                           fontFamily: MONO,
                           fontSize: 12.5,
                           color: r.to_trigger <= 3 ? C.good : C.text,
@@ -452,16 +409,17 @@ function SetupTable({ rows, onOpenSector, onOpenStock, color, label }) {
                       >
                         {pct(r.to_trigger, 1)}
                       </TableCell>
-                      <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+                      <TableCell align="right" className="num" sx={{ py: 1, fontFamily: MONO, fontSize: 12.5 }}>
                         {num(r.rsi, 1)}
                       </TableCell>
-                      <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+                      <TableCell align="right" className="num" sx={{ py: 1, fontFamily: MONO, fontSize: 12.5 }}>
                         {num(r.vol_ratio)}
                       </TableCell>
                       <TableCell
                         align="right"
                         className="num"
                         sx={{
+                          py: 1,
                           fontFamily: MONO,
                           fontSize: 12.5,
                           color: r.cmf > 0 ? C.good : r.cmf < 0 ? C.bad : C.muted,
