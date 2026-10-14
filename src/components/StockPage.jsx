@@ -38,6 +38,7 @@ import { C } from "../theme.js";
 import { fmtDate, num, pct } from "../format.js";
 import { M } from "../glossary.js";
 import { getStock, getStockNews } from "../api.js";
+import { DriverPanel } from "./Driver.jsx";
 
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
@@ -395,7 +396,7 @@ function LevelList({ title, rows, color }) {
   );
 }
 
-function ChartReadCard({ t, filings }) {
+function ChartReadCard({ t, filings, drivers }) {
   const events = t.events || [];
   return (
     <Card sx={{ display: "flex", flexDirection: "column", height: { lg: 520 }, overflow: "hidden" }}>
@@ -506,6 +507,18 @@ function ChartReadCard({ t, filings }) {
                         </Typography>
                       </Box>
                     )}
+                    {drivers?.[e.time]?.filings
+                      ?.filter((f) => f.fact)
+                      .map((f, i) => (
+                        <Typography key={i} sx={{ mt: 0.5, pl: 3.5, fontSize: 11.5, color: C.text, lineHeight: 1.45 }}>
+                          {f.fact}
+                        </Typography>
+                      ))}
+                    {drivers?.[e.time] && (
+                      <Box sx={{ mt: 0.85, pl: 3.5 }}>
+                        <DriverPanel driver={drivers[e.time]} compact />
+                      </Box>
+                    )}
                   </Box>
                 );
               })}
@@ -515,7 +528,9 @@ function ChartReadCard({ t, filings }) {
       </Box>
 
       <Typography sx={{ fontSize: 11, color: C.muted, pt: 1.25, mt: 1.25, borderTop: `1px solid ${C.line}`, lineHeight: 1.45 }}>
-        Describes historical price and volume only. Swing highs and lows are prior turning points, not forecasts.
+        Describes historical price and volume only. Swing highs and lows are prior turning points, not forecasts. A likely
+        driver is the move type that best fits the price, volume, delivery, peer and filing data on record — a reading,
+        not an established cause or a recommendation.
       </Typography>
     </Card>
   );
@@ -1566,7 +1581,7 @@ export default function StockPage({ onOpenSector }) {
                   levels={chartLevels}
                   showLegend
                 />
-                {tech && <ChartReadCard t={tech} filings={news?.filings} />}
+                {tech && <ChartReadCard t={tech} filings={news?.filings} drivers={news?.event_drivers} />}
               </Box>
             )}
 

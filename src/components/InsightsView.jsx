@@ -36,6 +36,7 @@ import { fmtDate, num } from "../format.js";
 import { HeadCell, TvCopyButton, useTableSort } from "./ui.jsx";
 import { BookmarkButton } from "../watchlist.jsx";
 import { PremiumOverlay } from "./Premium.jsx";
+import { ConfidencePill, DriverPanel } from "./Driver.jsx";
 
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 const FREE_PREVIEW = 5;
@@ -59,8 +60,11 @@ const FILTERS = [
   { id: "deal", label: "Bulk / Block Deal", test: (x) => x.deals?.length > 0 },
   {
     id: "solo",
-    label: "No Record",
-    test: (x) => !x.filings?.length && !x.deals?.length && !x.tags?.includes("Sector-wide move"),
+    label: "No Clear Driver",
+    test: (x) =>
+      x.driver
+        ? x.driver.key === "unexplained"
+        : !x.filings?.length && !x.deals?.length && !x.tags?.includes("Sector-wide move"),
   },
 ];
 
@@ -291,10 +295,7 @@ function MoverCard({ m, onOpenStock, onOpenSector }) {
         </Box>
       </Box>
 
-      {/* Headline */}
-      <Typography sx={{ fontSize: 13.25, fontWeight: 500, color: C.text, lineHeight: 1.5 }}>
-        {m.headline}
-      </Typography>
+      <DriverPanel driver={m.driver} fallback={m.headline} full={open} />
 
       {/* 4-Cell Tape Telemetry Strip */}
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 1 }}>
@@ -350,7 +351,7 @@ function MoverCard({ m, onOpenStock, onOpenSector }) {
                   <Box component="span" sx={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 600, color: C.warn, mr: 0.75 }}>
                     {f.category}:
                   </Box>
-                  {f.text || f.title}
+                  {f.fact || f.text || f.title}
                 </Typography>
               </Box>
               {f.url && (
@@ -531,7 +532,7 @@ function MoversTable({ rows, sort, onOpenStock, onOpenSector }) {
               <HeadCell label="Sector Share" k="sector_share" align="right" sort={sort} />
               <HeadCell label="Vol vs 50D" k="vol_x" align="right" sort={sort} />
               <HeadCell label="Deliv %" k="deliv_pct" align="right" sort={sort} />
-              <HeadCell label="Coinciding Fact / Catalyst" />
+              <HeadCell label="Likely Driver" k="driver_label" sort={sort} />
             </TableRow>
           </TableHead>
           <TableBody>
@@ -625,25 +626,18 @@ function MoversTable({ rows, sort, onOpenStock, onOpenSector }) {
                       {m.deliv_pct != null ? `${num(m.deliv_pct, 0)}%` : "—"}
                     </TableCell>
                     <TableCell sx={{ py: 1, maxWidth: 340 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap" }}>
-                        {m.tags?.slice(0, 2).map((t) => (
-                          <Tag key={t} tone={tagTone(t, m)}>
-                            {t}
-                          </Tag>
-                        ))}
-                        <Typography
-                          sx={{
-                            fontSize: 12,
-                            color: C.muted,
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            maxWidth: 220,
-                          }}
-                        >
+                      {m.driver ? (
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap" }}>
+                          <Typography sx={{ fontSize: 12.5, fontWeight: 600, color: C.text, whiteSpace: "nowrap" }}>
+                            {m.driver.label}
+                          </Typography>
+                          <ConfidencePill level={m.driver.confidence} />
+                        </Box>
+                      ) : (
+                        <Typography sx={{ fontSize: 12, color: C.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 300 }}>
                           {m.headline}
                         </Typography>
-                      </Box>
+                      )}
                     </TableCell>
                   </TableRow>
 
@@ -651,9 +645,18 @@ function MoversTable({ rows, sort, onOpenStock, onOpenSector }) {
                     <TableRow sx={{ bgcolor: "#0e0f12" }}>
                       <TableCell colSpan={11} sx={{ py: 2, px: 3 }}>
                         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: C.text }}>
-                            {m.headline}
-                          </Typography>
+                          <Box sx={{ maxWidth: 820 }}>
+                            <DriverPanel driver={m.driver} fallback={m.headline} full />
+                          </Box>
+                          {m.tags?.length > 0 && (
+                            <Box sx={{ display: "flex", gap: 0.65, flexWrap: "wrap" }}>
+                              {m.tags.map((t) => (
+                                <Tag key={t} tone={tagTone(t, m)}>
+                                  {t}
+                                </Tag>
+                              ))}
+                            </Box>
+                          )}
                           {m.detail?.map((d, i) => (
                             <Typography key={i} sx={{ fontSize: 12.25, color: C.muted }}>
                               · {d}
@@ -702,6 +705,7 @@ export default function InsightsView({ onOpenStock, onOpenSector }) {
   const [side, setSide] = useState("gainers");
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
+  const [driver, setDriver] = useState("");
   const [layout, setLayout] = useState("cards");
 
   const sort = useTableSort({
@@ -745,8 +749,21 @@ export default function InsightsView({ onOpenStock, onOpenSector }) {
       ...r,
       stock_share: r.parts?.stock ?? null,
       sector_share: r.parts?.sector ?? null,
+      driver_label: r.driver?.label ?? "",
     }));
   }, [data, side]);
+
+  const driverOptions = useMemo(() => {
+    const n = {};
+    sideList.forEach((m) => {
+      if (m.driver_label) n[m.driver_label] = (n[m.driver_label] || 0) + 1;
+    });
+    return Object.entries(n).sort((a, b) => b[1] - a[1]);
+  }, [sideList]);
+
+  useEffect(() => {
+    setDriver("");
+  }, [side, date]);
 
   const filterCounts = useMemo(() => {
     const out = {};
@@ -758,7 +775,8 @@ export default function InsightsView({ onOpenStock, onOpenSector }) {
 
   const rows = useMemo(() => {
     const f = FILTERS.find((x) => x.id === filter);
-    const byCat = f?.test ? sideList.filter(f.test) : sideList;
+    const byFilter = f?.test ? sideList.filter(f.test) : sideList;
+    const byCat = driver ? byFilter.filter((m) => m.driver_label === driver) : byFilter;
     const query = q.trim().toLowerCase();
     const searched = !query
       ? byCat
@@ -767,11 +785,12 @@ export default function InsightsView({ onOpenStock, onOpenSector }) {
             (m.symbol || "").toLowerCase().includes(query) ||
             (m.sector || "").toLowerCase().includes(query) ||
             (m.headline || "").toLowerCase().includes(query) ||
+            m.driver_label.toLowerCase().includes(query) ||
             (m.tags || []).some((t) => t.toLowerCase().includes(query)) ||
             (m.deals || []).some((d) => (d.client || "").toLowerCase().includes(query)),
         );
     return layout === "table" ? sort.apply(searched) : searched;
-  }, [sideList, filter, q, layout, sort]);
+  }, [sideList, filter, driver, q, layout, sort]);
 
   const locked = data?.[`locked_${side}`] || 0;
   const dates = data?.dates || [];
@@ -821,7 +840,7 @@ export default function InsightsView({ onOpenStock, onOpenSector }) {
               Session Movers &amp; Catalyst Attribution
             </Typography>
             <Typography sx={{ color: C.muted, fontSize: 12.75, lineHeight: 1.5, mt: 0.35 }}>
-              Decomposes every {threshPct}%+ mover into market, sector, and idiosyncratic shares alongside NSE corporate filings and bulk/block deals.
+              Reads every {threshPct}%+ mover&apos;s price action, volume, delivery, peers, filings and deals to show the likely driver, the evidence for it, and what doesn&apos;t fit.
             </Typography>
           </Box>
 
@@ -1020,26 +1039,51 @@ export default function InsightsView({ onOpenStock, onOpenSector }) {
             })}
           </Box>
 
-          <TextField
-            size="small"
-            placeholder="Filter symbol, sector, filing or deal client…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            sx={{
-              width: { xs: "100%", sm: 290 },
-              "& .MuiOutlinedInput-root": {
-                bgcolor: "#0e0f12",
-                borderRadius: 1.5,
-              },
-            }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" sx={{ color: C.muted }} />
-                </InputAdornment>
-              ),
-            }}
-          />
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", width: { xs: "100%", md: "auto" } }}>
+            <TextField
+              select
+              size="small"
+              value={driver}
+              onChange={(e) => setDriver(e.target.value)}
+              SelectProps={{ displayEmpty: true }}
+              sx={{
+                minWidth: 220,
+                "& .MuiOutlinedInput-root": { bgcolor: "#0e0f12", borderRadius: 1.5, fontSize: 12.5 },
+              }}
+            >
+              <MenuItem value="" sx={{ fontSize: 12.5 }}>
+                All likely drivers
+              </MenuItem>
+              {driverOptions.map(([label, n]) => (
+                <MenuItem key={label} value={label} sx={{ fontSize: 12.5 }}>
+                  {label}
+                  <Box component="span" sx={{ ml: 1, fontFamily: MONO, fontSize: 11, color: C.muted }}>
+                    {n}
+                  </Box>
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              size="small"
+              placeholder="Filter symbol, sector, driver or deal client…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              sx={{
+                width: { xs: "100%", sm: 290 },
+                "& .MuiOutlinedInput-root": {
+                  bgcolor: "#0e0f12",
+                  borderRadius: 1.5,
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" sx={{ color: C.muted }} />
+                  </InputAdornment>
+                ),
+              }}
+            />
+          </Box>
         </Box>
 
         {/* Row 3: Single-Line Session Telemetry & Attribution Legend */}
@@ -1099,7 +1143,7 @@ export default function InsightsView({ onOpenStock, onOpenSector }) {
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.65 }}>
-                <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>NO RECORD:</Typography>
+                <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>NO CLEAR DRIVER:</Typography>
                 <Typography sx={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 600, color: C.text }}>
                   {c.unexplained ?? 0}
                 </Typography>
@@ -1234,7 +1278,7 @@ export default function InsightsView({ onOpenStock, onOpenSector }) {
               <Box component="span" sx={{ fontFamily: MONO, color: C.text, fontWeight: 600, mr: 0.75 }}>
                 ATTRIBUTION METHODOLOGY:
               </Box>
-              Market share is the broad universe median return; Sector share is the peer-group median minus market; Idiosyncratic share is the residual stock move. Corporate announcements (filed between the prior session&apos;s 15:30 IST close and this session&apos;s close) and NSE bulk/block deals are coinciding facts on record, not proof of causation.
+              Market share is the broad universe median return; Sector share is the peer-group median minus market; Idiosyncratic share is the residual stock move. The likely driver is the move type that best fits the evidence on record — price shape, volume and delivery against the stock&apos;s own norm, its prior trend and range, peers, NSE filings (between the prior 15:30 IST close and this close, with results figures read from the company&apos;s XBRL filing and order or rating details from the filing itself) and bulk/block deals. It is a reading of public data, not a cause established from inside knowledge, and not a recommendation.
             </Typography>
           </Box>
         </>
