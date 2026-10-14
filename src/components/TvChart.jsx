@@ -15,9 +15,11 @@ import {
   LineStyle,
 } from "lightweight-charts";
 import React, { useEffect, useRef, useState } from "react";
-import { Box, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { C } from "../theme.js";
 import { getChartData } from "../api.js";
+
+const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
 const PERIODS = [
   { value: "6mo", label: "6M" },
@@ -66,9 +68,9 @@ function ChartComponent({ data, volumeData, height, markers, levels }) {
 
     const chart = createChart(container, {
       layout: {
-        background: { type: ColorType.Solid, color: "#141414" },
-        textColor: "rgba(238,234,227,0.45)",
-        fontFamily: "'Inter', -apple-system, sans-serif",
+        background: { type: ColorType.Solid, color: "#15161b" },
+        textColor: "rgba(238,234,227,0.5)",
+        fontFamily: MONO,
         fontSize: 11,
       },
       grid: {
@@ -76,8 +78,8 @@ function ChartComponent({ data, volumeData, height, markers, levels }) {
         horzLines: { color: "rgba(238,234,227,0.04)" },
       },
       crosshair: {
-        vertLine: { color: "rgba(238,234,227,0.2)", labelBackgroundColor: "#333" },
-        horzLine: { color: "rgba(238,234,227,0.2)", labelBackgroundColor: "#333" },
+        vertLine: { color: "rgba(238,234,227,0.22)", labelBackgroundColor: "#1b1d24" },
+        horzLine: { color: "rgba(238,234,227,0.22)", labelBackgroundColor: "#1b1d24" },
       },
       rightPriceScale: { borderColor: "rgba(238,234,227,0.08)" },
       timeScale: { borderColor: "rgba(238,234,227,0.08)", timeVisible: false },
@@ -193,15 +195,15 @@ export default function TvChart({ symbol, height = 400, markers, levels, showLeg
 
   if (!symbol) return null;
 
-  const chartHeight = height - 36;
+  const chartHeight = height - 46;
 
   return (
     <Box
       sx={{
-        borderRadius: 2,
+        borderRadius: 2.5,
         overflow: "hidden",
-        border: "1px solid rgba(238,234,227,0.08)",
-        bgcolor: "#141414",
+        border: `1px solid ${C.line}`,
+        bgcolor: "#15161b",
         position: "relative",
       }}
     >
@@ -210,41 +212,63 @@ export default function TvChart({ symbol, height = 400, markers, levels, showLeg
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          px: 1.5,
-          pt: 1,
-          pb: 0.5,
+          px: 2,
+          py: 1,
+          bgcolor: "#0e0f12",
+          borderBottom: `1px solid ${C.line}`,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.75, flexWrap: "wrap" }}>
-          <Typography sx={{ fontSize: 11, color: C.muted }}>
+          <Typography sx={{ fontFamily: MONO, fontSize: 11, fontWeight: 600, color: C.text, letterSpacing: "0.06em" }}>
             NSE:{symbol}
           </Typography>
           {showLegend && EMA_LINES.map((l) => (
             <Box key={l.span} sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
               <Box sx={{ width: 14, height: 2, bgcolor: l.color, borderRadius: 1 }} />
-              <Typography sx={{ fontSize: 10.5, color: C.muted }}>{l.label}</Typography>
+              <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>{l.label}</Typography>
             </Box>
           ))}
         </Box>
-        <ToggleButtonGroup
-          size="small"
-          exclusive
-          value={period}
-          onChange={(_, v) => v && setPeriod(v)}
+        <Box
           sx={{
-            "& .MuiToggleButton-root": {
-              px: 1, py: 0.25, fontSize: 11, color: C.muted,
-              borderColor: "rgba(238,234,227,0.08)", textTransform: "none",
-              "&.Mui-selected": { color: C.text, bgcolor: "rgba(238,234,227,0.06)" },
-            },
+            display: "inline-flex",
+            gap: 0.35,
+            p: 0.35,
+            borderRadius: 1.5,
+            bgcolor: "#0c0d10",
+            border: `1px solid ${C.line}`,
           }}
         >
-          {PERIODS.map((p) => (
-            <ToggleButton key={p.value} value={p.value}>
-              {p.label}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
+          {PERIODS.map((p) => {
+            const active = period === p.value;
+            return (
+              <Box
+                key={p.value}
+                role="button"
+                tabIndex={0}
+                onClick={() => setPeriod(p.value)}
+                sx={{
+                  px: 1.1,
+                  py: 0.3,
+                  borderRadius: 1,
+                  cursor: "pointer",
+                  bgcolor: active ? "#1b1d24" : "transparent",
+                  border: active ? "1px solid rgba(238,234,227,0.14)" : "1px solid transparent",
+                  fontFamily: MONO,
+                  fontSize: 11,
+                  fontWeight: active ? 600 : 400,
+                  color: active ? C.text : C.muted,
+                  transition: "all 0.15s ease",
+                  "&:hover": {
+                    bgcolor: active ? "#1b1d24" : "rgba(255,255,255,0.03)",
+                  },
+                }}
+              >
+                {p.label}
+              </Box>
+            );
+          })}
+        </Box>
       </Box>
 
       {/* Chart or status */}

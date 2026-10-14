@@ -40,6 +40,12 @@ export const getStock = (q, entry) => {
   return json(`/api/stock?${qs}`);
 };
 
+export const getInsightsMovers = (date = null) =>
+  json(date ? `/api/insights/movers?date=${date}` : "/api/insights/movers");
+
+export const getStockNews = (symbol) =>
+  json(`/api/stock/news?symbol=${encodeURIComponent(symbol)}`);
+
 // Sector Lookouts
 export const getSectorLookouts = (date = null) => {
   const q = date ? `?date=${date}` : "";

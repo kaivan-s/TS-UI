@@ -11,6 +11,7 @@ import AccountBalanceRoundedIcon from "@mui/icons-material/AccountBalanceRounded
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import CloseIcon from "@mui/icons-material/Close";
+import InsightsRoundedIcon from "@mui/icons-material/InsightsRounded";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
 import logoIcon from "../Images/favicon.svg";
@@ -66,6 +67,13 @@ const NAV_SECTIONS = [
   {
     title: "MARKET PULSE",
     items: [
+      {
+        id: "insights",
+        path: "/insights",
+        Icon: InsightsRoundedIcon,
+        label: "Insights",
+        desc: "Why stocks moved 5%+",
+      },
       {
         id: "market",
         path: "/market",

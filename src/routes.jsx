@@ -182,6 +182,14 @@ export default function AppRoutes() {
         }
       />
       <Route
+        path="/insights"
+        element={
+          <RequireAuth>
+            <App />
+          </RequireAuth>
+        }
+      />
+      <Route
         path="/stock/:symbol"
         element={
           <RequireAuth>

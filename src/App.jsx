@@ -24,6 +24,7 @@ import PrivacyPolicy from "./components/PrivacyPolicy.jsx";
 import TermsConditions from "./components/TermsConditions.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
 import StockPage from "./components/StockPage.jsx";
+import InsightsView from "./components/InsightsView.jsx";
 import { getDashboard, getSector, getSymbols } from "./api.js";
 import { useWatchlist } from "./watchlist.jsx";
 
@@ -35,6 +36,7 @@ const PATH_TO_VIEW = {
   "/fundamentals": "fundamentals",
   "/results": "results",
   "/market": "market",
+  "/insights": "insights",
   "/carry": "market",
   "/scanners": "market",
   "/guide": "guide",
@@ -246,6 +248,8 @@ export default function App() {
           )}
 
           {view === "market" && <MarketView onOpenStock={openStock} />}
+
+          {view === "insights" && <InsightsView onOpenStock={openStock} />}
 
           {view === "stock" && <StockPage onOpenSector={openSector} />}
 
