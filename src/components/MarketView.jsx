@@ -15,7 +15,7 @@ import {
   Typography,
 } from "@mui/material";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import { getCarry, getCarryIntraday, getScanners } from "../api.js";
+import { getCarryIntraday, getScanners } from "../api.js";
 import { C } from "../theme.js";
 import { TvCopyButton } from "./ui.jsx";
 
@@ -36,7 +36,6 @@ function marketOpenNow() {
 
 export default function MarketView({ onOpenStock }) {
   const [tab, setTab] = useState(0);
-  const [carryData, setCarryData] = useState(null);
   const [intradayData, setIntradayData] = useState(null);
   const [scanData, setScanData] = useState(null);
   const [busy, setBusy] = useState(true);
@@ -46,12 +45,10 @@ export default function MarketView({ onOpenStock }) {
     setBusy(true);
     setErr(null);
     try {
-      const [carry, intraday, scanners] = await Promise.all([
-        getCarry(),
+      const [intraday, scanners] = await Promise.all([
         getCarryIntraday(),
         getScanners(),
       ]);
-      setCarryData(carry);
       setIntradayData(intraday);
       setScanData(scanners);
     } catch (e) {
@@ -67,7 +64,7 @@ export default function MarketView({ onOpenStock }) {
     return () => clearInterval(id);
   }, [load]);
 
-  if (busy && !carryData && !scanData) {
+  if (busy && !intradayData && !scanData) {
     return (
       <Box
         sx={{
@@ -89,7 +86,7 @@ export default function MarketView({ onOpenStock }) {
     );
   }
 
-  if (err && !carryData && !scanData) {
+  if (err && !intradayData && !scanData) {
     return (
       <Box
         sx={{
@@ -294,7 +291,6 @@ export default function MarketView({ onOpenStock }) {
       {tab === 0 && (
         <CarryView
           onOpenStock={onOpenStock}
-          externalData={carryData}
           externalIntraday={intradayData}
           embedded
         />
