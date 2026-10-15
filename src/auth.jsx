@@ -29,6 +29,7 @@ export function AuthProvider({ children }) {
   const [trial, setTrial] = useState(false);
   const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [trialUsed, setTrialUsed] = useState(false);
+  const [meLoaded, setMeLoaded] = useState(false);
   const [telegramLinked, setTelegramLinked] = useState(false);
   const [telegramLinkCode, setTelegramLinkCode] = useState(null);
 
@@ -76,6 +77,7 @@ export function AuthProvider({ children }) {
       setTrial(false);
       setTrialDaysLeft(0);
       setTrialUsed(false);
+      setMeLoaded(false);
       resetUser();
       return;
     }
@@ -125,7 +127,8 @@ export function AuthProvider({ children }) {
         setTrial(false);
         setTrialDaysLeft(0);
         setTrialUsed(false);
-      });
+      })
+      .finally(() => { setMeLoaded(true); });
     return () => {
       stop = true;
     };
@@ -151,6 +154,7 @@ export function AuthProvider({ children }) {
       trial,
       trialDaysLeft,
       trialUsed,
+      meLoaded,
       subscriptionId,
       subscriptionExpires,
       subscriptionCancelled,
@@ -333,7 +337,7 @@ export function AuthProvider({ children }) {
       },
       getAccessToken,
     };
-  }, [session, configured, loading, denied, error, notice, busy, isPremium, plan, trial, trialDaysLeft, trialUsed, subscriptionId, subscriptionExpires, subscriptionCancelled, telegramLinked, telegramLinkCode]);
+  }, [session, configured, loading, denied, error, notice, busy, isPremium, plan, trial, trialDaysLeft, trialUsed, meLoaded, subscriptionId, subscriptionExpires, subscriptionCancelled, telegramLinked, telegramLinkCode]);
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
 }
