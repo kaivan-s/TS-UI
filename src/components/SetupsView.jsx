@@ -1,15 +1,17 @@
 /**
- * Setups — one unified table showing the full coil watchlist.
+ * Setups — unified view with tabs for coils, market scanners, and circuit carry.
  *
- * Sector-agrees stocks sit at the top, leaders-at-rest below, separated by a
- * visual divider row. Stocks appearing in both lists show both tags. The whole
- * page is one scrollable watchlist.
+ * Tabs: Coils | Big Movers | Unusual Volume | 52w Breakouts | Streaks | Sector Pulse | Circuit Carry
+ *
+ * Coils tab shows the original coil watchlist. Market scanner tabs lazy-load
+ * data from /api/scanners and /api/carry/intraday on first click.
  */
 
-import { useMemo, useState, Fragment } from "react";
+import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
 import {
   Box,
   Button,
+  CircularProgress,
   InputAdornment,
   Table,
   TableBody,
@@ -30,6 +32,9 @@ import { BookmarkButton } from "../watchlist.jsx";
 import { C } from "../theme.js";
 import { num, pct } from "../format.js";
 import { EVIDENCE_WINDOW, STAT_STRIPS } from "../evidence.js";
+import { getCarryIntraday, getScanners } from "../api.js";
+import ScannersView from "./ScannersView.jsx";
+import CarryView from "./CarryView.jsx";
 
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 const FREE_PREVIEW = 3;
@@ -178,6 +183,26 @@ function DividerRow({ label, count, color }) {
   );
 }
 
+// NSE cash session, Mon–Fri 09:15–15:30 IST.
+function marketOpenNow() {
+  const ist = new Date(Date.now() + (5.5 * 60 + new Date().getTimezoneOffset()) * 60000);
+  const day = ist.getDay();
+  const mins = ist.getHours() * 60 + ist.getMinutes();
+  return day >= 1 && day <= 5 && mins >= 9 * 60 + 15 && mins <= 15 * 60 + 30;
+}
+
+const SCAN_POLL_MS = 5 * 60 * 1000;
+
+const TOP_TABS = [
+  { id: "coils", label: "Coils" },
+  { id: "big_movers", label: "Big Movers" },
+  { id: "unusual_volume", label: "Unusual Vol" },
+  { id: "breakouts_52w", label: "52W Breakouts" },
+  { id: "momentum_streaks", label: "Streaks" },
+  { id: "sector_pulse", label: "Sector Pulse" },
+  { id: "circuit_carry", label: "Circuit Carry" },
+];
+
 export default function SetupsView({
   buys,
   rest,
@@ -186,8 +211,47 @@ export default function SetupsView({
   onOpenStock,
 }) {
   const { isPremium } = useAuth();
+  const [topTab, setTopTab] = useState("coils");
   const [q, setQ] = useState("");
   const [sectorPick, setSectorPick] = useState([]);
+
+  // Lazy-load market scanner data
+  const [scanData, setScanData] = useState(null);
+  const [intradayData, setIntradayData] = useState(null);
+  const [scanBusy, setScanBusy] = useState(false);
+  const [scanLoaded, setScanLoaded] = useState(false);
+
+  const loadScanners = useCallback(async () => {
+    if (scanBusy) return;
+    setScanBusy(true);
+    try {
+      const [scanners, intraday] = await Promise.all([
+        getScanners(),
+        getCarryIntraday(),
+      ]);
+      setScanData(scanners);
+      setIntradayData(intraday);
+      setScanLoaded(true);
+    } catch {
+      // silent — scanner data is supplementary
+    } finally {
+      setScanBusy(false);
+    }
+  }, [scanBusy]);
+
+  // Load scanner data on first non-coils tab click, then poll while market is open
+  useEffect(() => {
+    if (topTab === "coils") return;
+    if (!scanLoaded) loadScanners();
+  }, [topTab, scanLoaded]);
+
+  useEffect(() => {
+    if (topTab === "coils" || !scanLoaded) return;
+    const id = setInterval(loadScanners, SCAN_POLL_MS);
+    return () => clearInterval(id);
+  }, [topTab, scanLoaded]);
+
+  const isMarketTab = topTab !== "coils";
 
   const sort = useTableSort({
     key: null,
@@ -288,9 +352,156 @@ export default function SetupsView({
   const leaderRows = previewRows.filter((r) => r._section === "leader");
   const useSections = !sort.key;
 
+  // Scanner tab counts
+  const scanCounts = useMemo(() => {
+    if (!scanData) return {};
+    return {
+      big_movers: (scanData.big_movers || []).length,
+      unusual_volume: (scanData.unusual_volume || []).length,
+      breakouts_52w: (scanData.breakouts_52w || []).length,
+      momentum_streaks: (scanData.momentum_streaks || []).length,
+      sector_pulse: (scanData.sector_pulse || []).length,
+      circuit_carry: (intradayData?.latest || []).length,
+    };
+  }, [scanData, intradayData]);
+
+  // Map scanner tab id to ScannersView embeddedTab index
+  const SCANNER_TAB_MAP = {
+    big_movers: 0,
+    unusual_volume: 1,
+    momentum_streaks: 2,
+    breakouts_52w: 3,
+    sector_pulse: 4,
+  };
+
+  const live = marketOpenNow();
+
   return (
     <Box sx={{ pb: 6 }}>
       <UpdateBanner asOf={status?.as_of} />
+
+      {/* ─── Top-level tab bar ─── */}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 0.75,
+          mb: 2.5,
+        }}
+      >
+        {TOP_TABS.map((t) => {
+          const active = topTab === t.id;
+          const count = t.id === "coils"
+            ? merged.length
+            : scanCounts[t.id];
+          return (
+            <Box
+              key={t.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setTopTab(t.id)}
+              onKeyDown={(e) => e.key === "Enter" && setTopTab(t.id)}
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.85,
+                px: 1.5,
+                py: 0.75,
+                borderRadius: 1.5,
+                cursor: "pointer",
+                bgcolor: active ? "rgba(238,234,227,0.1)" : "#15161b",
+                border: `1px solid ${active ? "rgba(238,234,227,0.22)" : C.line}`,
+                color: active ? C.text : C.muted,
+                transition: "all 0.15s ease",
+                "&:hover": { color: C.text, borderColor: "rgba(238,234,227,0.2)" },
+              }}
+            >
+              <Typography sx={{ fontSize: 12.75, fontWeight: active ? 600 : 500 }}>
+                {t.label}
+              </Typography>
+              {count != null && (
+                <Box
+                  component="span"
+                  sx={{
+                    px: 0.65,
+                    py: "1px",
+                    borderRadius: 0.75,
+                    bgcolor: active ? "rgba(142,180,196,0.18)" : "rgba(255,255,255,0.04)",
+                    fontFamily: MONO,
+                    fontSize: 10.5,
+                    fontWeight: 600,
+                    color: active ? C.accent : C.muted,
+                  }}
+                >
+                  {count}
+                </Box>
+              )}
+            </Box>
+          );
+        })}
+        {isMarketTab && (
+          <Box
+            component="span"
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 0.5,
+              px: 1,
+              py: 0.5,
+              borderRadius: 1,
+              fontFamily: MONO,
+              fontSize: 9.5,
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              color: live ? C.good : C.muted,
+              bgcolor: live ? "rgba(125,186,150,0.12)" : "rgba(238,234,227,0.05)",
+              border: `1px solid ${live ? "rgba(125,186,150,0.32)" : "rgba(238,234,227,0.16)"}`,
+              ml: 0.5,
+            }}
+          >
+            {live ? "LIVE" : "CLOSED"}
+          </Box>
+        )}
+      </Box>
+
+      {/* ─── Market scanner tabs ─── */}
+      {isMarketTab && (
+        scanBusy && !scanLoaded ? (
+          <Box
+            sx={{
+              p: 6,
+              borderRadius: 3,
+              bgcolor: "#15161b",
+              border: `1px solid ${C.line}`,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1.5,
+            }}
+          >
+            <CircularProgress size={24} sx={{ color: C.accent }} />
+            <Typography sx={{ fontFamily: MONO, fontSize: 12.5, color: C.muted }}>
+              Loading market scanners…
+            </Typography>
+          </Box>
+        ) : topTab === "circuit_carry" ? (
+          <CarryView
+            onOpenStock={onOpenStock}
+            externalIntraday={intradayData}
+            embedded
+          />
+        ) : SCANNER_TAB_MAP[topTab] != null ? (
+          <ScannersView
+            onOpenStock={onOpenStock}
+            externalData={scanData}
+            embedded
+            embeddedTab={SCANNER_TAB_MAP[topTab]}
+          />
+        ) : null
+      )}
+
+      {/* ─── Coils tab content ─── */}
+      {topTab === "coils" && <>
 
       {/* ─── Page header ─── */}
       <Box
@@ -641,6 +852,8 @@ export default function SetupsView({
           </Box>
         )}
       </PremiumOverlay>
+
+      </>}
     </Box>
   );
 }

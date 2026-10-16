@@ -199,17 +199,10 @@ export default function AppRoutes() {
       />
       {/* /tracking removed — episode log replaced by watchlist */}
       <Route path="/tracking" element={<Navigate to="/setups" replace />} />
-      <Route
-        path="/market"
-        element={
-          <RequireAuth>
-            <App />
-          </RequireAuth>
-        }
-      />
-      {/* Legacy redirects */}
-      <Route path="/carry" element={<Navigate to="/market" replace />} />
-      <Route path="/scanners" element={<Navigate to="/market" replace />} />
+      {/* Market scanners merged into Setups — redirect legacy URLs */}
+      <Route path="/market" element={<Navigate to="/setups" replace />} />
+      <Route path="/carry" element={<Navigate to="/setups" replace />} />
+      <Route path="/scanners" element={<Navigate to="/setups" replace />} />
       <Route
         path="/watchlist"
         element={

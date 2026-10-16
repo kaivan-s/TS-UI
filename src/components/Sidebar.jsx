@@ -3,7 +3,7 @@ import { Box, Button, Drawer, IconButton, Tooltip, Typography, useMediaQuery, us
 import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
-import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
+
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import PaymentsRoundedIcon from "@mui/icons-material/PaymentsRounded";
@@ -28,7 +28,7 @@ const NAV_SECTIONS = [
         path: "/setups",
         Icon: PlaylistAddCheckRoundedIcon,
         label: "Setups",
-        desc: "Coiled bases & leaders",
+        desc: "Coils, movers & scanners",
       },
       {
         id: "sectors",
@@ -74,14 +74,6 @@ const NAV_SECTIONS = [
         Icon: InsightsRoundedIcon,
         label: "Insights",
         desc: "Why stocks moved 5%+",
-      },
-      {
-        id: "market",
-        path: "/market",
-        Icon: BoltRoundedIcon,
-        paths: ["/market", "/carry", "/scanners"],
-        label: "Markets",
-        desc: "Carry, movers & streaks",
       },
     ],
   },

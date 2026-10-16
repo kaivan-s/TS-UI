@@ -16,7 +16,7 @@ import { capturePageview } from "./posthog.js";
 import Sidebar from "./components/Sidebar.jsx";
 import Header from "./components/Header.jsx";
 import SetupsView from "./components/SetupsView.jsx";
-import MarketView from "./components/MarketView.jsx";
+// MarketView removed — scanners are now tabs inside SetupsView
 import SectorsView from "./components/SectorsView.jsx";
 import Guide from "./components/Guide.jsx";
 import Pricing from "./components/Pricing.jsx";
@@ -40,10 +40,7 @@ const PATH_TO_VIEW = {
   "/watchlist": "watchlist",
   "/fundamentals": "fundamentals",
   "/results": "results",
-  "/market": "market",
   "/insights": "insights",
-  "/carry": "market",
-  "/scanners": "market",
   "/guide": "guide",
   "/pricing": "pricing",
   "/feedback": "feedback",
@@ -330,8 +327,6 @@ export default function App() {
           {view === "results" && (
             <ResultsCalendarView onOpenStock={openStock} />
           )}
-
-          {view === "market" && <MarketView onOpenStock={openStock} />}
 
           {view === "insights" && (
             <InsightsView onOpenStock={openStock} onOpenSector={openSector} />
