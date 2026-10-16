@@ -195,12 +195,12 @@ const SCAN_POLL_MS = 5 * 60 * 1000;
 
 const TOP_TABS = [
   { id: "coils", label: "Coils" },
-  { id: "big_movers", label: "Big Movers" },
-  { id: "unusual_volume", label: "Unusual Vol" },
+  { id: "big_movers", label: "Big Movers", live: true },
+  { id: "unusual_volume", label: "Unusual Vol", live: true },
   { id: "breakouts_52w", label: "52W Breakouts" },
   { id: "momentum_streaks", label: "Streaks" },
-  { id: "sector_pulse", label: "Sector Pulse" },
-  { id: "circuit_carry", label: "Circuit Carry" },
+  { id: "sector_pulse", label: "Sector Pulse", live: true },
+  { id: "circuit_carry", label: "Circuit Carry", live: true },
 ];
 
 export default function SetupsView({
@@ -394,6 +394,7 @@ export default function SetupsView({
           const count = t.id === "coils"
             ? merged.length
             : scanCounts[t.id];
+          const showDot = t.live && live;
           return (
             <Box
               key={t.id}
@@ -416,6 +417,18 @@ export default function SetupsView({
                 "&:hover": { color: C.text, borderColor: "rgba(238,234,227,0.2)" },
               }}
             >
+              {showDot && (
+                <Box
+                  sx={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    bgcolor: C.good,
+                    flexShrink: 0,
+                    boxShadow: "0 0 4px rgba(125,186,150,0.5)",
+                  }}
+                />
+              )}
               <Typography sx={{ fontSize: 12.75, fontWeight: active ? 600 : 500 }}>
                 {t.label}
               </Typography>
@@ -439,29 +452,6 @@ export default function SetupsView({
             </Box>
           );
         })}
-        {isMarketTab && (
-          <Box
-            component="span"
-            sx={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 0.5,
-              px: 1,
-              py: 0.5,
-              borderRadius: 1,
-              fontFamily: MONO,
-              fontSize: 9.5,
-              fontWeight: 600,
-              letterSpacing: "0.08em",
-              color: live ? C.good : C.muted,
-              bgcolor: live ? "rgba(125,186,150,0.12)" : "rgba(238,234,227,0.05)",
-              border: `1px solid ${live ? "rgba(125,186,150,0.32)" : "rgba(238,234,227,0.16)"}`,
-              ml: 0.5,
-            }}
-          >
-            {live ? "LIVE" : "CLOSED"}
-          </Box>
-        )}
       </Box>
 
       {/* ─── Market scanner tabs ─── */}

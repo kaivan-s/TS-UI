@@ -550,24 +550,36 @@ const SCANNER_META = [
   {
     tag: "BIG MOVERS · ≥ 5% GAIN",
     desc: "Stocks up 5% or more from the previous session close.",
+    live: true,
   },
   {
     tag: "UNUSUAL VOLUME · ≥ 2.0× AVG",
     desc: "Stocks trading at 2× or more their 20-day average volume with positive momentum.",
+    live: true,
   },
   {
     tag: "MOMENTUM STREAKS · ≥ 3 DAYS",
     desc: "Stocks with 3 or more consecutive up days and at least 5% cumulative gain.",
+    live: false,
   },
   {
     tag: "52-WEEK BREAKOUTS · ≤ 2% FROM HIGH",
     desc: "Stocks at or within 2% of their 52-week high on above-average volume.",
+    live: false,
   },
   {
     tag: "SECTOR PULSE · BREADTH RANKING",
     desc: "Industries ranked by average constituent return and advancing participation.",
+    live: true,
   },
 ];
+
+function marketOpenNow() {
+  const ist = new Date(Date.now() + (5.5 * 60 + new Date().getTimezoneOffset()) * 60000);
+  const day = ist.getDay();
+  const mins = ist.getHours() * 60 + ist.getMinutes();
+  return day >= 1 && day <= 5 && mins >= 9 * 60 + 15 && mins <= 15 * 60 + 30;
+}
 
 export default function ScannersView({ onOpenStock, externalData, embedded, embeddedTab }) {
   const [data, setData] = useState(null);
@@ -631,6 +643,9 @@ export default function ScannersView({ onOpenStock, externalData, embedded, embe
   const breakouts = filterList(d?.breakouts_52w || []);
   const sectors = filterList(d?.sector_pulse || []);
   const meta = SCANNER_META[activeTab] || SCANNER_META[0];
+  const isLive = marketOpenNow();
+  const scanTime = d?.scan_time;
+  const asOf = d?.as_of;
 
   const content = (
     <>
@@ -651,9 +666,54 @@ export default function ScannersView({ onOpenStock, externalData, embedded, embe
         }}
       >
         <Box>
-          <Typography sx={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.14em", color: C.accent }}>
-            {meta.tag}
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.25 }}>
+            <Typography sx={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.14em", color: C.accent }}>
+              {meta.tag}
+            </Typography>
+            {meta.live ? (
+              <Box
+                component="span"
+                sx={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  px: 0.75,
+                  py: "1px",
+                  borderRadius: 0.75,
+                  fontFamily: MONO,
+                  fontSize: 9,
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  color: isLive ? C.good : C.muted,
+                  bgcolor: isLive ? "rgba(125,186,150,0.12)" : "rgba(238,234,227,0.05)",
+                  border: `1px solid ${isLive ? "rgba(125,186,150,0.32)" : "rgba(238,234,227,0.16)"}`,
+                }}
+              >
+                {isLive && (
+                  <Box sx={{ width: 5, height: 5, borderRadius: "50%", bgcolor: C.good, boxShadow: "0 0 4px rgba(125,186,150,0.5)" }} />
+                )}
+                {isLive ? (scanTime ? `LIVE · ${scanTime} IST` : "LIVE") : "LAST SESSION"}
+              </Box>
+            ) : (
+              <Box
+                component="span"
+                sx={{
+                  px: 0.75,
+                  py: "1px",
+                  borderRadius: 0.75,
+                  fontFamily: MONO,
+                  fontSize: 9,
+                  fontWeight: 600,
+                  letterSpacing: "0.08em",
+                  color: C.muted,
+                  bgcolor: "rgba(238,234,227,0.05)",
+                  border: "1px solid rgba(238,234,227,0.16)",
+                }}
+              >
+                EOD{asOf ? ` · ${asOf}` : ""}
+              </Box>
+            )}
+          </Box>
           <Typography sx={{ fontSize: 13.25, color: C.muted, mt: 0.25 }}>
             {meta.desc}
           </Typography>
