@@ -74,6 +74,11 @@ export const getScanners = () => json("/api/scanners");
 export const getScannersIntraday = () => json("/api/scanners/intraday");
 export const getScannersEod = () => json("/api/scanners/eod");
 
+// Commodity and macro drivers
+export const getCommodities = () => json("/api/commodities");
+export const getStockDrivers = (symbol) =>
+  json(`/api/stock/drivers?symbol=${encodeURIComponent(symbol)}`);
+
 // Fundamentals screen
 export const getFundamentalsScreen = (params = {}) => {
   const qs = new URLSearchParams();

@@ -29,6 +29,7 @@ import FeedbackView from "./components/FeedbackView.jsx";
 import SectorDrawer from "./components/SectorDrawer.jsx";
 import StockPage from "./components/StockPage.jsx";
 import InsightsView from "./components/InsightsView.jsx";
+import CommoditiesView from "./components/CommoditiesView.jsx";
 import { getDashboard, getSector, getSymbols } from "./api.js";
 import { useWatchlist } from "./watchlist.jsx";
 import { useAuth } from "./auth.jsx";
@@ -41,6 +42,7 @@ const PATH_TO_VIEW = {
   "/fundamentals": "fundamentals",
   "/results": "results",
   "/insights": "insights",
+  "/commodities": "commodities",
   "/guide": "guide",
   "/pricing": "pricing",
   "/feedback": "feedback",
@@ -331,6 +333,8 @@ export default function App() {
           {view === "insights" && (
             <InsightsView onOpenStock={openStock} onOpenSector={openSector} />
           )}
+
+          {view === "commodities" && <CommoditiesView onOpenStock={openStock} />}
 
           {view === "stock" && <StockPage onOpenSector={openSector} />}
 

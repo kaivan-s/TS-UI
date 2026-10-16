@@ -190,6 +190,14 @@ export default function AppRoutes() {
         }
       />
       <Route
+        path="/commodities"
+        element={
+          <RequireAuth>
+            <App />
+          </RequireAuth>
+        }
+      />
+      <Route
         path="/stock/:symbol"
         element={
           <RequireAuth>

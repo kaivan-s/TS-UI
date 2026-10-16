@@ -13,6 +13,7 @@ import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import CloseIcon from "@mui/icons-material/Close";
 import InsightsRoundedIcon from "@mui/icons-material/InsightsRounded";
+import OilBarrelRoundedIcon from "@mui/icons-material/OilBarrelRounded";
 import { C } from "../theme.js";
 import { useAuth } from "../auth.jsx";
 import logoIcon from "../Images/favicon.svg";
@@ -74,6 +75,13 @@ const NAV_SECTIONS = [
         Icon: InsightsRoundedIcon,
         label: "Insights",
         desc: "Why stocks moved 5%+",
+      },
+      {
+        id: "commodities",
+        path: "/commodities",
+        Icon: OilBarrelRoundedIcon,
+        label: "Commodities",
+        desc: "Crude, metals & who they move",
       },
     ],
   },

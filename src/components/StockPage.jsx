@@ -39,6 +39,7 @@ import { fmtDate, num, pct } from "../format.js";
 import { M } from "../glossary.js";
 import { getStock, getStockNews } from "../api.js";
 import { DriverPanel } from "./Driver.jsx";
+import DriversCard from "./DriversCard.jsx";
 
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
@@ -89,6 +90,7 @@ const SECTIONS = [
   { id: "chart", label: "Chart & Technicals" },
   { id: "coil", label: "Coil & Sector Gates" },
   { id: "fundamentals", label: "Fundamentals" },
+  { id: "drivers", label: "Market Drivers" },
   { id: "filings", label: "Exchange Filings" },
 ];
 
@@ -1979,6 +1981,10 @@ export default function StockPage({ onOpenSector }) {
                   </Card>
                 )}
               </Box>
+            )}
+
+            {(section === "all" || section === "drivers") && foundSymbol && (
+              <DriversCard symbol={foundSymbol} hideEmpty={section === "all"} />
             )}
 
             {/* Row 4: NSE Corporate Filings & Disclosures */}
