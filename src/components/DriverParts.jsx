@@ -97,10 +97,9 @@ export function LinkChip({ r, driverKey, driverLabel, onOpenStock }) {
 export function NewsList({ news, max = 4 }) {
   const items = news?.items || [];
   if (!items.length) {
-    const msg = news?.status === "loading" || news?.status == null
-      ? "Fetching headlines…"
-      : "Headlines unavailable right now — the news source is rate-limiting. They refresh in the background.";
-    return <Typography sx={{ fontSize: 12, color: C.muted }}>{msg}</Typography>;
+    return (
+      <Typography sx={{ fontSize: 12, color: C.muted }}>No headlines in the last two weeks.</Typography>
+    );
   }
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 0.85 }}>

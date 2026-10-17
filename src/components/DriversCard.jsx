@@ -10,9 +10,6 @@ import { getStockDrivers } from "../api.js";
 import { C } from "../theme.js";
 import { Change, MONO, NewsList, Sparkline, fmtPrice, scaleFor } from "./DriverParts.jsx";
 
-const NEWS_POLL_MS = 45 * 1000;
-const NEWS_POLL_MAX = 4;
-
 function DriverRow({ d, symbol }) {
   const m = d.market;
   const measured = d.beta != null;
@@ -63,27 +60,14 @@ export default function DriversCard({ symbol, hideEmpty }) {
   useEffect(() => {
     if (!symbol) return undefined;
     let stop = false;
-    let polls = 0;
-    let timer = null;
     setData(null);
     setLoading(true);
-    const load = () => {
-      getStockDrivers(symbol)
-        .then((d) => {
-          if (stop) return;
-          setData(d);
-          const rows = [...d.measured, ...d.expected];
-          if (rows.some((x) => !x.news?.items?.length) && polls++ < NEWS_POLL_MAX) {
-            timer = setTimeout(load, NEWS_POLL_MS);
-          }
-        })
-        .catch(() => !stop && setData({ measured: [], expected: [] }))
-        .finally(() => !stop && setLoading(false));
-    };
-    load();
+    getStockDrivers(symbol)
+      .then((d) => !stop && setData(d))
+      .catch(() => !stop && setData({ measured: [], expected: [] }))
+      .finally(() => !stop && setLoading(false));
     return () => {
       stop = true;
-      clearTimeout(timer);
     };
   }, [symbol]);
 

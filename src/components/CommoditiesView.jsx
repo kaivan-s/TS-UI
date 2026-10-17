@@ -9,9 +9,6 @@ import { getCommodities } from "../api.js";
 import { C } from "../theme.js";
 import { Change, LinkChip, MONO, NewsList, Sparkline, fmtPrice } from "./DriverParts.jsx";
 
-const NEWS_POLL_MS = 45 * 1000;
-const NEWS_POLL_MAX = 6;
-
 function DriverCard({ d, onOpenStock }) {
   const m = d.market;
   const none = !d.with.length && !d.against.length;
@@ -97,22 +94,11 @@ export default function CommoditiesView({ onOpenStock }) {
 
   useEffect(() => {
     let stop = false;
-    let polls = 0;
-    let timer = null;
-    const load = () => {
-      getCommodities()
-        .then((d) => {
-          if (stop) return;
-          setData(d);
-          const pending = d.drivers.some((x) => !x.news?.items?.length);
-          if (pending && polls++ < NEWS_POLL_MAX) timer = setTimeout(load, NEWS_POLL_MS);
-        })
-        .catch((e) => !stop && setErr(e.message));
-    };
-    load();
+    getCommodities()
+      .then((d) => !stop && setData(d))
+      .catch((e) => !stop && setErr(e.message));
     return () => {
       stop = true;
-      clearTimeout(timer);
     };
   }, []);
 
