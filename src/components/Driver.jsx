@@ -68,6 +68,60 @@ function EvidenceList({ items, ok, limit }) {
   );
 }
 
+const signed = (v) => (v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(1)}%`);
+
+function sinceLabel(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return ` since ${d.toLocaleString("en-IN", { month: "short", year: "numeric" })}`;
+}
+
+/** What followed past moves with the same label: from the next open, ranked against all stocks. */
+function BaseRate({ rate, compact }) {
+  const h5 = rate?.h5;
+  if (!h5) return null;
+  const h20 = rate.h20;
+  const cases = `${h5.n.toLocaleString("en-IN")} past moves like this${sinceLabel(rate.since)}`;
+  const lead = {
+    lagged: `${cases} usually lagged the market afterwards`,
+    beat: `${cases} usually did better than the market afterwards`,
+    mixed: `${cases} showed no consistent follow-through — outcomes split roughly evenly`,
+  }[h5.verdict];
+  const detail = h5.verdict === "mixed"
+    ? " — about as many did better than other stocks as did worse."
+    : `: over the next 5 sessions the median was ${signed(h5.median_ret)}, and ${h5.bottom_half}% ended in the bottom half of all stocks.`;
+  const color = h5.verdict === "lagged" ? C.warn : h5.verdict === "beat" ? C.good : C.muted;
+  return (
+    <Box sx={{ pt: compact ? 0.4 : 0.75, borderTop: `1px solid ${C.line}` }}>
+      <Typography sx={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: "0.08em", color, textTransform: "uppercase", mb: 0.4 }}>
+        What usually followed
+      </Typography>
+      <Typography sx={{ fontSize: compact ? 11.75 : 12.5, color: C.text, lineHeight: 1.55 }}>
+        {lead}
+        {detail}
+      </Typography>
+      {!compact && (
+        <Box sx={{ display: "flex", gap: 2.25, mt: 0.75, flexWrap: "wrap" }}>
+          {[
+            ["5-day median", signed(h5.median_ret)],
+            ["20-day median", signed(h20?.median_ret)],
+            ["Worst 10% (5d)", signed(h5.worst10)],
+            ["Best 10% (5d)", signed(h5.best10)],
+          ].map(([k, v]) => (
+            <Box key={k}>
+              <Typography sx={{ fontFamily: MONO, fontSize: 9.5, color: C.muted, letterSpacing: "0.06em" }}>{k}</Typography>
+              <Typography sx={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 600, color: C.text }}>{v}</Typography>
+            </Box>
+          ))}
+        </Box>
+      )}
+      <Typography sx={{ fontSize: 10.5, color: C.muted, mt: 0.6, lineHeight: 1.5 }}>
+        Measured from the next day&apos;s open. A record of past cases, not a forecast for this one.
+      </Typography>
+    </Box>
+  );
+}
+
 export function DriverPanel({ driver, fallback, full = false, compact = false }) {
   const [showEvidence, setShowEvidence] = useState(false);
   if (!driver) {
@@ -116,6 +170,7 @@ export function DriverPanel({ driver, fallback, full = false, compact = false })
           )}
         </>
       )}
+      <BaseRate rate={driver.base_rate} compact={compact} />
       {compact && nEvidence > 0 && (
         <Typography
           role="button"
