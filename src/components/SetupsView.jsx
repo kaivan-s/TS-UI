@@ -32,8 +32,9 @@ import { BookmarkButton } from "../watchlist.jsx";
 import { C } from "../theme.js";
 import { num, pct } from "../format.js";
 import { EVIDENCE_WINDOW, STAT_STRIPS } from "../evidence.js";
-import { getCarryIntraday, getScanners } from "../api.js";
+import { getCarryIntraday, getGapFade, getScanners } from "../api.js";
 import ScannersView from "./ScannersView.jsx";
+import GapFadeView from "./GapFadeView.jsx";
 import CarryView from "./CarryView.jsx";
 
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
@@ -192,9 +193,19 @@ function marketOpenNow() {
 }
 
 const SCAN_POLL_MS = 5 * 60 * 1000;
+const GAP_POLL_MS = 30 * 1000;
+
+// 08:59–09:35 IST on weekdays: pre-open through the end of the gap window.
+function gapWindowNow() {
+  const ist = new Date(Date.now() + (5.5 * 60 + new Date().getTimezoneOffset()) * 60000);
+  const day = ist.getDay();
+  const mins = ist.getHours() * 60 + ist.getMinutes();
+  return day >= 1 && day <= 5 && mins >= 8 * 60 + 59 && mins <= 9 * 60 + 35;
+}
 
 const TOP_TABS = [
   { id: "coils", label: "Coils" },
+  { id: "gap_fade", label: "Gap-Ups in Downtrends", live: true },
   { id: "big_movers", label: "Big Movers", live: true },
   { id: "unusual_volume", label: "Unusual Vol", live: true },
   { id: "breakouts_52w", label: "52W Breakouts" },
@@ -211,7 +222,26 @@ export default function SetupsView({
   onOpenStock,
 }) {
   const { isPremium } = useAuth();
-  const [topTab, setTopTab] = useState("coils");
+  const [topTab, setTopTab] = useState(() => (gapWindowNow() ? "gap_fade" : "coils"));
+  const [gapData, setGapData] = useState(null);
+  const [gapErr, setGapErr] = useState(null);
+
+  const loadGap = useCallback(async () => {
+    try {
+      setGapData(await getGapFade());
+      setGapErr(null);
+    } catch (e) {
+      setGapErr(e?.message || "Could not load pre-open data");
+    }
+  }, []);
+
+  useEffect(() => {
+    loadGap();
+    const id = setInterval(() => {
+      if (gapWindowNow()) loadGap();
+    }, GAP_POLL_MS);
+    return () => clearInterval(id);
+  }, [loadGap]);
   const [q, setQ] = useState("");
   const [sectorPick, setSectorPick] = useState([]);
 
@@ -364,6 +394,7 @@ export default function SetupsView({
       circuit_carry: (intradayData?.latest || []).length,
     };
   }, [scanData, intradayData]);
+  const tabCounts = { ...scanCounts, gap_fade: gapData ? (gapData.rows || []).length : undefined };
 
   // Map scanner tab id to ScannersView embeddedTab index
   const SCANNER_TAB_MAP = {
@@ -393,7 +424,7 @@ export default function SetupsView({
           const active = topTab === t.id;
           const count = t.id === "coils"
             ? merged.length
-            : scanCounts[t.id];
+            : tabCounts[t.id];
           const showDot = t.live && live;
           return (
             <Box
@@ -454,8 +485,12 @@ export default function SetupsView({
         })}
       </Box>
 
+      {topTab === "gap_fade" && (
+        <GapFadeView data={gapData} error={gapErr} onOpenStock={onOpenStock} />
+      )}
+
       {/* ─── Market scanner tabs ─── */}
-      {isMarketTab && (
+      {isMarketTab && topTab !== "gap_fade" && (
         scanBusy && !scanLoaded ? (
           <Box
             sx={{
