@@ -67,6 +67,64 @@ function Pill({ children, tone }) {
   );
 }
 
+const fmtDate = (iso) =>
+  new Date(`${iso}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+
+/** Picks logged at ~09:20 and priced again at ~15:15; positive = the stock fell (short gained). */
+function LiveRecord({ rec, topN }) {
+  const s = rec?.top;
+  return (
+    <Box sx={{ p: { xs: 2, sm: 2.5 }, mb: 2, borderRadius: 2.5, bgcolor: "#15161b", border: `1px solid ${C.line}` }}>
+      <Typography sx={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.14em", color: C.accent, mb: 1 }}>
+        LIVE RECORD{rec?.since ? ` · SINCE ${fmtDate(rec.since).toUpperCase()}` : ""}
+      </Typography>
+      {!s ? (
+        <Typography sx={{ fontSize: 12.5, color: C.muted, lineHeight: 1.6 }}>
+          Each trading day the list is logged at 09:20 and priced again at 15:15. Results appear here after the
+          first full session.
+        </Typography>
+      ) : (
+        <>
+          <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 1.5 }}>
+            {[
+              [`Top ${topN} instances · ${rec.sessions} sessions`, s.trades],
+              ["Avg fall 09:20 → 15:15, after costs", pct(s.avg_pct)],
+              ["Median instance", pct(s.median_pct)],
+              ["Fell more than costs", `${s.win_pct}%`],
+            ].map(([k, v]) => (
+              <Box key={k}>
+                <Typography sx={{ fontFamily: MONO, fontSize: 16, fontWeight: 600, color: C.text }}>{v}</Typography>
+                <Typography sx={{ fontSize: 11.5, color: C.muted }}>{k}</Typography>
+              </Box>
+            ))}
+          </Box>
+          {rec.all && rec.all.trades !== s.trades && (
+            <Typography sx={{ fontSize: 12.5, color: C.muted, lineHeight: 1.6, mb: 1 }}>
+              All listed stocks: {rec.all.trades} instances, average {pct(rec.all.avg_pct)}, median{" "}
+              {pct(rec.all.median_pct)}.
+            </Typography>
+          )}
+          {rec.recent.map((d) => (
+            <Box key={d.date} sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", py: 0.5, borderTop: `1px solid ${C.line}` }}>
+              <Typography sx={{ fontFamily: MONO, fontSize: 11.5, color: C.muted, minWidth: 56 }}>{fmtDate(d.date)}</Typography>
+              {d.picks.filter((p) => p.top).map((p) => (
+                <Typography key={p.symbol} sx={{ fontFamily: MONO, fontSize: 11.5, color: C.text }}>
+                  {p.symbol}{" "}
+                  <Box component="span" sx={{ color: p.net_pct > 0 ? C.good : C.bad }}>{pct(p.net_pct)}</Box>
+                </Typography>
+              ))}
+            </Box>
+          ))}
+          <Typography sx={{ fontSize: 11.5, color: C.muted, lineHeight: 1.6, mt: 1 }}>
+            A positive figure means the stock fell after 09:20, net of {(rec.cost_bps / 100).toFixed(2)}% round-trip
+            costs. Logged automatically; no picks are removed afterwards.
+          </Typography>
+        </>
+      )}
+    </Box>
+  );
+}
+
 export default function GapFadeView({ data, error, onOpenStock }) {
   const sort = useTableSort({
     key: "rank",
@@ -270,6 +328,8 @@ export default function GapFadeView({ data, error, onOpenStock }) {
           </TableContainer>
         </Box>
       )}
+
+      {data && !error && <LiveRecord rec={data.live_record} topN={rules.top_n ?? 5} />}
 
       {/* How it was tested */}
       {bt && (
