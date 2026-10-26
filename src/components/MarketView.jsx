@@ -2,7 +2,8 @@
  * Market — unified view merging Circuit carry and Market scanners.
  *
  * Top-level screens:
- *   Circuit carry · Big movers · Unusual volume · Streaks · 52w breakouts · Sector pulse
+ *   Gap-ups in downtrends (09:00–09:30) · Circuit carry · Big movers ·
+ *   Unusual volume · Streaks · 52w breakouts · Sector pulse
  *
  * Circuit carry has its own internal sub-tabs (Today's scan / Past observations).
  */
@@ -15,15 +16,29 @@ import {
   Typography,
 } from "@mui/material";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import { getCarryIntraday, getScanners } from "../api.js";
+import { getCarryIntraday, getGapFade, getScanners } from "../api.js";
 import { C } from "../theme.js";
 import { TvCopyButton } from "./ui.jsx";
 
 import CarryView from "./CarryView.jsx";
+import GapFadeView from "./GapFadeView.jsx";
 import ScannersView from "./ScannersView.jsx";
 
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 const POLL_MS = 5 * 60 * 1000;
+const GAP_POLL_MS = 30 * 1000;
+const GAP_TAB = 6;
+
+function istMinutes() {
+  const ist = new Date(Date.now() + (5.5 * 60 + new Date().getTimezoneOffset()) * 60000);
+  return { day: ist.getDay(), mins: ist.getHours() * 60 + ist.getMinutes() };
+}
+
+// 08:59–09:35 IST on weekdays: pre-open through the end of the gap window.
+function gapWindowNow() {
+  const { day, mins } = istMinutes();
+  return day >= 1 && day <= 5 && mins >= 8 * 60 + 59 && mins <= 9 * 60 + 35;
+}
 
 // NSE cash session, Mon–Fri 09:15–15:30 IST. Exchange holidays aren't known
 // here, so a holiday weekday reads as open until the data says otherwise.
@@ -35,11 +50,22 @@ function marketOpenNow() {
 }
 
 export default function MarketView({ onOpenStock }) {
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState(() => (gapWindowNow() ? GAP_TAB : 0));
   const [intradayData, setIntradayData] = useState(null);
   const [scanData, setScanData] = useState(null);
+  const [gapData, setGapData] = useState(null);
+  const [gapErr, setGapErr] = useState(null);
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState(null);
+
+  const loadGap = useCallback(async (force = false) => {
+    try {
+      setGapData(await getGapFade(force));
+      setGapErr(null);
+    } catch (e) {
+      setGapErr(e?.message || "Could not load pre-open data");
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setBusy(true);
@@ -48,6 +74,7 @@ export default function MarketView({ onOpenStock }) {
       const [intraday, scanners] = await Promise.all([
         getCarryIntraday(),
         getScanners(),
+        loadGap(),
       ]);
       setIntradayData(intraday);
       setScanData(scanners);
@@ -56,13 +83,20 @@ export default function MarketView({ onOpenStock }) {
     } finally {
       setBusy(false);
     }
-  }, []);
+  }, [loadGap]);
 
   useEffect(() => {
     load();
     const id = setInterval(load, POLL_MS);
     return () => clearInterval(id);
   }, [load]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (gapWindowNow()) loadGap();
+    }, GAP_POLL_MS);
+    return () => clearInterval(id);
+  }, [loadGap]);
 
   if (busy && !intradayData && !scanData) {
     return (
@@ -110,8 +144,10 @@ export default function MarketView({ onOpenStock }) {
   const sectors = scanData?.sector_pulse || [];
   const intradayLatest = intradayData?.latest || [];
   const intradayCount = intradayLatest.length;
+  const gapRows = gapData?.rows || [];
 
   const TABS = [
+    { id: GAP_TAB, label: "Gap-Ups in Downtrends", count: gapRows.length, symbols: gapRows.map((r) => r.symbol) },
     { id: 0, label: "Circuit Carry", count: intradayCount, symbols: intradayLatest.map((r) => r.symbol) },
     { id: 1, label: "Big Movers", count: movers.length, symbols: movers.map((r) => r.symbol) },
     { id: 2, label: "Unusual Volume", count: volume.length, symbols: volume.map((r) => r.symbol) },
@@ -120,7 +156,7 @@ export default function MarketView({ onOpenStock }) {
     { id: 5, label: "Sector Pulse", count: sectors.length, symbols: sectors.map((r) => r.best_stock).filter(Boolean) },
   ];
 
-  const activeSymbols = TABS[tab]?.symbols || [];
+  const activeSymbols = TABS.find((t) => t.id === tab)?.symbols || [];
   const live = marketOpenNow();
 
   return (
@@ -288,6 +324,9 @@ export default function MarketView({ onOpenStock }) {
       </Box>
 
       {/* Active Scanner View */}
+      {tab === GAP_TAB && (
+        <GapFadeView data={gapData} error={gapErr} onOpenStock={onOpenStock} />
+      )}
       {tab === 0 && (
         <CarryView
           onOpenStock={onOpenStock}

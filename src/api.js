@@ -72,6 +72,8 @@ export const getCarryIntraday = (asOf = null) =>
 // Broader market scanners.
 export const getScanners = () => json("/api/scanners");
 export const getScannersIntraday = () => json("/api/scanners/intraday");
+export const getGapFade = (force = false) =>
+  json(force ? "/api/gap-fade?force=1" : "/api/gap-fade");
 export const getScannersEod = () => json("/api/scanners/eod");
 
 // Commodity and macro drivers
