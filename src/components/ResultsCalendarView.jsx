@@ -50,6 +50,49 @@ const TREND_FILTERS = [
   { id: "down", label: "↓ Declining", color: C.bad },
 ];
 
+const SHOW_FILTERS = [
+  { id: "all", label: "All" },
+  { id: "upcoming", label: "Upcoming" },
+  { id: "declared", label: "Declared" },
+];
+
+const DAY_SORTS = [
+  { id: "mcap", label: "Market cap" },
+  { id: "gainers", label: "Biggest rise", color: C.good },
+  { id: "losers", label: "Biggest fall", color: C.bad },
+];
+
+function FilterChips({ items, value, onChange }) {
+  return items.map((it) => {
+    const active = value === it.id;
+    return (
+      <Box
+        key={it.id}
+        role="button"
+        tabIndex={0}
+        onClick={() => onChange(it.id)}
+        onKeyDown={(e) => e.key === "Enter" && onChange(it.id)}
+        sx={{
+          px: 1.25,
+          py: 0.45,
+          borderRadius: 1.25,
+          cursor: "pointer",
+          fontFamily: MONO,
+          fontSize: 11,
+          fontWeight: active ? 600 : 500,
+          bgcolor: active ? "rgba(238,234,227,0.1)" : "rgba(255,255,255,0.02)",
+          border: `1px solid ${active ? "rgba(238,234,227,0.22)" : C.line}`,
+          color: active ? (it.color || C.text) : C.muted,
+          transition: "all 0.15s ease",
+          "&:hover": { color: C.text, borderColor: "rgba(238,234,227,0.2)" },
+        }}
+      >
+        {it.label}
+      </Box>
+    );
+  });
+}
+
 function fmtCr(v) {
   if (v == null || Number.isNaN(Number(v))) return "";
   const n = Number(v);
@@ -74,6 +117,63 @@ function fmtDateLabel(iso) {
 
 const TODAY_ISO = isoOf(new Date());
 const isToday = (iso) => iso === TODAY_ISO;
+
+const PAST_DAYS = 60;
+
+function fmtPct(v, digits = 1) {
+  if (v == null || Number.isNaN(Number(v))) return "—";
+  const n = Number(v);
+  return `${n > 0 ? "+" : ""}${n.toFixed(digits)}%`;
+}
+
+function pctColor(v) {
+  if (v == null || Number.isNaN(Number(v))) return C.muted;
+  if (v >= 0.5) return C.good;
+  if (v <= -0.5) return C.bad;
+  return C.text;
+}
+
+function fmtRupeeCr(v) {
+  if (v == null) return "—";
+  return `₹${Math.round(Number(v)).toLocaleString("en-IN")} cr`;
+}
+
+const TIMING_LABEL = {
+  before_open: "before market open",
+  during_market: "during market hours",
+  after_close: "after market close",
+};
+
+/** "3 Nov, 13:47" from "2026-11-03 13:47". */
+function fmtDeclared(s) {
+  if (!s) return "";
+  const [d, t] = s.split(" ");
+  const dt = new Date(d + "T00:00:00");
+  return `${dt.getDate()} ${MONTHS[dt.getMonth()]}, ${t}`;
+}
+
+const hasReaction = (r) => r.declared && r.status !== "pending" && r.day_pct != null;
+
+function medianDayMove(rows) {
+  const v = rows.map((r) => r.day_pct).sort((a, b) => a - b);
+  if (!v.length) return null;
+  const m = Math.floor(v.length / 2);
+  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+}
+
+function sortRows(rows, how) {
+  const out = [...rows];
+  const byCap = (a, b) => (b.market_cap_cr ?? 0) - (a.market_cap_cr ?? 0);
+  if (how === "mcap") return out.sort(byCap);
+  return out.sort((a, b) => {
+    const av = hasReaction(a) ? a.day_pct : null;
+    const bv = hasReaction(b) ? b.day_pct : null;
+    if (av == null && bv == null) return byCap(a, b);
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    return how === "gainers" ? bv - av : av - bv;
+  });
+}
 
 function RelativeBadge({ dateStr }) {
   if (!dateStr || dateStr === "Unknown") return null;
@@ -173,8 +273,209 @@ function Stat({ label, value, color = C.text, tip }) {
   );
 }
 
+function ReactionPill({ r }) {
+  const pending = !hasReaction(r);
+  const color = pending ? C.muted : pctColor(r.day_pct);
+  const label = pending
+    ? "Reacts next session"
+    : `${fmtPct(r.day_pct)} ${r.status === "live" ? "today" : "on the day"}`;
+  return (
+    <Tooltip
+      title={
+        pending
+          ? "Declared after the cut-off; the first session with the results known hasn't traded yet."
+          : r.status === "live"
+            ? "Live: current price vs the previous close, from the reaction session in progress."
+            : `Close vs previous close on ${fmtDateLabel(r.reaction_date)}, the first session that traded with the results known.`
+      }
+      placement="top"
+      arrow
+    >
+      <Box
+        sx={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 0.6,
+          flexShrink: 0,
+          px: 1,
+          py: 0.3,
+          borderRadius: 1,
+          bgcolor: `${color}18`,
+          border: `1px solid ${color}33`,
+        }}
+      >
+        {r.status === "live" && (
+          <Box sx={{ width: 5, height: 5, borderRadius: "50%", bgcolor: C.bad }} />
+        )}
+        <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color, fontWeight: 700, whiteSpace: "nowrap" }}>
+          {label}
+        </Typography>
+      </Box>
+    </Tooltip>
+  );
+}
+
+function ResultsLine({ label, value, chg, swing, compare }) {
+  return (
+    <Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 1 }}>
+      <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>{label}</Typography>
+      <Typography sx={{ fontFamily: MONO, fontSize: 11.5, color: C.text, whiteSpace: "nowrap" }}>
+        {fmtRupeeCr(value)}{" "}
+        {chg != null ? (
+          <Box component="span" sx={{ color: pctColor(chg * 100), fontWeight: 600 }}>
+            {fmtPct(chg * 100, 0)} {compare}
+          </Box>
+        ) : swing ? (
+          <Box component="span" sx={{ color: swing.includes("profit") ? C.good : C.bad, fontWeight: 600 }}>
+            {swing}
+          </Box>
+        ) : null}
+      </Typography>
+    </Box>
+  );
+}
+
+/** Card for a company whose results are already out: the numbers and the price reaction. */
+function DeclaredCard({ r, onOpenStock }) {
+  const res = r.results;
+  const done = r.status === "done";
+  return (
+    <Box
+      onClick={() => onOpenStock?.(r.symbol)}
+      sx={{
+        p: 2,
+        borderRadius: 2,
+        border: `1px solid ${C.line}`,
+        bgcolor: "#111216",
+        cursor: onOpenStock ? "pointer" : "default",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        transition: "border-color 0.15s ease, background-color 0.15s ease",
+        "&:hover": onOpenStock ? { borderColor: "rgba(142,180,196,0.45)", bgcolor: "#16181e" } : {},
+      }}
+    >
+      <Box>
+        <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 0.75 }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontFamily: MONO, fontSize: 14, fontWeight: 600, color: C.text, letterSpacing: "-0.01em" }}>
+              {r.symbol}
+            </Typography>
+            {r.name && (
+              <Typography
+                sx={{ fontSize: 11.5, color: C.muted, mt: 0.2, lineHeight: 1.35, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+              >
+                {r.name}
+              </Typography>
+            )}
+          </Box>
+          <ReactionPill r={r} />
+        </Box>
+
+        <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, mb: 1.25 }}>
+          Declared {fmtDeclared(r.declared_at)}, {TIMING_LABEL[r.timing] || ""}
+          {r.filing_url && (
+            <>
+              {" · "}
+              <Box
+                component="a"
+                href={r.filing_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                sx={{ color: C.accent, textDecoration: "none", "&:hover": { textDecoration: "underline" } }}
+              >
+                Filing ↗
+              </Box>
+            </>
+          )}
+        </Typography>
+
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 1.25,
+            p: 1.25,
+            borderRadius: 1.5,
+            bgcolor: "#0c0d10",
+            border: "1px solid rgba(255,255,255,0.04)",
+          }}
+        >
+          <Stat
+            label="Day move"
+            value={fmtPct(r.day_pct)}
+            color={pctColor(r.day_pct)}
+            tip="Close vs previous close on the first session that traded with the results known"
+          />
+          <Stat
+            label="Vs market"
+            value={fmtPct(r.vs_market_pct)}
+            color={pctColor(r.vs_market_pct)}
+            tip="Day move minus the median NSE stock's move that session"
+          />
+          <Stat
+            label="Gap at open"
+            value={fmtPct(r.gap_pct)}
+            color={pctColor(r.gap_pct)}
+            tip="Open vs previous close. Shown only when the results were out before that session opened."
+          />
+          <Stat
+            label="Volume"
+            value={r.vol_x != null ? `${num(r.vol_x, 1)}×` : "—"}
+            color={r.vol_x >= 2 ? C.accent : C.text}
+            tip="Reaction-day volume vs the 20-session median"
+          />
+          <Stat
+            label="Next day"
+            value={fmtPct(r.next_pct)}
+            color={pctColor(r.next_pct)}
+            tip="The session after the reaction day, close to close"
+          />
+          <Stat
+            label={done && r.after_sessions ? `Since (${r.after_sessions}d)` : "Since"}
+            value={fmtPct(r.after_pct)}
+            color={pctColor(r.after_pct)}
+            tip={
+              r.last_date
+                ? `Close on ${fmtDateLabel(r.last_date)} vs the reaction-day close`
+                : "Latest close vs the reaction-day close"
+            }
+          />
+        </Box>
+
+        <Box sx={{ mt: 1.25, display: "flex", flexDirection: "column", gap: 0.4 }}>
+          {res ? (
+            <>
+              <Typography sx={{ fontFamily: MONO, fontSize: 9.5, color: C.muted, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                {res.quarter} · {(res.basis || "").toLowerCase()}
+              </Typography>
+              <ResultsLine label="Revenue" value={res.revenue_cr} chg={res.revenue_chg} compare={res.compare} />
+              <ResultsLine label="Profit" value={res.profit_cr} chg={res.profit_chg} swing={res.profit_swing} compare={res.compare} />
+            </>
+          ) : (
+            <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted }}>
+              Revenue and profit figures appear once NSE publishes the XBRL filing.
+            </Typography>
+          )}
+        </Box>
+      </Box>
+
+      <Box sx={{ mt: 1.25, pt: 1, borderTop: `1px solid ${C.line}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+        <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {[r.market_cap_cr ? fmtCr(r.market_cap_cr) : null, r.industry].filter(Boolean).join(" · ")}
+        </Typography>
+        <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.accent, flexShrink: 0 }}>
+          Inspect →
+        </Typography>
+      </Box>
+    </Box>
+  );
+}
+
 /** One stock card in the day-detail panel. */
 function DetailCard({ r, onOpenStock }) {
+  if (r.declared) return <DeclaredCard r={r} onOpenStock={onOpenStock} />;
   const t = r.earnings_trend || "?";
   const ts = TREND_STYLE[t] || TREND_STYLE["?"];
   const peColor = r.pe_ttm > 0 && r.pe_ttm < 25 ? C.good : r.pe_ttm > 50 ? C.bad : C.text;
@@ -312,6 +613,26 @@ function DetailCard({ r, onOpenStock }) {
   );
 }
 
+function ReactionSummary({ rows, median }) {
+  if (!rows.length) return null;
+  const up = rows.filter((r) => r.day_pct > 0).length;
+  const down = rows.filter((r) => r.day_pct < 0).length;
+  return (
+    <Typography sx={{ fontFamily: MONO, fontSize: 12, color: C.muted }}>
+      ·{" "}
+      <Box component="span" sx={{ color: C.good }}>{up} rose</Box>
+      {", "}
+      <Box component="span" sx={{ color: C.bad }}>{down} fell</Box>
+      {median != null && (
+        <>
+          {", median "}
+          <Box component="span" sx={{ color: pctColor(median), fontWeight: 600 }}>{fmtPct(median)}</Box>
+        </>
+      )}
+    </Typography>
+  );
+}
+
 const MAX_CHIPS = 4;
 
 export default function ResultsCalendarView({ onOpenStock }) {
@@ -320,6 +641,9 @@ export default function ResultsCalendarView({ onOpenStock }) {
   const [error, setError] = useState("");
   const [q, setQ] = useState("");
   const [trendFilter, setTrendFilter] = useState("all");
+  const [show, setShow] = useState("all"); // "all" | "upcoming" | "declared"
+  const [daySort, setDaySort] = useState("mcap"); // "mcap" | "gainers" | "losers"
+  const [pastShown, setPastShown] = useState(10);
   const [mode, setMode] = useState("calendar"); // "calendar" | "list"
   const [selected, setSelected] = useState(null);
   const [cursor, setCursor] = useState(() => {
@@ -329,7 +653,7 @@ export default function ResultsCalendarView({ onOpenStock }) {
 
   useEffect(() => {
     setLoading(true);
-    getResultsCalendar(120)
+    getResultsCalendar(120, PAST_DAYS)
       .then((d) => {
         setRows(d.rows || []);
         setError("");
@@ -339,9 +663,14 @@ export default function ResultsCalendarView({ onOpenStock }) {
   }, []);
 
   // Filtered rows + date map + summary telemetry
-  const { byDate, totalStocks, dateCount, todayCount, weekCount, growingCount, activeMonths } = useMemo(() => {
+  const {
+    byDate, totalStocks, dateCount, todayCount, weekCount, growingCount, activeMonths,
+    declaredCount, roseCount, fellCount,
+  } = useMemo(() => {
     const query = q.trim().toLowerCase();
     const filtered = rows.filter((r) => {
+      if (show === "upcoming" && r.declared) return false;
+      if (show === "declared" && !r.declared) return false;
       if (trendFilter === "up" && r.earnings_trend !== "↑↑" && r.earnings_trend !== "↑") return false;
       if (trendFilter === "flat" && r.earnings_trend !== "→") return false;
       if (trendFilter === "down" && r.earnings_trend !== "↓") return false;
@@ -358,6 +687,9 @@ export default function ResultsCalendarView({ onOpenStock }) {
     let tCount = 0;
     let wCount = 0;
     let gCount = 0;
+    let dCount = 0;
+    let rose = 0;
+    let fell = 0;
     const todayDate = new Date(TODAY_ISO + "T00:00:00");
 
     for (const r of filtered) {
@@ -366,12 +698,17 @@ export default function ResultsCalendarView({ onOpenStock }) {
       map[d].push(r);
 
       if (r.earnings_trend === "↑↑" || r.earnings_trend === "↑") gCount++;
+      if (r.declared) {
+        dCount++;
+        if (hasReaction(r) && r.day_pct > 0) rose++;
+        if (hasReaction(r) && r.day_pct < 0) fell++;
+      }
 
       if (d !== "Unknown") {
         const dt = new Date(d + "T00:00:00");
         const diff = (dt - todayDate) / (1000 * 60 * 60 * 24);
         if (d === TODAY_ISO) tCount++;
-        if (diff >= 0 && diff <= 7) wCount++;
+        if (diff >= 0 && diff <= 7 && !r.declared) wCount++;
 
         const mKey = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`;
         if (!monthSet.has(mKey)) {
@@ -398,9 +735,12 @@ export default function ResultsCalendarView({ onOpenStock }) {
       todayCount: tCount,
       weekCount: wCount,
       growingCount: gCount,
+      declaredCount: dCount,
+      roseCount: rose,
+      fellCount: fell,
       activeMonths: Array.from(monthSet.values()).sort((a, b) => a.key.localeCompare(b.key)),
     };
-  }, [rows, q, trendFilter]);
+  }, [rows, q, trendFilter, show]);
 
   // Jump to first month with results if current month is empty, and auto-select a date with results
   useEffect(() => {
@@ -472,12 +812,19 @@ export default function ResultsCalendarView({ onOpenStock }) {
     if (byDate[TODAY_ISO]) setSelected(TODAY_ISO);
   };
 
-  const grouped = useMemo(
-    () => Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)),
-    [byDate]
-  );
+  // Timeline: upcoming dates soonest first, then declared dates most recent first.
+  const grouped = useMemo(() => {
+    const entries = Object.entries(byDate);
+    const isPast = (d) => d !== "Unknown" && d < TODAY_ISO;
+    return {
+      upcoming: entries.filter(([d]) => !isPast(d)).sort(([a], [b]) => a.localeCompare(b)),
+      past: entries.filter(([d]) => isPast(d)).sort(([a], [b]) => b.localeCompare(a)),
+    };
+  }, [byDate]);
 
-  const selectedRows = selected ? byDate[selected] || [] : [];
+  const selectedRows = selected ? sortRows(byDate[selected] || [], daySort) : [];
+  const selectedReacted = selectedRows.filter(hasReaction);
+  const selectedMedian = medianDayMove(selectedReacted);
 
   return (
     <Box sx={{ pb: 6 }}>
@@ -512,7 +859,7 @@ export default function ResultsCalendarView({ onOpenStock }) {
                   color: C.accent,
                 }}
               >
-                EARNINGS SCHEDULE · 120D WINDOW
+                EARNINGS SCHEDULE · NEXT 120D · DECLARED LAST {PAST_DAYS}D
               </Typography>
             </Box>
             <Typography
@@ -528,7 +875,7 @@ export default function ResultsCalendarView({ onOpenStock }) {
               Quarterly Results Calendar
             </Typography>
             <Typography sx={{ fontSize: 13.75, color: C.muted, lineHeight: 1.6 }}>
-              Track upcoming NSE quarterly earnings announcements. Check when a coiled setup reports before taking a breakout into an event gap.
+              Track upcoming NSE quarterly earnings announcements, and see how each stock traded on and after results that are already out.
             </Typography>
           </Box>
 
@@ -625,6 +972,18 @@ export default function ResultsCalendarView({ onOpenStock }) {
             {[
               { label: "Reporting Today", value: todayCount, color: todayCount > 0 ? C.bad : C.text },
               { label: "Next 7 Days", value: weekCount, color: C.accent },
+              { label: `Declared (${PAST_DAYS}d)`, value: declaredCount, color: C.text },
+              {
+                label: "Rose / Fell on results",
+                value: (
+                  <>
+                    <Box component="span" sx={{ color: C.good }}>{roseCount}</Box>
+                    <Box component="span" sx={{ color: C.muted }}> / </Box>
+                    <Box component="span" sx={{ color: C.bad }}>{fellCount}</Box>
+                  </>
+                ),
+                color: C.text,
+              },
               { label: "In View", value: `${totalStocks} across ${dateCount}d`, color: C.text },
               { label: "Growing (↑↑ / ↑)", value: growingCount, color: C.good },
             ].map((stat) => (
@@ -641,34 +1000,9 @@ export default function ResultsCalendarView({ onOpenStock }) {
 
           {/* Earnings Trend Filter Chips */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap" }}>
-            {TREND_FILTERS.map((tf) => {
-              const active = trendFilter === tf.id;
-              return (
-                <Box
-                  key={tf.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setTrendFilter(tf.id)}
-                  onKeyDown={(e) => e.key === "Enter" && setTrendFilter(tf.id)}
-                  sx={{
-                    px: 1.25,
-                    py: 0.45,
-                    borderRadius: 1.25,
-                    cursor: "pointer",
-                    fontFamily: MONO,
-                    fontSize: 11,
-                    fontWeight: active ? 600 : 500,
-                    bgcolor: active ? "rgba(238,234,227,0.1)" : "rgba(255,255,255,0.02)",
-                    border: `1px solid ${active ? "rgba(238,234,227,0.22)" : C.line}`,
-                    color: active ? (tf.color || C.text) : C.muted,
-                    transition: "all 0.15s ease",
-                    "&:hover": { color: C.text, borderColor: "rgba(238,234,227,0.2)" },
-                  }}
-                >
-                  {tf.label}
-                </Box>
-              );
-            })}
+            <FilterChips items={SHOW_FILTERS} value={show} onChange={setShow} />
+            <Box sx={{ width: "1px", height: 18, bgcolor: C.line, mx: 0.5 }} />
+            <FilterChips items={TREND_FILTERS} value={trendFilter} onChange={setTrendFilter} />
           </Box>
         </Box>
       </Box>
@@ -984,10 +1318,13 @@ export default function ResultsCalendarView({ onOpenStock }) {
                           {/* Company Ticker Chips */}
                           {items.slice(0, MAX_CHIPS).map((r) => {
                             const ts = TREND_STYLE[r.earnings_trend || "?"] || TREND_STYLE["?"];
+                            const reacted = hasReaction(r);
                             return (
                               <Tooltip
                                 key={r.symbol}
-                                title={`${r.name || r.symbol}${r.market_cap_cr ? ` · ${fmtCr(r.market_cap_cr)}` : ""}`}
+                                title={`${r.name || r.symbol}${r.market_cap_cr ? ` · ${fmtCr(r.market_cap_cr)}` : ""}${
+                                  reacted ? ` · ${fmtPct(r.day_pct)} on results${r.status === "live" ? " (live)" : ""}` : ""
+                                }`}
                                 placement="top"
                                 arrow
                               >
@@ -1034,6 +1371,21 @@ export default function ResultsCalendarView({ onOpenStock }) {
                                   >
                                     {r.symbol}
                                   </Typography>
+                                  {reacted && (
+                                    <Typography
+                                      sx={{
+                                        fontFamily: MONO,
+                                        fontSize: 9.5,
+                                        fontWeight: 600,
+                                        color: pctColor(r.day_pct),
+                                        ml: "auto",
+                                        pl: 0.5,
+                                        flexShrink: 0,
+                                      }}
+                                    >
+                                      {fmtPct(r.day_pct)}
+                                    </Typography>
+                                  )}
                                 </Box>
                               </Tooltip>
                             );
@@ -1090,11 +1442,18 @@ export default function ResultsCalendarView({ onOpenStock }) {
                   </Typography>
                   <RelativeBadge dateStr={selected} />
                   <Typography sx={{ fontFamily: MONO, fontSize: 12, color: C.muted }}>
-                    · {selectedRows.length} {selectedRows.length === 1 ? "company" : "companies"} reporting
+                    · {selectedRows.length} {selectedRows.length === 1 ? "company" : "companies"}{" "}
+                    {selected < TODAY_ISO ? "reported" : "reporting"}
                   </Typography>
+                  <ReactionSummary rows={selectedReacted} median={selectedMedian} />
                 </Box>
 
-                <TvCopyButton symbols={selectedRows.map((r) => r.symbol)} />
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, flexWrap: "wrap" }}>
+                  {selectedReacted.length > 1 && (
+                    <FilterChips items={DAY_SORTS} value={daySort} onChange={setDaySort} />
+                  )}
+                  <TvCopyButton symbols={selectedRows.map((r) => r.symbol)} />
+                </Box>
               </Box>
 
               <Box
@@ -1118,7 +1477,60 @@ export default function ResultsCalendarView({ onOpenStock }) {
          ════════════════════════════════════════════════ */}
       {!loading && rows.length > 0 && mode === "list" && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-          {grouped.map(([dateStr, items]) => (
+          {grouped.upcoming.map(([d, items]) => renderDateGroup(d, items))}
+
+          {grouped.past.length > 0 && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: grouped.upcoming.length ? 2 : 0 }}>
+              <Typography
+                sx={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.18em", textTransform: "uppercase", color: C.accent }}
+              >
+                Already declared
+              </Typography>
+              <Box sx={{ flex: 1, height: "1px", bgcolor: C.line }} />
+            </Box>
+          )}
+          {grouped.past.slice(0, pastShown).map(([d, items]) => renderDateGroup(d, items))}
+          {grouped.past.length > pastShown && (
+            <Box
+              role="button"
+              tabIndex={0}
+              onClick={() => setPastShown((n) => n + 10)}
+              onKeyDown={(e) => e.key === "Enter" && setPastShown((n) => n + 10)}
+              sx={{
+                alignSelf: "center",
+                px: 2,
+                py: 0.75,
+                borderRadius: 1.5,
+                cursor: "pointer",
+                fontFamily: MONO,
+                fontSize: 12,
+                color: C.text,
+                bgcolor: "#0e0f12",
+                border: `1px solid ${C.line}`,
+                "&:hover": { borderColor: C.accent },
+              }}
+            >
+              Show earlier dates ({grouped.past.length - pastShown} more)
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {!loading && rows.some((r) => r.declared) && (
+        <Typography sx={{ mt: 3, fontSize: 11.5, color: C.muted, lineHeight: 1.6 }}>
+          Declared results come from NSE corporate announcements. The day move is the close against the previous
+          close on the first session that traded with the results known (the same session if they came out
+          before 14:30, otherwise the next one). Price moves describe what happened and are not a recommendation.
+        </Typography>
+      )}
+    </Box>
+  );
+
+  function renderDateGroup(dateStr, rawItems) {
+    const items = sortRows(rawItems, "mcap");
+    const reacted = items.filter(hasReaction);
+    const median = medianDayMove(reacted);
+    return (
             <Box
               key={dateStr}
               sx={{
@@ -1148,6 +1560,7 @@ export default function ResultsCalendarView({ onOpenStock }) {
                   <Typography sx={{ fontFamily: MONO, fontSize: 12, color: C.muted }}>
                     · {items.length} {items.length === 1 ? "company" : "companies"}
                   </Typography>
+                  <ReactionSummary rows={reacted} median={median} />
                 </Box>
 
                 <TvCopyButton symbols={items.map((r) => r.symbol)} />
@@ -1165,9 +1578,6 @@ export default function ResultsCalendarView({ onOpenStock }) {
                 ))}
               </Box>
             </Box>
-          ))}
-        </Box>
-      )}
-    </Box>
-  );
+    );
+  }
 }

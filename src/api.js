@@ -95,8 +95,8 @@ export const getFundamentalsScreen = (params = {}) => {
 };
 
 // Results calendar
-export const getResultsCalendar = (days = 45) =>
-  json(`/api/results-calendar?days=${days}`);
+export const getResultsCalendar = (days = 45, past = 0) =>
+  json(`/api/results-calendar?days=${days}&past=${past}`);
 
 // Chart data. Raw fetch, but through apiUrl so it hits the backend
 // rather than the UI host (which 404s on /api/chart-data).
