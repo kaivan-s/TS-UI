@@ -1,10 +1,9 @@
 /**
- * Setups — unified view with tabs for coils, market scanners, and circuit carry.
+ * Setups — Coils | Gap-Ups in Downtrends | Market Movers.
  *
- * Tabs: Coils | Big Movers | Unusual Volume | 52w Breakouts | Streaks | Sector Pulse | Circuit Carry
- *
- * Coils tab shows the original coil watchlist. Market scanner tabs lazy-load
- * data from /api/scanners and /api/carry/intraday on first click.
+ * Coils: Sector agrees (CROSSING/PULLBACK) on top, then every other coil
+ * sorted by distance to breakout. Market Movers merges the movement lists
+ * plus an Upper-circuit tag (Circuit Carry folded in as context).
  */
 
 import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
@@ -35,7 +34,6 @@ import { EVIDENCE_WINDOW, STAT_STRIPS } from "../evidence.js";
 import { getCarryIntraday, getGapFade, getScanners } from "../api.js";
 import { MarketMovers } from "./ScannersView.jsx";
 import GapFadeView from "./GapFadeView.jsx";
-import CarryView from "./CarryView.jsx";
 
 const MONO = '"IBM Plex Mono", ui-monospace, monospace';
 const FREE_PREVIEW = 3;
@@ -64,17 +62,7 @@ const TAG = {
   agree: {
     label: "Sector agrees",
     color: C.good,
-    tip: "This stock's sector is also waking up or resting after a volume surge — the backtested setup.",
-  },
-  emerging: {
-    label: "Emerging",
-    color: "#7b8ab8",
-    tip: "This stock's sector expanded but breadth or delivery is narrow — watch, don't act.",
-  },
-  leader: {
-    label: "Leader",
-    color: C.accent,
-    tip: "Top 30% on twelve-month momentum, coiled and quietly basing. Sector-agnostic.",
+    tip: "This stock's sector is waking up or resting after a verified volume surge — the strongest coil group in the 3-year test.",
   },
 };
 
@@ -206,7 +194,6 @@ function gapWindowNow() {
 const TOP_TABS = [
   { id: "coils", label: "Coils" },
   { id: "gap_fade", label: "Gap-Ups in Downtrends", live: true },
-  { id: "circuit_carry", label: "Circuit Carry", note: "paper-tracked", live: true },
   { id: "market_movers", label: "Market Movers", live: true },
 ];
 
@@ -286,52 +273,27 @@ export default function SetupsView({
       k === "symbol" || k === "sector" ? "asc" : "desc",
   });
 
-  // Build a unified list: tag each row with its source(s)
-  const { merged, nAgree, nLeader, nEmerging } = useMemo(() => {
-    const agreeSet = new Set(buys.map((r) => r.symbol));
-    const leaderSet = new Set(rest.map((r) => r.symbol));
-
+  // Sector agrees on top; every other coil underneath.
+  const { merged, nAgree, nOther } = useMemo(() => {
     const bySymbol = new Map();
-
-    // Sector-agrees rows first
     for (const r of buys) {
-      const isEmerging = r.sector_klass === "CROSSING_UNVERIFIED";
-      bySymbol.set(r.symbol, {
-        ...r,
-        _agree: !isEmerging,
-        _emerging: isEmerging,
-        _leader: leaderSet.has(r.symbol),
-        _section: isEmerging ? "emerging" : "agree",
-      });
+      bySymbol.set(r.symbol, { ...r, _agree: true, _section: "agree" });
     }
-
-    // Leaders-at-rest rows (only add if not already in buys)
     for (const r of rest) {
       if (bySymbol.has(r.symbol)) {
-        // Already present from buys — just tag as leader too
         const existing = bySymbol.get(r.symbol);
-        existing._leader = true;
-        // Merge momentum data from leader row
         if (r.mom12_1 != null) existing.mom12_1 = r.mom12_1;
         if (r.episode_days != null) existing.episode_days = r.episode_days;
         if (r.episode_new != null) existing.episode_new = r.episode_new;
       } else {
-        bySymbol.set(r.symbol, {
-          ...r,
-          _agree: false,
-          _emerging: false,
-          _leader: true,
-          _section: "leader",
-        });
+        bySymbol.set(r.symbol, { ...r, _agree: false, _section: "other" });
       }
     }
-
     const all = Array.from(bySymbol.values());
     return {
       merged: all,
       nAgree: all.filter((r) => r._agree).length,
-      nEmerging: all.filter((r) => r._emerging).length,
-      nLeader: all.filter((r) => r._leader && !r._agree && !r._emerging).length,
+      nOther: all.filter((r) => !r._agree).length,
     };
   }, [buys, rest]);
 
@@ -350,12 +312,12 @@ export default function SetupsView({
     // When sorting is active, sort flat; otherwise keep section grouping
     if (sort.key) return sort.apply(filtered);
 
-    // Default order: agree → emerging → leader-only
-    const order = { agree: 0, emerging: 1, leader: 2 };
+    // Default: Sector agrees first, then other coils by distance to breakout.
+    const order = { agree: 0, other: 1 };
     return filtered.sort(
       (a, b) =>
         (order[a._section] ?? 9) - (order[b._section] ?? 9) ||
-        (b.coil ?? 0) - (a.coil ?? 0),
+        (a.to_trigger ?? 99) - (b.to_trigger ?? 99),
     );
   }, [merged, q, sectorPick, sort.key, sort.dir]);
 
@@ -374,22 +336,19 @@ export default function SetupsView({
 
   // Split shown rows into sections for divider rows (only when not custom-sorted)
   const agreeRows = previewRows.filter((r) => r._section === "agree");
-  const emergingRows = previewRows.filter((r) => r._section === "emerging");
-  const leaderRows = previewRows.filter((r) => r._section === "leader");
+  const otherRows = previewRows.filter((r) => r._section === "other");
   const useSections = !sort.key;
 
-  // Scanner tab counts
+  const circuitRows = intradayData?.latest || [];
   const scanCounts = useMemo(() => {
     if (!scanData) return {};
     const movers = new Set(
       ["big_movers", "unusual_volume", "breakouts_52w", "momentum_streaks"]
         .flatMap((k) => (scanData[k] || []).map((r) => r.symbol)),
     );
-    return {
-      market_movers: movers.size,
-      circuit_carry: (intradayData?.latest || []).length,
-    };
-  }, [scanData, intradayData]);
+    for (const r of circuitRows) if (r.symbol) movers.add(r.symbol);
+    return { market_movers: movers.size };
+  }, [scanData, circuitRows]);
   const tabCounts = { ...scanCounts, gap_fade: gapData ? (gapData.rows || []).length : undefined };
 
   const live = marketOpenNow();
@@ -450,15 +409,6 @@ export default function SetupsView({
               <Typography sx={{ fontSize: 12.75, fontWeight: active ? 600 : 500 }}>
                 {t.label}
               </Typography>
-              {t.note && (
-                <Typography
-                  component="span"
-                  title="Listed and tracked on paper; real fills at the upper band have not been measured."
-                  sx={{ fontFamily: MONO, fontSize: 10, color: C.muted, fontStyle: "italic" }}
-                >
-                  {t.note}
-                </Typography>
-              )}
               {count != null && (
                 <Box
                   component="span"
@@ -505,14 +455,12 @@ export default function SetupsView({
               Loading market scanners…
             </Typography>
           </Box>
-        ) : topTab === "circuit_carry" ? (
-          <CarryView
-            onOpenStock={onOpenStock}
-            externalIntraday={intradayData}
-            embedded
-          />
         ) : topTab === "market_movers" ? (
-          <MarketMovers data={scanData} onOpenStock={onOpenStock} />
+          <MarketMovers
+            data={scanData}
+            circuitRows={circuitRows}
+            onOpenStock={onOpenStock}
+          />
         ) : null
       )}
 
@@ -566,9 +514,10 @@ export default function SetupsView({
               Coil Watchlist
             </Typography>
             <Typography sx={{ fontSize: 13, color: C.muted, mt: 0.35, maxWidth: 680 }}>
-              Stocks passing all seven coil filters, split by conviction.
-              Sector-agrees names are backtested; leaders are proven
-              momentum stocks quietly basing.
+              Stocks passing all seven coil filters. Sector-agrees names sit in
+              a verified sector surge or pullback — the strongest group in the
+              3-year test. Other coils are the same filters without that sector
+              confirmation.
             </Typography>
           </Box>
 
@@ -598,17 +547,10 @@ export default function SetupsView({
               value={nAgree}
               color={nAgree > 0 ? C.good : C.muted}
             />
-            {nEmerging > 0 && (
-              <TelemetryItem
-                label="Emerging"
-                value={nEmerging}
-                color="#7b8ab8"
-              />
-            )}
             <TelemetryItem
-              label="Leaders at rest"
-              value={rest.length}
-              color={rest.length > 0 ? C.accent : C.muted}
+              label="Other coils"
+              value={nOther}
+              color={C.muted}
             />
             <TelemetryItem
               label="Coil pool"
@@ -666,7 +608,7 @@ export default function SetupsView({
             <Box component="span" sx={{ fontFamily: MONO, color: C.text }}>
               {status?.dates?.setups}
             </Box>{" "}
-            (historical reference). Leaders at rest is current.
+            (historical reference). Other coils are current.
           </Typography>
         </Box>
       )}
@@ -781,7 +723,13 @@ export default function SetupsView({
                       sortKey="earnings_trend"
                     />
                     <HeadCell k="adj" align="right" sort={sort} />
-                    <HeadCell k="coil" sx={{ minWidth: 120 }} sort={sort} />
+                    <HeadCell
+                      label="Tightness"
+                      help="0–100 description of how tight the base is (volume, range, money flow, delivery, age). It did not predict which coils beat the market."
+                      sx={{ minWidth: 120 }}
+                      sort={sort}
+                      sortKey="coil"
+                    />
                     <HeadCell k="pos_hi" align="right" sort={sort} />
                     <HeadCell k="to_trigger" align="right" sort={sort} />
                     <HeadCell k="rsi" align="right" sort={sort} />
@@ -790,7 +738,7 @@ export default function SetupsView({
                     <HeadCell k="cmf" align="right" sort={sort} />
                     <HeadCell
                       label="12m mom"
-                      help="Return over twelve months ending one month ago. Shown for leaders at rest."
+                      help="Return over twelve months ending one month ago. Shown for context; it is not used to cut or rank this list."
                       align="right"
                       sort={sort}
                       sortKey="mom12_1"
@@ -817,31 +765,14 @@ export default function SetupsView({
                           ))}
                         </>
                       )}
-                      {emergingRows.length > 0 && (
+                      {otherRows.length > 0 && (
                         <>
                           <DividerRow
-                            label="Emerging"
-                            count={nEmerging}
-                            color="#7b8ab8"
+                            label="Other coils"
+                            count={nOther}
+                            color={C.muted}
                           />
-                          {emergingRows.map((r) => (
-                            <StockRow
-                              key={r.symbol}
-                              r={r}
-                              onOpenSector={onOpenSector}
-                              onOpenStock={onOpenStock}
-                            />
-                          ))}
-                        </>
-                      )}
-                      {leaderRows.length > 0 && (
-                        <>
-                          <DividerRow
-                            label="Leaders at rest"
-                            count={rest.length}
-                            color={C.accent}
-                          />
-                          {leaderRows.map((r) => (
+                          {otherRows.map((r) => (
                             <StockRow
                               key={r.symbol}
                               r={r}
@@ -890,11 +821,7 @@ function TelemetryItem({ label, value, color }) {
 }
 
 function StockRow({ r, onOpenSector, onOpenStock }) {
-  const accentColor = r._agree
-    ? C.good
-    : r._emerging
-      ? "#7b8ab8"
-      : C.accent;
+  const accentColor = r._agree ? C.good : C.muted;
 
   return (
     <Fragment>
@@ -924,8 +851,6 @@ function StockRow({ r, onOpenSector, onOpenStock }) {
         <TableCell sx={{ py: 0.75 }}>
           <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
             {r._agree && <SourceTag type="agree" />}
-            {r._emerging && <SourceTag type="emerging" />}
-            {r._leader && <SourceTag type="leader" />}
             {r.shape_confirmed && (
               <Tooltip
                 title="Every shape check passed on this sector: the crossing came from quiet and the red days traded lighter."

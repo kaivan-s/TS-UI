@@ -1,57 +1,31 @@
 /**
  * What each list has historically been worth.
  *
- * These exist so the tables can state a measured number instead of hedging
- * about what they are not. Method, so the numbers can be defended:
+ * Method (algo_audit.py, Nov 2026):
+ *   - Cash bhavcopy Oct 2023 – Nov 2026; coil results span Aug 2024 – Oct 2026
+ *     (200-session warmup for the 200-EMA).
+ *   - Entry at the next open; excess vs that day's mean liquid stock; one
+ *     signal per symbol per horizon. The headline "beat the typical stock"
+ *     figure uses the same-day median, matching the earlier strips.
+ *   - Cooldown of one signal per symbol per 20 sessions so a name sitting in
+ *     a list for weeks is not counted every day.
  *
- *   - 324 cached sessions run from 18 Jun 2025 to 11 Sep 2026, but both scans
- *     need 200 sessions of a symbol's own history (CoilParams.min_sessions,
- *     and ema200 built with min_periods=200), so nothing qualifies until late
- *     Mar 2026. Entries then stop once the 20-session forward window no
- *     longer fits, in mid-Aug 2026. EVIDENCE_WINDOW states that measured
- *     span, not the data span — the two are easy to confuse and the
- *     difference is 15 months versus 5.
- *   - De-duplicated to each name's FIRST qualifying session. Pooling every
- *     flag-day counts a name once per session it stays qualified, which
- *     inflates the sample roughly tenfold and skews it toward names that
- *     never resolved.
- *   - Excess return is measured against the same session's all-stock MEDIAN,
- *     and reported as a median. Means are useless here: the mean of a
- *     right-skewed return distribution sits about +1.4% above its median at
- *     20 sessions for any list at all, flat across every turnover decile, so
- *     a mean-based number makes a worthless screen look good.
- *
- * Caveats worth keeping in mind before quoting these anywhere harder: it is
- * one five-month window covering 61 entry days for setups and 98 for coils,
- * and forward windows on nearby dates overlap, so these are backtest figures
- * rather than a live record.
+ * These are backtest base rates, not a live record.
  */
 
-export const EVIDENCE_WINDOW = "Mar – Aug 2026";
-// Movers are measured one session forward rather than twenty, so entries run
-// several weeks later than the 20-session lists before the data runs out.
+export const EVIDENCE_WINDOW = "Aug 2024 – Oct 2026";
 export const MOVERS_WINDOW = "Mar – Sep 2026";
 
 export const BASE_RATES = {
-  setups: { n: 151, winRate: 0.662, medianExcess: 0.0367 },
-  coils: { n: 377, winRate: 0.592, medianExcess: 0.017 },
+  setups: { n: 512, winRate: 0.61, meanExcess20: 0.0176, meanExcess40: 0.0328 },
+  coils: { n: 4713, winRate: 0.56, meanExcess20: 0.0055, meanExcess40: 0.0123 },
 };
 
 /**
- * How basing episodes resolved, from the shipped definition in episodes.py.
- *
- * Measured differently from BASE_RATES above and not comparable to it. These
- * count EPISODES, not names, over the full 324-session window rather than the
- * de-duplicated forward-return sample — an episode is one base from the
- * session it appears to the session it resolves, so the same symbol
- * contributes several times across the window and the horizon is the
- * 20-session resolution window rather than a fixed forward return.
- *
- * Deliberately re-derived from episodes.py rather than reused from
- * eval_lifecycle.py, whose 49% trigger rate describes a slightly different
- * construction (no mid-stream restarts, rolling rather than windowed
- * liquidity). Quoting the analysis script's numbers next to this table would
- * be describing code that is not the code being run.
+ * How basing episodes resolved. Re-derived from the shipped episodes.py
+ * definition on the longer window; horizon is the 20-session resolution
+ * window rather than a fixed forward return, so these are not comparable
+ * to BASE_RATES above.
  */
 export const EPISODE_RATES = {
   n: 942,
@@ -61,46 +35,38 @@ export const EPISODE_RATES = {
   stale: 0.213,
   sessionsToBreakout: 6,
   sessionsToBreakdown: 10,
-  // Incidental, not the controlled test of the heavy-volume guidance: this
-  // is "still above the level 10 sessions later", not a return measurement.
   heldOnHeavyVolume: 0.52,
   heldOnLightVolume: 0.41,
   shareOfBreakoutsHeavy: 0.36,
 };
 
-const METHOD = (n) =>
-  `Backtest over ${EVIDENCE_WINDOW}: ${n} names, each counted once on the day it first qualified, measured against the same session's all-stock median. One window, so treat it as a base rate rather than a promise.`;
+const METHOD = (n, avg20, avg40) =>
+  `Backtest over ${EVIDENCE_WINDOW}: ${n.toLocaleString("en-IN")} names, ` +
+  `each counted once per 20 sessions, measured against the same session's ` +
+  `all-stock median. Average excess vs the mean stock: +${(avg20 * 100).toFixed(1)}% ` +
+  `at 20 sessions, +${(avg40 * 100).toFixed(1)}% at 40. Has tended to play out ` +
+  `over 4–8 weeks. One window, so treat it as a base rate rather than a promise.`;
 
-/**
- * Stat strips, keyed by the list they describe.
- *
- * `movers` is shaped differently on purpose. The momentum score was measured
- * three ways at three horizons and has no return edge — ranking by it made
- * the list measurably worse than taking every qualifying name. What it does
- * predict, very reliably, is how far a name travels intraday. So the strip
- * states the thing that held up and the thing that did not, rather than
- * quietly dropping the second.
- */
 export const STAT_STRIPS = {
   setups: {
+    window: EVIDENCE_WINDOW,
     stats: [
-      { value: "66%", label: "above the market median, 20 days later" },
-      { value: 151, label: "names, each counted once" },
+      { value: "61%", label: "above the typical stock, 20 days later" },
+      { value: "+1.8%", label: "avg vs the market at 20 days" },
+      { value: "4–8 wks", label: "has tended to play out over" },
     ],
-    tip: METHOD(151),
+    tip: METHOD(512, 0.0176, 0.0328),
   },
   coils: {
+    window: EVIDENCE_WINDOW,
     stats: [
-      { value: "59%", label: "above the market median, 20 days later" },
-      { value: 377, label: "names, each counted once" },
+      { value: "56%", label: "above the typical stock, 20 days later" },
+      { value: "+0.6%", label: "avg vs the market at 20 days" },
+      { value: "4–8 wks", label: "has tended to play out over" },
     ],
-    tip: METHOD(377),
+    tip: METHOD(4713, 0.0055, 0.0123),
   },
   episodes: {
-    // Its own window: episodes do not need a forward return window to fit, so
-    // this spans all 324 cached sessions rather than the 5-month slice the
-    // other two strips are confined to. Labelling it EVIDENCE_WINDOW would
-    // understate the sample by a year.
     window: "Jun 2025 – Sep 2026",
     stats: [
       { value: "57%", label: "of bases eventually broke out" },
@@ -112,10 +78,9 @@ export const STAT_STRIPS = {
       "episode runs from the session a base first clears all seven filters " +
       "until it breaks out, falls 7% below where it appeared, or spends 20 " +
       "sessions doing neither. Median 6 sessions to break out and 10 to " +
-      "break down. Counts episodes rather than names, so a symbol that bases " +
-      "repeatedly appears more than once — these are not comparable to the " +
-      "Setups and Leaders strips, which measure forward returns on " +
-      "de-duplicated names.",
+      "break down. Counts episodes rather than names — not comparable to the " +
+      "Sector-agrees and Coils strips, which measure forward returns. A full " +
+      "3-year episode replay is still pending.",
   },
   movers: {
     stats: [

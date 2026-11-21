@@ -173,8 +173,8 @@ const WORKFLOW_STEPS = [
   {
     n: "04",
     tag: "12M MOMENTUM CUT",
-    title: "Leaders at rest — the other cut",
-    body: "Switch the Setups page to Leaders at rest to drop the requirement that the sector is acting. Instead, the same coil pool is cut to stocks in the top 30% of the whole market on return over the twelve months ending a month ago, with anything in a disqualified sector removed. Survivors are ranked by that return divided by its volatility, so a steady trend outranks an erratic one, and the top 20 are shown.",
+    title: "Sector agrees vs other coils",
+    body: "Sector agrees are coils whose industry is in a verified CROSSING or PULLBACK. That group beat the typical stock 61% of the time over 20 sessions in the 3-year test. Other coils passed the same seven filters without that sector confirmation and still showed a modest edge (56%). The 12-month momentum cut that used to hide most coils was retired — it was unstable across sample halves.",
   },
   {
     n: "05",

@@ -61,7 +61,7 @@ export const M = {
   // --- coil / stock ----------------------------------------------------
   coil: {
     label: "Tightness",
-    help: "0–100 score combining volume, range, money flow, delivery and base age. Higher is tighter, but all rows here already passed — this score does not predict which ones will work.",
+    help: "0–100 description of how tight the base is (volume, range, money flow, delivery, age). Higher is tighter. It did not predict which coils beat the market — kept as a description, not a ranking.",
   },
   pos_hi: {
     label: "Near high",

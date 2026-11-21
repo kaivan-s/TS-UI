@@ -1437,7 +1437,7 @@ export default function StockPage({ onOpenSector }) {
                     arrow
                   >
                     <Box component="span" sx={{ cursor: "help" }}>
-                      <TonePill tone="bad">{f.label}</TonePill>
+                      <TonePill tone={f.kind === "broke_out" ? "good" : "bad"}>{f.label}</TonePill>
                     </Box>
                   </Tooltip>
                 ))}
@@ -1573,7 +1573,7 @@ export default function StockPage({ onOpenSector }) {
                 </Typography>
                 {m.coil != null && (
                   <Typography sx={{ fontFamily: MONO, fontSize: 11.5, color: C.muted }}>
-                    (score {num(m.coil, 1)})
+                    (tightness {num(m.coil, 1)})
                   </Typography>
                 )}
               </Box>

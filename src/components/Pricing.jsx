@@ -36,7 +36,7 @@ const FREE_HIGHLIGHTS = [
 const PRO_HIGHLIGHTS = [
   "Everything in Free Desk, unlimited",
   "Full sector-agreed Setups list + triggers",
-  "Leaders at rest (top 20 momentum)",
+  "Full coil pool (Sector agrees + other coils)",
   "Sector shape & constituent history",
   "Sector & delivery queries in Telegram",
   "Unlimited on-demand Telegram bot views",
@@ -58,9 +58,8 @@ const COMPARISON_GROUPS = [
   {
     category: "Actionable Setups & Audit Trail",
     rows: [
-      { feature: "Sector-agreed Setups list", free: "1 preview", pro: "Full list + entry levels" },
-      { feature: "Leaders at rest (12M momentum cut)", free: false, pro: "Top 20 ranked" },
-      { feature: "All coiled bases with scores", free: "Overview", pro: "Full pool + filters" },
+      { feature: "Sector-agreed Setups list", free: "1 preview", pro: "Full list" },
+      { feature: "Other coils (full pool)", free: "Overview", pro: "Full pool + filters" },
       { feature: "Header stock lookup & gate check", free: "Included", pro: "Included" },
     ],
   },
@@ -175,7 +174,7 @@ export default function Pricing() {
         >
           <Typography sx={{ fontWeight: 600, fontSize: 15 }}>Welcome to Pro Desk!</Typography>
           <Typography sx={{ fontSize: 13.5, color: C.muted, mt: 0.25 }}>
-            Your subscription is active and all setups, leaders at rest, and unlimited Telegram queries are unlocked.
+            Your subscription is active and all setups, coils, and unlimited Telegram queries are unlocked.
           </Typography>
           <Typography sx={{ fontSize: 12.75, color: C.muted, mt: 1, fontFamily: MONO }}>
             Link Telegram:{" "}
@@ -304,7 +303,7 @@ export default function Pricing() {
             {isPremium
               ? subscriptionCancelled
                 ? `Your Pro subscription is set to end on ${formatDate(subscriptionExpires)}.`
-                : `You have full access to all sector-agreed setups, leaders at rest, and unlimited Telegram bot queries.`
+                : `You have full access to all sector-agreed setups, the full coil pool, and unlimited Telegram bot queries.`
               : "The core desk — charts, fundamentals, watchlist, results calendar, and nightly sector scans — is free forever. Upgrade to Pro for the complete setups shortlist and unlimited bot queries."}
           </Typography>
         </Box>

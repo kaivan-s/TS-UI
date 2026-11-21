@@ -536,7 +536,7 @@ function PricingSection({ onSelect }) {
     "Everything in Free, unlimited",
     "Full sector-agreed setups list",
     "Synced personal watchlist with enrichment",
-    "Leaders at rest & pullback screens",
+    "Full coil pool & pullback screens",
     "Sector and delivery queries in Telegram",
     "Unlimited on-demand Telegram bot queries",
     "Priority data refresh after market close",

@@ -551,14 +551,19 @@ const MOVER_TAGS = {
   vol: { label: "Volume", color: C.accent, help: "Trading at 2× or more its 20-day average volume." },
   high52: { label: "52W high", color: C.warn, help: "At or within 2% of its 52-week high on above-average volume." },
   streak: { label: "Streak", color: "#b39ddb", help: "3 or more consecutive up days with at least 5% gained." },
+  circuit: {
+    label: "Upper circuit",
+    color: "#e0a060",
+    help: "Near or at its upper price band. Live record: when sellers were present at 15:20 so an order could fill, the next day averaged −0.15% before cost (34 sessions). Context, not a setup.",
+  },
 };
 
-/** One row per stock across Big Movers, Unusual Volume, 52W Breakouts and Streaks. */
-function mergeMovers(d) {
+/** One row per stock across Big Movers, Unusual Volume, 52W Breakouts, Streaks and Upper circuit. */
+function mergeMovers(d, circuitRows = []) {
   const by = new Map();
   const add = (r, tag, detail, extra) => {
     const cur = by.get(r.symbol) || { symbol: r.symbol, sector: r.sector, tags: [] };
-    cur.tags.push({ id: tag, detail });
+    if (!cur.tags.some((t) => t.id === tag)) cur.tags.push({ id: tag, detail });
     for (const [k, v] of Object.entries(extra)) if (cur[k] == null && v != null) cur[k] = v;
     by.set(r.symbol, cur);
   };
@@ -570,6 +575,15 @@ function mergeMovers(d) {
     add(r, "high52", `${r.from_high?.toFixed(1)}% from high`, { change: r.change, price: r.close, turnover_cr: r.turnover_cr, vol_ratio: r.vol_ratio });
   for (const r of d?.momentum_streaks || [])
     add(r, "streak", `${r.streak}d, +${r.cum_return?.toFixed(1)}%`, { price: r.close, turnover_cr: r.turnover_cr });
+  for (const r of circuitRows || []) {
+    const status = r.at_circuit ? "at band" : r.status || "near band";
+    const fill = r.fillable === false ? " · no sellers" : r.fillable ? " · sellers present" : "";
+    add(r, "circuit", `${status}${fill}`, {
+      change: r.pchange,
+      price: r.ltp,
+      turnover_cr: r.turnover_cr ?? (r.med_turn20 != null ? +(r.med_turn20 / 100).toFixed(1) : null),
+    });
+  }
   return Array.from(by.values()).map((r) => ({ ...r, n_tags: r.tags.length }));
 }
 
@@ -746,18 +760,19 @@ function MoversMergedTable({ rows, onOpenStock }) {
   );
 }
 
-/** Setups → Market Movers: the four movement lists merged, with the sector strip on top. */
-export function MarketMovers({ data, onOpenStock }) {
+/** Setups → Market Movers: the movement lists merged, with the sector strip on top. */
+export function MarketMovers({ data, circuitRows = [], onOpenStock }) {
   const [q, setQ] = useState("");
   const query = q.trim().toLowerCase();
   const rows = useMemo(() => {
-    const all = mergeMovers(data);
+    const all = mergeMovers(data, circuitRows);
     if (!query) return all;
     return all.filter(
       (r) => (r.symbol || "").toLowerCase().includes(query) || (r.sector || "").toLowerCase().includes(query),
     );
-  }, [data, query]);
+  }, [data, circuitRows, query]);
   const isLive = marketOpenNow();
+  const nCircuit = rows.filter((r) => r.tags.some((t) => t.id === "circuit")).length;
 
   return (
     <>
@@ -785,7 +800,7 @@ export function MarketMovers({ data, onOpenStock }) {
             </Box>
           </Typography>
           <Typography sx={{ fontSize: 13.25, color: C.muted }}>
-            What moved today: big gainers, unusual volume, 52-week highs and up-streaks in one list. Useful as background, not as signals.
+            What moved today: big gainers, unusual volume, 52-week highs, up-streaks and stocks near their upper circuit. Useful as background, not as signals.
           </Typography>
         </Box>
         <TextField
@@ -810,6 +825,11 @@ export function MarketMovers({ data, onOpenStock }) {
       <Box sx={{ p: 2.5, borderRadius: 2.5, bgcolor: "#15161b", border: `1px solid ${C.line}` }}>
         <Typography sx={{ fontSize: 12.5, color: C.muted, lineHeight: 1.6 }}>
           Informational lists, not recommendations. A stock appearing here had notable price or volume action; it says nothing about what it will do next.
+          {nCircuit > 0 && (
+            <>
+              {" "}Upper-circuit names: over 34 live sessions, when sellers were present at 15:20 so an order could fill, the next day averaged −0.15% before cost.
+            </>
+          )}
         </Typography>
       </Box>
     </>
