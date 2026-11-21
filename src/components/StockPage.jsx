@@ -1429,6 +1429,18 @@ export default function StockPage({ onOpenSector }) {
                 {data?.found && <PhaseChip phase={data.phase} label={data.phase_label} />}
                 {tech?.trend?.label && <TonePill tone={tech.trend.tone}>{tech.trend.label}</TonePill>}
                 {data?.sector_klass && <KlassChip klass={data.sector_klass} />}
+                {(data?.flags || []).map((f) => (
+                  <Tooltip
+                    key={f.kind}
+                    title={`${f.detail} ${f.note} Shown for ${f.sessions_left} more ${f.sessions_left === 1 ? "session" : "sessions"}.`}
+                    placement="bottom"
+                    arrow
+                  >
+                    <Box component="span" sx={{ cursor: "help" }}>
+                      <TonePill tone="bad">{f.label}</TonePill>
+                    </Box>
+                  </Tooltip>
+                ))}
                 {data?.sector && (
                   <Box
                     role="button"

@@ -54,6 +54,7 @@ const SHOW_FILTERS = [
   { id: "all", label: "All" },
   { id: "upcoming", label: "Upcoming" },
   { id: "declared", label: "Declared" },
+  { id: "weak", label: "Weak reactions", color: C.bad },
 ];
 
 const DAY_SORTS = [
@@ -315,6 +316,39 @@ function ReactionPill({ r }) {
   );
 }
 
+function WeakReactionBadge({ f }) {
+  return (
+    <Tooltip
+      title={`${f.detail} ${f.note}`}
+      placement="top"
+      arrow
+    >
+      <Box
+        onClick={(e) => e.stopPropagation()}
+        sx={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 0.75,
+          mb: 0.9,
+          px: 1,
+          py: 0.3,
+          borderRadius: 1,
+          bgcolor: `${C.bad}18`,
+          border: `1px solid ${C.bad}40`,
+          cursor: "help",
+        }}
+      >
+        <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.bad, fontWeight: 700, whiteSpace: "nowrap" }}>
+          Weak reaction
+        </Typography>
+        <Typography sx={{ fontFamily: MONO, fontSize: 10, color: C.muted, whiteSpace: "nowrap" }}>
+          {f.sessions_left} {f.sessions_left === 1 ? "session" : "sessions"} left
+        </Typography>
+      </Box>
+    </Tooltip>
+  );
+}
+
 function ResultsLine({ label, value, chg, swing, compare }) {
   return (
     <Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 1 }}>
@@ -371,6 +405,8 @@ function DeclaredCard({ r, onOpenStock }) {
           </Box>
           <ReactionPill r={r} />
         </Box>
+
+        {r.weak_reaction && <WeakReactionBadge f={r.weak_reaction} />}
 
         <Typography sx={{ fontFamily: MONO, fontSize: 10.5, color: C.muted, mb: 1.25 }}>
           Declared {fmtDeclared(r.declared_at)}, {TIMING_LABEL[r.timing] || ""}
@@ -671,6 +707,7 @@ export default function ResultsCalendarView({ onOpenStock }) {
     const filtered = rows.filter((r) => {
       if (show === "upcoming" && r.declared) return false;
       if (show === "declared" && !r.declared) return false;
+      if (show === "weak" && !r.weak_reaction) return false;
       if (trendFilter === "up" && r.earnings_trend !== "↑↑" && r.earnings_trend !== "↑") return false;
       if (trendFilter === "flat" && r.earnings_trend !== "→") return false;
       if (trendFilter === "down" && r.earnings_trend !== "↓") return false;

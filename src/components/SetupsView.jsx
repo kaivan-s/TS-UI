@@ -33,7 +33,7 @@ import { C } from "../theme.js";
 import { num, pct } from "../format.js";
 import { EVIDENCE_WINDOW, STAT_STRIPS } from "../evidence.js";
 import { getCarryIntraday, getGapFade, getScanners } from "../api.js";
-import ScannersView from "./ScannersView.jsx";
+import { MarketMovers } from "./ScannersView.jsx";
 import GapFadeView from "./GapFadeView.jsx";
 import CarryView from "./CarryView.jsx";
 
@@ -206,12 +206,8 @@ function gapWindowNow() {
 const TOP_TABS = [
   { id: "coils", label: "Coils" },
   { id: "gap_fade", label: "Gap-Ups in Downtrends", live: true },
-  { id: "big_movers", label: "Big Movers", live: true },
-  { id: "unusual_volume", label: "Unusual Vol", live: true },
-  { id: "breakouts_52w", label: "52W Breakouts" },
-  { id: "momentum_streaks", label: "Streaks" },
-  { id: "sector_pulse", label: "Sector Pulse", live: true },
-  { id: "circuit_carry", label: "Circuit Carry", live: true },
+  { id: "circuit_carry", label: "Circuit Carry", note: "paper-tracked", live: true },
+  { id: "market_movers", label: "Market Movers", live: true },
 ];
 
 export default function SetupsView({
@@ -385,25 +381,16 @@ export default function SetupsView({
   // Scanner tab counts
   const scanCounts = useMemo(() => {
     if (!scanData) return {};
+    const movers = new Set(
+      ["big_movers", "unusual_volume", "breakouts_52w", "momentum_streaks"]
+        .flatMap((k) => (scanData[k] || []).map((r) => r.symbol)),
+    );
     return {
-      big_movers: (scanData.big_movers || []).length,
-      unusual_volume: (scanData.unusual_volume || []).length,
-      breakouts_52w: (scanData.breakouts_52w || []).length,
-      momentum_streaks: (scanData.momentum_streaks || []).length,
-      sector_pulse: (scanData.sector_pulse || []).length,
+      market_movers: movers.size,
       circuit_carry: (intradayData?.latest || []).length,
     };
   }, [scanData, intradayData]);
   const tabCounts = { ...scanCounts, gap_fade: gapData ? (gapData.rows || []).length : undefined };
-
-  // Map scanner tab id to ScannersView embeddedTab index
-  const SCANNER_TAB_MAP = {
-    big_movers: 0,
-    unusual_volume: 1,
-    momentum_streaks: 2,
-    breakouts_52w: 3,
-    sector_pulse: 4,
-  };
 
   const live = marketOpenNow();
 
@@ -463,6 +450,15 @@ export default function SetupsView({
               <Typography sx={{ fontSize: 12.75, fontWeight: active ? 600 : 500 }}>
                 {t.label}
               </Typography>
+              {t.note && (
+                <Typography
+                  component="span"
+                  title="Listed and tracked on paper; real fills at the upper band have not been measured."
+                  sx={{ fontFamily: MONO, fontSize: 10, color: C.muted, fontStyle: "italic" }}
+                >
+                  {t.note}
+                </Typography>
+              )}
               {count != null && (
                 <Box
                   component="span"
@@ -515,13 +511,8 @@ export default function SetupsView({
             externalIntraday={intradayData}
             embedded
           />
-        ) : SCANNER_TAB_MAP[topTab] != null ? (
-          <ScannersView
-            onOpenStock={onOpenStock}
-            externalData={scanData}
-            embedded
-            embeddedTab={SCANNER_TAB_MAP[topTab]}
-          />
+        ) : topTab === "market_movers" ? (
+          <MarketMovers data={scanData} onOpenStock={onOpenStock} />
         ) : null
       )}
 

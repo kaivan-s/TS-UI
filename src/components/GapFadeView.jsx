@@ -348,10 +348,10 @@ export default function GapFadeView({ data, error, onOpenStock }) {
           </Typography>
           <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap", mb: 1.5 }}>
             {[
-              ["Instances measured (top 5 a day)", bt.trades],
-              ["Avg fall 09:20 → 15:15, after costs", `${bt.entry_0920_avg_pct.toFixed(2)}%`],
-              ["Same, starting 09:25", `${bt.entry_0925_avg_pct.toFixed(2)}%`],
-              ["Median instance", `${bt.median_pct.toFixed(2)}%`],
+              ["Instances measured (every qualifying stock)", bt.trades.toLocaleString("en-IN")],
+              ["Median fall 09:20 → 15:15, after costs", pct(bt.median_pct)],
+              ["Fell more than costs", `${bt.win_pct}%`],
+              ["Move from the open to 09:20", pct(bt.open_to_0920_pct)],
             ].map(([k, v]) => (
               <Box key={k}>
                 <Typography sx={{ fontFamily: MONO, fontSize: 16, fontWeight: 600, color: C.text }}>{v}</Typography>
@@ -365,7 +365,7 @@ export default function GapFadeView({ data, error, onOpenStock }) {
             </Typography>
           ))}
           <Typography sx={{ fontSize: 11.5, color: C.muted, lineHeight: 1.6, mt: 1.25, opacity: 0.85 }}>
-            This list describes a price pattern and how it behaved over a short past window. It is not a
+            This list describes a price pattern and how it behaved in the past. It is not a
             recommendation to buy or sell any security, and past behaviour does not indicate future results.
             Short selling in the cash segment must be squared off the same day, and a stock that locks at its
             upper circuit may not be possible to buy back.

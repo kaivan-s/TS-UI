@@ -546,6 +546,276 @@ function SectorTable({ rows, onOpenStock }) {
   );
 }
 
+const MOVER_TAGS = {
+  up5: { label: "Up 5%+", color: C.good, help: "Up 5% or more from the previous close." },
+  vol: { label: "Volume", color: C.accent, help: "Trading at 2× or more its 20-day average volume." },
+  high52: { label: "52W high", color: C.warn, help: "At or within 2% of its 52-week high on above-average volume." },
+  streak: { label: "Streak", color: "#b39ddb", help: "3 or more consecutive up days with at least 5% gained." },
+};
+
+/** One row per stock across Big Movers, Unusual Volume, 52W Breakouts and Streaks. */
+function mergeMovers(d) {
+  const by = new Map();
+  const add = (r, tag, detail, extra) => {
+    const cur = by.get(r.symbol) || { symbol: r.symbol, sector: r.sector, tags: [] };
+    cur.tags.push({ id: tag, detail });
+    for (const [k, v] of Object.entries(extra)) if (cur[k] == null && v != null) cur[k] = v;
+    by.set(r.symbol, cur);
+  };
+  for (const r of d?.big_movers || [])
+    add(r, "up5", `+${r.pchange?.toFixed(1)}%`, { change: r.pchange, price: r.ltp, turnover_cr: r.turnover_cr });
+  for (const r of d?.unusual_volume || [])
+    add(r, "vol", `${r.vol_ratio?.toFixed(1)}×`, { change: r.pchange, price: r.ltp, turnover_cr: r.turnover_cr, vol_ratio: r.vol_ratio });
+  for (const r of d?.breakouts_52w || [])
+    add(r, "high52", `${r.from_high?.toFixed(1)}% from high`, { change: r.change, price: r.close, turnover_cr: r.turnover_cr, vol_ratio: r.vol_ratio });
+  for (const r of d?.momentum_streaks || [])
+    add(r, "streak", `${r.streak}d, +${r.cum_return?.toFixed(1)}%`, { price: r.close, turnover_cr: r.turnover_cr });
+  return Array.from(by.values()).map((r) => ({ ...r, n_tags: r.tags.length }));
+}
+
+function SectorStrip({ rows }) {
+  const top = [...rows].sort((a, b) => (b.avg_change ?? 0) - (a.avg_change ?? 0));
+  if (!top.length) return null;
+  return (
+    <Box sx={{ mb: 2.5 }}>
+      <Typography sx={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.14em", color: C.muted, mb: 0.75 }}>
+        SECTOR PULSE · AVERAGE MOVE AND SHARE OF STOCKS UP
+      </Typography>
+      <Box sx={{ display: "flex", gap: 1, overflowX: "auto", pb: 0.5 }}>
+        {top.map((s) => {
+          const c = color(s.avg_change);
+          return (
+            <Box
+              key={s.sector}
+              title={s.best_stock ? `Biggest riser: ${s.best_stock} +${s.best_change}%` : undefined}
+              sx={{
+                flexShrink: 0,
+                px: 1.25,
+                py: 0.75,
+                borderRadius: 1.5,
+                bgcolor: "#15161b",
+                border: `1px solid ${C.line}`,
+              }}
+            >
+              <Typography sx={{ fontSize: 11.5, color: C.text, whiteSpace: "nowrap" }}>{s.sector}</Typography>
+              <Typography sx={{ fontFamily: MONO, fontSize: 11, color: c, whiteSpace: "nowrap" }}>
+                {s.avg_change > 0 ? "+" : ""}
+                {s.avg_change}%
+                <Box component="span" sx={{ color: C.muted }}> · {s.adv_pct}% up</Box>
+              </Typography>
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
+  );
+}
+
+function MoversMergedTable({ rows, onOpenStock }) {
+  const [tagPick, setTagPick] = useState("all");
+  const sort = useTableSort({
+    key: "n_tags",
+    dir: "desc",
+    dirFor: (k) => (k === "symbol" || k === "sector" ? "asc" : "desc"),
+  });
+  const counts = useMemo(() => {
+    const c = {};
+    for (const r of rows) for (const t of r.tags) c[t.id] = (c[t.id] || 0) + 1;
+    return c;
+  }, [rows]);
+  const shown = useMemo(() => {
+    const f = tagPick === "all" ? rows : rows.filter((r) => r.tags.some((t) => t.id === tagPick));
+    return sort.key === "n_tags"
+      ? [...f].sort((a, b) => (b.n_tags - a.n_tags) * (sort.dir === "desc" ? 1 : -1) || (b.change ?? 0) - (a.change ?? 0))
+      : sort.apply(f);
+  }, [rows, tagPick, sort.key, sort.dir]);
+
+  return (
+    <>
+      <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", mb: 1.5 }}>
+        {[["all", { label: "All", color: C.text }], ...Object.entries(MOVER_TAGS)].map(([id, t]) => {
+          const active = tagPick === id;
+          return (
+            <Box
+              key={id}
+              role="button"
+              tabIndex={0}
+              onClick={() => setTagPick(id)}
+              onKeyDown={(e) => e.key === "Enter" && setTagPick(id)}
+              title={t.help}
+              sx={{
+                px: 1.1,
+                py: 0.4,
+                borderRadius: 1.25,
+                cursor: "pointer",
+                fontFamily: MONO,
+                fontSize: 11,
+                fontWeight: active ? 600 : 500,
+                bgcolor: active ? "rgba(238,234,227,0.1)" : "rgba(255,255,255,0.02)",
+                border: `1px solid ${active ? "rgba(238,234,227,0.22)" : C.line}`,
+                color: active ? t.color : C.muted,
+              }}
+            >
+              {t.label} {id === "all" ? rows.length : counts[id] || 0}
+            </Box>
+          );
+        })}
+      </Box>
+      {!shown.length ? (
+        <EmptyScannerState text="No stocks on these lists right now." />
+      ) : (
+        <Box sx={{ bgcolor: "#15161b", border: `1px solid ${C.line}`, borderRadius: 2.5, overflow: "hidden", mb: 3 }}>
+          <TableContainer sx={{ overflowX: "auto" }}>
+            <Table size="small" sx={{ minWidth: 720, ...TABLE_SX }}>
+              <TableHead>
+                <TableRow>
+                  <HeadCell label="" sx={{ width: 36, p: 0 }} />
+                  <HeadCell label="Symbol" sort={sort} sortKey="symbol" />
+                  <HeadCell label="Tags" help="Which lists the stock is on. Stocks on more lists sort first." sort={sort} sortKey="n_tags" />
+                  <HeadCell label="Change" align="right" sort={sort} sortKey="change" />
+                  <HeadCell label="Price" align="right" sort={sort} sortKey="price" />
+                  <HeadCell label="Turnover" align="right" sort={sort} sortKey="turnover_cr" />
+                  <HeadCell label="Sector" sort={sort} sortKey="sector" />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {shown.map((r) => (
+                  <TableRow key={r.symbol} hover sx={{ "&:hover": { bgcolor: "rgba(255,255,255,0.025) !important" } }}>
+                    <TableCell sx={{ py: 0, px: 0.75, width: 36 }}>
+                      <BookmarkButton symbol={r.symbol} />
+                    </TableCell>
+                    <TableCell
+                      onClick={() => onOpenStock?.(r.symbol)}
+                      sx={{
+                        fontFamily: MONO,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: C.text,
+                        cursor: onOpenStock ? "pointer" : "default",
+                        "&:hover": onOpenStock ? { color: C.accent } : {},
+                      }}
+                    >
+                      {r.symbol}
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                        {r.tags.map((t) => {
+                          const m = MOVER_TAGS[t.id];
+                          return (
+                            <Box
+                              key={t.id}
+                              component="span"
+                              title={m.help}
+                              sx={{
+                                px: 0.7,
+                                py: 0.1,
+                                borderRadius: 0.85,
+                                bgcolor: `${m.color}16`,
+                                border: `1px solid ${m.color}38`,
+                                color: m.color,
+                                fontFamily: MONO,
+                                fontSize: 10,
+                                fontWeight: 600,
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {m.label} <Box component="span" sx={{ color: C.muted, fontWeight: 500 }}>{t.detail}</Box>
+                            </Box>
+                          );
+                        })}
+                      </Box>
+                    </TableCell>
+                    <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 500, color: color(r.change) }}>
+                      {r.change == null ? "—" : `${r.change > 0 ? "+" : ""}${r.change.toFixed(1)}%`}
+                    </TableCell>
+                    <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+                      {num(r.price)}
+                    </TableCell>
+                    <TableCell align="right" className="num" sx={{ fontFamily: MONO, fontSize: 12.5 }}>
+                      {r.turnover_cr != null ? `₹${r.turnover_cr} cr` : "—"}
+                    </TableCell>
+                    <TableCell sx={{ fontSize: 12, color: C.muted }}>{r.sector || "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      )}
+    </>
+  );
+}
+
+/** Setups → Market Movers: the four movement lists merged, with the sector strip on top. */
+export function MarketMovers({ data, onOpenStock }) {
+  const [q, setQ] = useState("");
+  const query = q.trim().toLowerCase();
+  const rows = useMemo(() => {
+    const all = mergeMovers(data);
+    if (!query) return all;
+    return all.filter(
+      (r) => (r.symbol || "").toLowerCase().includes(query) || (r.sector || "").toLowerCase().includes(query),
+    );
+  }, [data, query]);
+  const isLive = marketOpenNow();
+
+  return (
+    <>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 2,
+          px: 2.5,
+          py: 1.75,
+          mb: 2.5,
+          borderRadius: 2.5,
+          bgcolor: "#15161b",
+          border: `1px solid ${C.line}`,
+        }}
+      >
+        <Box>
+          <Typography sx={{ fontFamily: MONO, fontSize: 10.5, letterSpacing: "0.14em", color: C.accent, mb: 0.25 }}>
+            MARKET MOVERS · CONTEXT, NOT SIGNALS
+            <Box component="span" sx={{ color: C.muted }}>
+              {" · "}
+              {isLive ? (data?.scan_time ? `LIVE ${data.scan_time} IST` : "LIVE") : data?.as_of ? `EOD ${data.as_of}` : "LAST SESSION"}
+            </Box>
+          </Typography>
+          <Typography sx={{ fontSize: 13.25, color: C.muted }}>
+            What moved today: big gainers, unusual volume, 52-week highs and up-streaks in one list. Useful as background, not as signals.
+          </Typography>
+        </Box>
+        <TextField
+          size="small"
+          placeholder="Filter symbol or sector…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          sx={{ width: { xs: "100%", sm: 210 }, "& .MuiOutlinedInput-root": { bgcolor: "#0e0f12", borderRadius: 1.5 } }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" sx={{ color: C.muted }} />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+
+      <SectorStrip rows={data?.sector_pulse || []} />
+      <MoversMergedTable rows={rows} onOpenStock={onOpenStock} />
+
+      <Box sx={{ p: 2.5, borderRadius: 2.5, bgcolor: "#15161b", border: `1px solid ${C.line}` }}>
+        <Typography sx={{ fontSize: 12.5, color: C.muted, lineHeight: 1.6 }}>
+          Informational lists, not recommendations. A stock appearing here had notable price or volume action; it says nothing about what it will do next.
+        </Typography>
+      </Box>
+    </>
+  );
+}
+
 const SCANNER_META = [
   {
     tag: "BIG MOVERS · ≥ 5% GAIN",

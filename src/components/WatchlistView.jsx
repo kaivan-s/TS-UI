@@ -53,7 +53,13 @@ const FILTERS = [
   { id: "all", label: "All Saved" },
   { id: "coiled", label: "Coiled Only" },
   { id: "near", label: "Near Breakout (≤3%)" },
+  { id: "weak_results", label: "Weak results" },
+  { id: "weak_bounce", label: "Weak bounce" },
 ];
+
+const SHORT_LABEL = { weak_results: "Weak results", weak_bounce: "Weak bounce" };
+
+const hasFlag = (r, kind) => (r.flags || []).some((f) => f.kind === kind);
 
 function fmtCr(v) {
   if (v == null || Number.isNaN(Number(v))) return "—";
@@ -102,6 +108,8 @@ export default function WatchlistView({ onOpenStock }) {
       coiled,
       near,
       growing,
+      weak_results: rows.filter((r) => hasFlag(r, "weak_results")).length,
+      weak_bounce: rows.filter((r) => hasFlag(r, "weak_bounce")).length,
     };
   }, [rows]);
 
@@ -110,6 +118,7 @@ export default function WatchlistView({ onOpenStock }) {
     const filtered = rows.filter((r) => {
       if (filter === "coiled" && !r.is_coiled) return false;
       if (filter === "near" && !(r.to_trigger != null && r.to_trigger <= 3)) return false;
+      if ((filter === "weak_results" || filter === "weak_bounce") && !hasFlag(r, filter)) return false;
       if (!query) return true;
       return (
         (r.symbol || "").toLowerCase().includes(query) ||
@@ -472,6 +481,32 @@ export default function WatchlistView({ onOpenStock }) {
                               Coiled
                             </Box>
                           )}
+                          {(r.flags || []).map((f) => (
+                            <Tooltip
+                              key={f.kind}
+                              title={`${f.detail} ${f.note} Shown for ${f.sessions_left} more ${f.sessions_left === 1 ? "session" : "sessions"}.`}
+                              placement="top"
+                              arrow
+                            >
+                              <Box
+                                component="span"
+                                sx={{
+                                  px: 0.75,
+                                  py: 0.15,
+                                  borderRadius: 1,
+                                  bgcolor: "rgba(200,122,122,0.12)",
+                                  border: "1px solid rgba(200,122,122,0.3)",
+                                  color: C.bad,
+                                  fontFamily: MONO,
+                                  fontSize: 10,
+                                  fontWeight: 600,
+                                  cursor: "help",
+                                }}
+                              >
+                                {SHORT_LABEL[f.kind] || f.label}
+                              </Box>
+                            </Tooltip>
+                          ))}
                         </Box>
                       </TableCell>
                       <TableCell sx={{ py: 1.1, fontSize: 12.25, color: C.muted }}>
