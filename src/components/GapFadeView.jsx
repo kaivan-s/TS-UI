@@ -14,6 +14,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { C } from "../theme.js";
@@ -69,6 +70,28 @@ function Pill({ children, tone }) {
 
 const fmtDate = (iso) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+
+/** Shown when most of the market opened higher; the tested top five did not fade on such mornings. */
+function BroadOpenNote({ open, stats }) {
+  if (!open?.broad || !stats) return null;
+  return (
+    <Box sx={{ p: { xs: 2, sm: 2.5 }, mb: 2, borderRadius: 2.5, bgcolor: "rgba(196,164,106,0.07)", border: `1px solid ${C.warn}55` }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, flexWrap: "wrap", mb: 0.75 }}>
+        <Pill tone={C.warn}>BROAD GAP-UP OPEN</Pill>
+        <Typography sx={{ fontFamily: MONO, fontSize: 11, color: C.muted }}>
+          Median stock opened {pct(open.median_gap_pct)}
+        </Typography>
+      </Box>
+      <Typography sx={{ fontSize: 12.5, color: C.muted, lineHeight: 1.6 }}>
+        Most of the market opened higher this morning. On the {stats.sessions} sessions since Dec 2023 when the
+        median liquid stock opened {stats.threshold_pct}% or more above its close, the top five on this list
+        did not fade: median {pct(stats.median_pct)} from 09:20 to 15:15 after costs, and {stats.win_pct}% fell
+        more than costs. On other mornings the same top five came to a median of {pct(stats.other_median_pct)}.
+        A negative figure means the stock rose.
+      </Typography>
+    </Box>
+  );
+}
 
 /** Picks logged at ~09:20 and priced again at ~15:15; positive = the stock fell (short gained). */
 function LiveRecord({ rec, topN }) {
@@ -171,7 +194,15 @@ export default function GapFadeView({ data, error, onOpenStock }) {
           Stocks on a 5% price band are left out. The {rules.top_n ?? 5} largest gaps are marked, matching the
           tested rule. {data?.universe != null && `${data.universe} stocks met the trend and liquidity conditions today.`}
         </Typography>
+        {data?.market_open && (
+          <Typography sx={{ fontSize: 12.5, color: C.muted, lineHeight: 1.6, mt: 0.5 }}>
+            Market open: the median of {data.market_open.stocks} liquid stocks opened{" "}
+            <Box component="span" sx={{ color: C.text }}>{pct(data.market_open.median_gap_pct)}</Box>.
+          </Typography>
+        )}
       </Box>
+
+      <BroadOpenNote open={data?.market_open} stats={bt?.broad_open} />
 
       {error && !data && (
         <Box
@@ -277,6 +308,16 @@ export default function GapFadeView({ data, error, onOpenStock }) {
                         <Box component="span" sx={{ ml: 1 }}>
                           <Pill tone={C.accent}>TOP {rules.top_n ?? 5}</Pill>
                         </Box>
+                      )}
+                      {r.filing && (
+                        <Tooltip
+                          arrow
+                          title={`${r.filing.category}: ${r.filing.title} · filed ${fmtDate(r.filing.date)} ${r.filing.time}. A company filing can keep a gap moving in either direction.`}
+                        >
+                          <Box component="span" sx={{ ml: 1 }} onClick={(e) => e.stopPropagation()}>
+                            <Pill tone={C.warn}>OVERNIGHT FILING</Pill>
+                          </Box>
+                        </Tooltip>
                       )}
                     </TableCell>
                     <TableCell align="right" className="num"
