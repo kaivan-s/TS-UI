@@ -319,6 +319,20 @@ export default function GapFadeView({ data, error, onOpenStock }) {
                           </Box>
                         </Tooltip>
                       )}
+                      {r.global_move && (
+                        <Tooltip
+                          arrow
+                          title={`${r.global_move.driver} is ${pct(r.global_move.move_pct, 1)} since the previous Indian close (${r.global_move.industry}).${
+                            bt?.global_driver
+                              ? ` Since Dec 2023, downtrend gap-ups whose global driver rose ${bt.global_driver.threshold_pct}% or more overnight came to a median of ${pct(bt.global_driver.median_pct)} from 09:20 to 15:15 after costs (${bt.global_driver.win_pct}% fell more than costs, ${bt.global_driver.trades} instances), against ${pct(bt.global_driver.other_median_pct)} when the driver was flat or lower. A negative figure means the stock rose.`
+                              : ""
+                          }`}
+                        >
+                          <Box component="span" sx={{ ml: 1 }} onClick={(e) => e.stopPropagation()}>
+                            <Pill tone={C.warn}>{r.global_move.driver.toUpperCase()} {pct(r.global_move.move_pct, 1)}</Pill>
+                          </Box>
+                        </Tooltip>
+                      )}
                     </TableCell>
                     <TableCell align="right" className="num"
                       sx={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 600, color: C.good }}>
